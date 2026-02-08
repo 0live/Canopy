@@ -15,6 +15,7 @@ class UserRole(str, Enum):
     MANAGE_ATLASES_AND_MAPS = "MANAGE_ATLASES_AND_MAPS"
     LOAD_DATA = "LOAD_DATA"
     LOAD_ICONS = "LOAD_ICONS"
+    WITHDBACCESS = "WITHDBACCESS"
 
 
 class User(SQLModel, table=True):

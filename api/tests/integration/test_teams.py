@@ -165,12 +165,15 @@ async def test_team_membership_management(
     manager_id = next(u["id"] for u in users if u["username"] == "manager")
 
     # Grant MANAGE_TEAMS role
-    await client.patch(
-        f"/users/{manager_id}", json={"roles": ["MANAGE_TEAMS"]}, headers=admin_headers
+    # Grant MANAGE_TEAMS role
+    await client.put(
+        f"/users/{manager_id}/roles",
+        json={"roles": ["MANAGE_TEAMS"]},
+        headers=admin_headers,
     )
 
     # Login as manager
-    manager_token = await auth_token_factory("manager", "password")
+    manager_token = await auth_token_factory("manager", "password12345")
     manager_headers = {"Authorization": f"Bearer {manager_token}"}
 
     user_token = await auth_token_factory("user", "user")

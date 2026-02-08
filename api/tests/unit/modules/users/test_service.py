@@ -113,19 +113,6 @@ class TestUserService:
         assert exc.value.params["detail"] == "user.update_permission_denied"
 
     @pytest.mark.asyncio
-    async def test_update_user_role_denied(self, service):
-        """Test updating roles without admin privileges."""
-        user = UserDetail(
-            id=1, username="me", email="me@test.com", roles=[UserRole.USER], teams=[]
-        )
-        update_data = UserUpdate(roles=[UserRole.ADMIN])
-
-        with pytest.raises(PermissionDeniedException) as exc:
-            await service.update_user(1, update_data, user)
-
-        assert exc.value.params["detail"] == "user.role_permission_denied"
-
-    @pytest.mark.asyncio
     async def test_delete_user_success(self, service, mock_repo):
         """Test successful user deletion by admin."""
         admin_user = UserDetail(

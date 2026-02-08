@@ -74,7 +74,14 @@ async def test_update_user_role_restriction(
         json=updated_data,
         headers={"Authorization": f"Bearer {token}"},
     )
-    assert response.status_code == 403
+    # Formerly 403, now 200 but roles are ignored
+    assert response.status_code == 200
+
+    # Verify roles are still USER
+    me_res_after = await client.get(
+        "/users/me", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert me_res_after.json()["roles"] == ["USER"]
 
 
 @pytest.mark.asyncio

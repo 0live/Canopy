@@ -6,6 +6,7 @@ from app.core.security import get_current_user
 from app.modules.users.schemas import (
     UserCreate,
     UserDetail,
+    UserRoleUpdate,
     UserSummary,
     UserUpdate,
 )
@@ -62,3 +63,13 @@ async def delete_user(
     current_user: UserDetail = Depends(get_current_user),
 ):
     return await service.delete_user(user_id, current_user)
+
+
+@userRouter.put("/{user_id}/roles", response_model=UserDetail)
+async def update_user_roles(
+    user_id: int,
+    role_update: UserRoleUpdate,
+    service: UserServiceDep,
+    current_user: UserDetail = Depends(get_current_user),
+):
+    return await service.update_user_roles(user_id, role_update, current_user)

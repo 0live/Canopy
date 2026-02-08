@@ -32,10 +32,13 @@ class UserCreate(UserBase):
         return validate_password(v)
 
 
+class UserRoleUpdate(BaseModel):
+    roles: List[UserRole]
+
+
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = Field(default=None)
     username: Optional[str] = Field(default=None)
-    roles: Optional[List[UserRole]] = Field(default=None)
     password: Optional[str] = Field(default=None)
 
     @field_validator("password")

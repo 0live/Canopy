@@ -19,7 +19,13 @@ from app.core.permissions import has_any_role
 from app.modules.teams.models import Team
 from app.modules.users.models import User, UserRole
 from app.modules.users.repository import UserRepository
-from app.modules.users.schemas import UserCreate, UserDetail, UserSummary, UserUpdate
+from app.modules.users.schemas import (
+    UserCreate,
+    UserDetail,
+    UserRoleUpdate,
+    UserSummary,
+    UserUpdate,
+)
 
 
 class UserService:
@@ -199,6 +205,24 @@ class UserService:
             user_id, options=[selectinload(User.teams).selectinload(Team.users)]
         )
 
+    async def update_user_roles(
+        self, user_id: int, role_update: UserRoleUpdate, current_user: UserDetail
+    ) -> UserDetail:
+        if not has_any_role(current_user, [UserRole.ADMIN]):
+            raise PermissionDeniedException(
+                params={"detail": "user.role_permission_denied"}
+            )
+
+        update_data = {"roles": role_update.roles}
+        await self.repository.update(
+            user_id, update_data, options=[selectinload(User.teams)]
+        )
+        await self.repository.session.commit()
+
+        return await self.repository.get(
+            user_id, options=[selectinload(User.teams).selectinload(Team.users)]
+        )
+
     def _ensure_update_permissions(self, user_id: int, current_user: UserDetail):
         if user_id != current_user.id and not has_any_role(
             current_user, [UserRole.ADMIN]
@@ -210,19 +234,11 @@ class UserService:
     def _prepare_update_data(
         self, user_update: UserUpdate, current_user: UserDetail
     ) -> dict[str, Any]:
-        update_data = user_update.model_dump(
-            exclude_unset=True, exclude={"password", "roles"}
-        )
+        update_data = user_update.model_dump(exclude_unset=True, exclude={"password"})
 
         if user_update.password is not None:
             update_data["hashed_password"] = hash_password(user_update.password)
 
-        if user_update.roles is not None:
-            if not has_any_role(current_user, [UserRole.ADMIN]):
-                raise PermissionDeniedException(
-                    params={"detail": "user.role_permission_denied"}
-                )
-            update_data["roles"] = user_update.roles
         return update_data
 
     async def _handle_update_integrity_error(
