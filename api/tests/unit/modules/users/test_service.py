@@ -23,8 +23,16 @@ class TestUserService:
         return Settings()
 
     @pytest.fixture
-    def service(self, mock_repo, mock_settings):
-        return UserService(repository=mock_repo, settings=mock_settings)
+    def mock_db_access_service(self):
+        return AsyncMock()
+
+    @pytest.fixture
+    def service(self, mock_repo, mock_settings, mock_db_access_service):
+        return UserService(
+            repository=mock_repo,
+            settings=mock_settings,
+            db_access_service=mock_db_access_service,
+        )
 
     @pytest.mark.asyncio
     async def test_get_user_by_id_success_admin(self, service, mock_repo):
@@ -122,6 +130,12 @@ class TestUserService:
             roles=[UserRole.ADMIN],
             teams=[],
         )
+        target_user = Mock(
+            id=1,
+            username="target",
+            roles=[UserRole.USER],  # No WITHDBACCESS
+        )
+        mock_repo.get = AsyncMock(return_value=target_user)
         mock_repo.delete = AsyncMock(return_value=True)
 
         result = await service.delete_user(1, admin_user)
@@ -140,8 +154,7 @@ class TestUserService:
             roles=[UserRole.ADMIN],
             teams=[],
         )
-        mock_repo.delete = AsyncMock(return_value=False)
-        mock_repo.session.commit = AsyncMock()
+        mock_repo.get = AsyncMock(return_value=None)
 
         with pytest.raises(EntityNotFoundException) as exc:
             await service.delete_user(1, admin_user)
@@ -356,3 +369,35 @@ class TestUserService:
 
         assert result.id == 2
         mock_repo.create.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_update_user_roles_success(
+        self, service, mock_repo, mock_db_access_service
+    ):
+        """Test successful role update with DB access grant."""
+        from app.modules.users.schemas import UserInternalUpdate, UserRoleUpdate
+
+        admin_user = UserDetail(
+            id=99,
+            username="admin",
+            email="admin@test.com",
+            roles=[UserRole.ADMIN],
+            teams=[],
+        )
+        target_user = Mock(id=1, username="target", roles=[UserRole.USER])
+        # Update returns the user
+        mock_repo.get = AsyncMock(return_value=target_user)
+        mock_repo.update = AsyncMock()
+        mock_repo.session.commit = AsyncMock()
+
+        role_update = UserRoleUpdate(roles=[UserRole.USER, UserRole.WITHDBACCESS])
+
+        result_user, token = await service.update_user_roles(1, role_update, admin_user)
+
+        # Check that update was called with UserInternalUpdate
+        args, kwargs = mock_repo.update.call_args
+        update_data = args[1]
+        assert isinstance(update_data, UserInternalUpdate)
+        assert update_data.roles == [UserRole.USER, UserRole.WITHDBACCESS]
+        assert update_data.db_activation_token is not None
+        assert token is not None

@@ -28,7 +28,9 @@ class User(SQLModel, table=True):
     verification_token: Optional[str] = Field(default=None)
     db_activation_token: Optional[str] = Field(default=None)
     db_activation_token_created_at: Optional[datetime.datetime] = Field(default=None)
-    roles: List[UserRole] = Field(sa_column=Column(ARRAY(SAEnum(UserRole))))
+    roles: List[UserRole] = Field(
+        sa_column=Column(ARRAY(SAEnum(UserRole, schema="app_data")))
+    )
     teams: List["Team"] = Relationship(
         back_populates="users",
         link_model=UserTeamLink,

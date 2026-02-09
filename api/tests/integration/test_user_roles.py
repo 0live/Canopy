@@ -37,7 +37,8 @@ async def test_put_user_roles_admin(
         headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response.status_code == 200
-    assert "ADMIN" in response.json()["roles"]
+    data = response.json()
+    assert "ADMIN" in data["user"]["roles"]
 
     # 2. Verify persistence
     response = await client.get(

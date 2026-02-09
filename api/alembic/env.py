@@ -7,10 +7,11 @@ from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from app.modules.users.models import User  # noqa
-from app.modules.teams.models import Team, UserTeamLink  # noqa
+from app.core import models  # noqa: F401
 from app.modules.atlases.models import Atlas, AtlasTeamLink  # noqa
 from app.modules.auth.models import RefreshToken  # noqa
+from app.modules.teams.models import Team, UserTeamLink  # noqa
+from app.modules.users.models import User  # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -24,6 +25,7 @@ host = os.getenv("POSTGRES_HOST", default_host)
 
 db_url = f"postgresql+psycopg://{postgres_user}:{postgres_password}@{host}:5432/{postgres_db}"
 config.set_main_option("sqlalchemy.url", db_url)
+config.set_main_option("version_table_schema", "app_data")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -72,6 +74,13 @@ def include_object(object, name, type_, reflected, compare_to):
         # Ignore if name is in the list or starts with a reserved prefix
         if name in ignored_tables or any(name.startswith(p) for p in ignored_prefixes):
             return False
+
+        # Only include tables in app_data and users_data (and public if necessary, but we are moving away)
+        # reflected is True if the table already exists in the DB
+        if getattr(object, "schema", None) not in ["app_data", "users_data"]:
+            return False
+
+    return True
 
     return True
 

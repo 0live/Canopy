@@ -5,6 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.core import models  # noqa: F401
 from app.core.hashing import hash_password
 from app.modules.atlases.models import Atlas, AtlasTeamLink
 from app.modules.teams.models import Team
@@ -34,7 +35,7 @@ class Seeder:
         # Order matters because of Foreign Key constraints
         await session.exec(
             text(
-                'TRUNCATE TABLE userteamlink, atlasteamlink, atlas, map, team, "user" RESTART IDENTITY CASCADE;'
+                'TRUNCATE TABLE app_data.userteamlink, app_data.atlasteamlink, app_data.atlas, app_data.map, app_data.team, app_data."user" RESTART IDENTITY CASCADE;'
             )
         )
         if commit:

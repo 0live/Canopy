@@ -8,6 +8,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from app.core import models  # noqa: F401
 from app.core.config import get_settings
 from app.core.database import sessionmanager
 from app.core.exceptions.handlers import add_all_exception_handlers
