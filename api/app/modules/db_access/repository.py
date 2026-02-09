@@ -61,6 +61,9 @@ class DbAccessRepository(BaseRepository[User]):
         await self.session.execute(
             text(f"GRANT USAGE ON SCHEMA users_data TO {role_name}")
         )
+        await self.session.execute(
+            text(f"GRANT CREATE ON SCHEMA users_data TO {role_name}")
+        )
         await self.session.execute(text(f"GRANT USAGE ON SCHEMA public TO {role_name}"))
         await self.session.execute(
             text(f"GRANT SELECT ON ALL TABLES IN SCHEMA public TO {role_name}")
