@@ -5,7 +5,7 @@ from app.core.database import get_session
 from app.core.seeds import Seeder
 from app.main import app
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import pool
+from sqlalchemy import pool, text
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -56,6 +56,8 @@ async def engine_fixture(settings: Settings):
     """Initializes the database schema once per session."""
     engine = create_async_engine(settings.database_url, poolclass=pool.NullPool)
     async with engine.begin() as conn:
+        await conn.execute(text("CREATE SCHEMA IF NOT EXISTS app_data"))
+        await conn.execute(text("CREATE SCHEMA IF NOT EXISTS users_data"))
         await conn.run_sync(SQLModel.metadata.create_all)
     yield engine
     await engine.dispose()

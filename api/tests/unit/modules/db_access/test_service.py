@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from app.core.exceptions import (
@@ -138,13 +138,20 @@ class TestActivateDatabaseAccess:
         mock_repository.role_exists = AsyncMock(return_value=False)
         mock_repository.create_role = AsyncMock()
         mock_repository.update = AsyncMock()
+        mock_repository.session = MagicMock()
+        mock_repository.session.commit = AsyncMock()
 
         current_user = MagicMock(spec=User)
         current_user.id = 42
 
-        result = await service.activate_database_access(
-            "valid_token", "securepassword123", current_user
-        )
+        # Mock MessageService
+        with patch(
+            "app.modules.db_access.service.MessageService"
+        ) as MockMessageService:
+            MockMessageService.get_message.side_effect = lambda key: key
+            result = await service.activate_database_access(
+                "valid_token", "securepassword123", current_user
+            )
 
         assert result.role_name == "user_42"
         assert result.message == "db_access.activation_success"

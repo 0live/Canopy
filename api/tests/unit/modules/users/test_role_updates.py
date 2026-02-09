@@ -19,8 +19,16 @@ class TestUserRoleUpdates:
         return Mock()
 
     @pytest.fixture
-    def service(self, mock_repo, mock_settings):
-        return UserService(repository=mock_repo, settings=mock_settings)
+    def mock_db_access_service(self):
+        return AsyncMock()
+
+    @pytest.fixture
+    def service(self, mock_repo, mock_settings, mock_db_access_service):
+        return UserService(
+            repository=mock_repo,
+            settings=mock_settings,
+            db_access_service=mock_db_access_service,
+        )
 
     @pytest.mark.asyncio
     async def test_update_user_roles_success(self, service, mock_repo):
@@ -86,5 +94,5 @@ class TestUserRoleUpdates:
         update_data = UserRoleUpdate(roles=[UserRole.ADMIN])
 
         # Even for self, it should be denied if not admin
-        with pytest.raises(PermissionDeniedException) as exc:
+        with pytest.raises(PermissionDeniedException):
             await service.update_user_roles(1, update_data, user)

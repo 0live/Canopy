@@ -291,12 +291,13 @@ class UserService:
         self, e: IntegrityError, user_update: UserUpdate
     ):
         await self.repository.session.rollback()
-        if "ix_user_username" in str(e.orig):
+        error_msg = str(e)
+        if "user_username" in error_msg:
             raise DuplicateEntityException(
                 key="user.username_exists",
                 params={"username": user_update.username},
             )
-        if "ix_user_email" in str(e.orig):
+        if "user_email" in error_msg:
             raise DuplicateEntityException(
                 key="user.email_exists", params={"email": user_update.email}
             )
