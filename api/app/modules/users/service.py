@@ -258,7 +258,9 @@ class UserService:
             update_data.db_activation_token_created_at = None
 
         await self.repository.update(
-            user_id, update_data, options=[selectinload(User.teams)]
+            user_id,
+            update_data.model_dump(exclude_unset=True),
+            options=[selectinload(User.teams)],
         )
         await self.repository.session.commit()
 

@@ -13,3 +13,4 @@ CREATE SCHEMA IF NOT EXISTS users_data;
 -- Restrict access to root only (revoke public access)
 REVOKE ALL ON SCHEMA app_data FROM PUBLIC;
 REVOKE ALL ON SCHEMA users_data FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
