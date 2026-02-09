@@ -1,4 +1,5 @@
 import secrets
+from datetime import datetime, timezone
 from typing import Annotated, Any, Optional
 
 from fastapi import Depends
@@ -16,12 +17,14 @@ from app.core.exceptions import (
 from app.core.hashing import hash_password, verify_password
 from app.core.messages import MessageService
 from app.core.permissions import has_any_role
+from app.modules.db_access.service import DbAccessService, DbAccessServiceDep
 from app.modules.teams.models import Team
 from app.modules.users.models import User, UserRole
 from app.modules.users.repository import UserRepository
 from app.modules.users.schemas import (
     UserCreate,
     UserDetail,
+    UserInternalUpdate,
     UserRoleUpdate,
     UserSummary,
     UserUpdate,
@@ -35,9 +38,11 @@ class UserService:
         self,
         repository: UserRepository,
         settings: Settings,
+        db_access_service: DbAccessService,
     ):
         self.repository = repository
         self.settings = settings
+        self.db_access_service = db_access_service
 
     async def get_all_users(self, current_user: UserDetail) -> list[UserSummary]:
         if not has_any_role(current_user, [UserRole.ADMIN]):
@@ -179,12 +184,20 @@ class UserService:
             raise PermissionDeniedException(
                 params={"detail": "user.delete_permission_denied"}
             )
-        deleted = await self.repository.delete(user_id)
-        await self.repository.session.commit()
-        if not deleted:
+
+        user = await self.repository.get(user_id)
+        if not user:
             raise EntityNotFoundException(
                 entity="User", key="user.not_found", params={"id": user_id}
             )
+
+        # Clean up PostgreSQL role if user had database access
+        if UserRole.WITHDBACCESS in user.roles:
+            await self.db_access_service.revoke_database_access(user_id)
+
+        await self.repository.delete(user_id)
+        await self.repository.session.commit()
+
         return {"message": MessageService.get_message("user.deleted_success")}
 
     async def update_user(
@@ -207,21 +220,52 @@ class UserService:
 
     async def update_user_roles(
         self, user_id: int, role_update: UserRoleUpdate, current_user: UserDetail
-    ) -> UserDetail:
+    ) -> tuple[UserDetail, Optional[str]]:
+        """Update user roles. Returns (user, activation_token) where token is set if WITHDBACCESS was granted."""
         if not has_any_role(current_user, [UserRole.ADMIN]):
             raise PermissionDeniedException(
                 params={"detail": "user.role_permission_denied"}
             )
 
-        update_data = {"roles": role_update.roles}
+        user = await self.repository.get(user_id)
+        if not user:
+            raise EntityNotFoundException(
+                entity="User", key="user.not_found", params={"id": user_id}
+            )
+
+        old_roles = set(user.roles) if user.roles else set()
+        new_roles = set(role_update.roles)
+
+        update_data = UserInternalUpdate(roles=role_update.roles)
+        activation_token: Optional[str] = None
+
+        # Handle WITHDBACCESS grant: generate activation token
+        if (
+            UserRole.WITHDBACCESS in new_roles
+            and UserRole.WITHDBACCESS not in old_roles
+        ):
+            activation_token = secrets.token_urlsafe(32)
+            update_data.db_activation_token = activation_token
+            update_data.db_activation_token_created_at = datetime.now(timezone.utc)
+
+        # Handle WITHDBACCESS revocation: clean up PostgreSQL role
+        if (
+            UserRole.WITHDBACCESS in old_roles
+            and UserRole.WITHDBACCESS not in new_roles
+        ):
+            await self.db_access_service.revoke_database_access(user_id)
+            update_data.db_activation_token = None
+            update_data.db_activation_token_created_at = None
+
         await self.repository.update(
             user_id, update_data, options=[selectinload(User.teams)]
         )
         await self.repository.session.commit()
 
-        return await self.repository.get(
+        result_user = await self.repository.get(
             user_id, options=[selectinload(User.teams).selectinload(Team.users)]
         )
+        return result_user, activation_token
 
     def _ensure_update_permissions(self, user_id: int, current_user: UserDetail):
         if user_id != current_user.id and not has_any_role(
@@ -264,9 +308,13 @@ class UserService:
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 
-def get_user_service(session: SessionDep, settings: SettingsDep) -> UserService:
+async def get_user_service(
+    session: SessionDep,
+    settings: SettingsDep,
+    db_access_service: DbAccessServiceDep,
+) -> UserService:
     repo = UserRepository(session, User)
-    return UserService(repo, settings)
+    return UserService(repo, settings, db_access_service=db_access_service)
 
 
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]

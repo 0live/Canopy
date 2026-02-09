@@ -7,6 +7,7 @@ from app.modules.users.schemas import (
     UserCreate,
     UserDetail,
     UserRoleUpdate,
+    UserRoleUpdateResponse,
     UserSummary,
     UserUpdate,
 )
@@ -65,11 +66,20 @@ async def delete_user(
     return await service.delete_user(user_id, current_user)
 
 
-@userRouter.put("/{user_id}/roles", response_model=UserDetail)
+@userRouter.put("/{user_id}/roles", response_model=UserRoleUpdateResponse)
 async def update_user_roles(
     user_id: int,
     role_update: UserRoleUpdate,
     service: UserServiceDep,
     current_user: UserDetail = Depends(get_current_user),
 ):
-    return await service.update_user_roles(user_id, role_update, current_user)
+    """
+    Update user roles (Admin only).
+
+    If WITHDBACCESS is granted, returns an activation token that the admin
+    should share with the user to activate their database access.
+    """
+    user, activation_token = await service.update_user_roles(
+        user_id, role_update, current_user
+    )
+    return UserRoleUpdateResponse(user=user, db_activation_token=activation_token)

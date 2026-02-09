@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 from typing import List, Optional
 
@@ -25,6 +26,8 @@ class User(SQLModel, table=True):
     hashed_password: str
     is_verified: bool = Field(default=False)
     verification_token: Optional[str] = Field(default=None)
+    db_activation_token: Optional[str] = Field(default=None)
+    db_activation_token_created_at: Optional[datetime.datetime] = Field(default=None)
     roles: List[UserRole] = Field(sa_column=Column(ARRAY(SAEnum(UserRole))))
     teams: List["Team"] = Relationship(
         back_populates="users",

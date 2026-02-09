@@ -72,5 +72,15 @@
   },
   "validation": {
     "password_too_short": "Le mot de passe doit contenir au moins {length} caractères."
+  },
+  "db_access": {
+    "activation_success": "Accès à la base de données activé avec succès.",
+    "invalid_token": "Token d'activation invalide ou expiré.",
+    "already_activated": "L'accès à la base de données est déjà activé.",
+    "role_creation_failed": "Échec de la création du rôle base de données.",
+    "role_revoked": "L'accès à la base de données a été révoqué.",
+    "no_access": "Vous n'avez pas les permissions d'accès à la base de données.",
+    "token_mismatch": "Ce token ne vous appartient pas.",
+    "token_expired": "Le token d'activation a expiré."
   }
 }
