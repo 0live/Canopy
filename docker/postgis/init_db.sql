@@ -1,7 +1,3 @@
--- =============================================================================
--- Canopy PostgreSQL Initialization
--- =============================================================================
-
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS hstore;
 DROP EXTENSION IF EXISTS postgis_tiger_geocoder CASCADE;
@@ -14,3 +10,6 @@ CREATE SCHEMA IF NOT EXISTS users_data;
 REVOKE ALL ON SCHEMA app_data FROM PUBLIC;
 REVOKE ALL ON SCHEMA users_data FROM PUBLIC;
 REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON DATABASE information_schema FROM PUBLIC;
+REVOKE ALL ON DATABASE pg_catalog FROM PUBLIC;
+REVOKE ALL ON DATABASE topology FROM PUBLIC;

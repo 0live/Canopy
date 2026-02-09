@@ -9,6 +9,7 @@ from app.core.exceptions import (
     DbAccessException,
     PermissionDeniedException,
 )
+from app.core.messages import MessageService
 from app.modules.db_access.repository import (
     DbAccessRepository,
     DbAccessRepositoryDep,
@@ -80,10 +81,11 @@ class DbAccessService:
             user.id,
             {"db_activation_token": None, "db_activation_token_created_at": None},
         )
+        await self.repository.session.commit()
 
         return DatabaseActivateResponse(
             role_name=role_name,
-            message="db_access.activation_success",
+            message=MessageService.get_message("db_access.activation_success"),
         )
 
     async def revoke_database_access(self, user_id: int) -> bool:

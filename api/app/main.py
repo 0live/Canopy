@@ -16,7 +16,7 @@ from app.core.messages import MessageService
 from app.core.rate_limit import limiter
 from app.modules.atlases.endpoints import atlasesRouter
 from app.modules.auth.endpoints import authRouter
-from app.modules.db_access.endpoints import databaseRouter
+from app.modules.db_access.endpoints import databaseAccessRouter
 from app.modules.maps.endpoints import mapsRouter
 from app.modules.teams.endpoints import teamsRouter
 from app.modules.users.endpoints import userRouter
@@ -80,4 +80,4 @@ app.include_router(userRouter)
 app.include_router(teamsRouter)
 app.include_router(atlasesRouter)
 app.include_router(mapsRouter)
-app.include_router(databaseRouter)
+app.include_router(databaseAccessRouter)

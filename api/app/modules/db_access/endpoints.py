@@ -9,11 +9,10 @@ from app.modules.db_access.schemas import (
 from app.modules.db_access.service import DbAccessServiceDep
 from app.modules.users.schemas import UserDetail
 
-# Rename router tag for consistency? Maybe keep "Database" for readability in docs.
-databaseRouter = APIRouter(prefix="/database", tags=["Database"])
+databaseAccessRouter = APIRouter(prefix="/database-access", tags=["Database Access"])
 
 
-@databaseRouter.post("/activate", response_model=DatabaseActivateResponse)
+@databaseAccessRouter.post("/activate", response_model=DatabaseActivateResponse)
 async def activate_database_access(
     request: DatabaseActivateRequest,
     service: DbAccessServiceDep,
@@ -23,14 +22,13 @@ async def activate_database_access(
     Activate database access using activation token.
 
     The token is provided by an administrator after granting WITHDBACCESS role.
-    The user chooses their own database password (min 12 characters).
     """
     return await service.activate_database_access(
         request.token, request.password, current_user
     )
 
 
-@databaseRouter.get("/status", response_model=DatabaseAccessStatus)
+@databaseAccessRouter.get("/status", response_model=DatabaseAccessStatus)
 async def get_database_status(
     service: DbAccessServiceDep,
     current_user: UserDetail = Depends(get_current_user),

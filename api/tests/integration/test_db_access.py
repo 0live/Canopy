@@ -166,7 +166,7 @@ async def test_database_status_endpoint(
 
     # Check status - should have no access
     response = await client.get(
-        "/database/status",
+        "/database-access/status",
         headers={"Authorization": f"Bearer {user_token}"},
     )
     assert response.status_code == 200
@@ -194,7 +194,7 @@ async def test_activate_with_invalid_token(
     token = login_res.json()["access_token"]
 
     response = await client.post(
-        "/database/activate",
+        "/database-access/activate",
         json={
             "token": "invalid_token_that_does_not_exist",
             "password": "secure_password_123",
@@ -224,7 +224,7 @@ async def test_activate_password_too_short(
     token = login_res.json()["access_token"]
 
     response = await client.post(
-        "/database/activate",
+        "/database-access/activate",
         json={
             "token": "some_token",
             "password": "short",  # Less than 12 chars
