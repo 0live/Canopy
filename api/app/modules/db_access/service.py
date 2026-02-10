@@ -54,19 +54,32 @@ class DbAccessService:
         )
 
     async def activate_database_access(
-        self, token: str, password: str, current_user: User
+        self, password: str, current_user: User
     ) -> DatabaseActivateResponse:
         """
         Activate database access using activation token.
 
-        Validates the token (existence & expiry) and verifies it belongs to current_user.
+        Validates the token (existence & expiry) from the user record.
         """
-        user = await self._get_valid_user_by_token(token)
+        # Validate that the user has the required role
+        if UserRole.WITHDBACCESS not in current_user.roles:
+            raise PermissionDeniedException(key="db_access.no_access")
 
-        if user.id != current_user.id:
-            raise PermissionDeniedException(key="db_access.token_mismatch")
+        # Validate token existence
+        if not current_user.db_activation_token:
+            raise AuthenticationException(key="db_access.invalid_token")
 
-        role_name = self._get_role_name(user.id)
+        # Validate token expiry
+        if current_user.db_activation_token_created_at:
+            created_at = current_user.db_activation_token_created_at
+            if created_at.tzinfo is None:
+                created_at = created_at.replace(tzinfo=timezone.utc)
+
+            now = datetime.now(timezone.utc)
+            if now - created_at > self.TOKEN_VALIDITY_DURATION:
+                raise DbAccessException(key="db_access.token_expired")
+
+        role_name = self._get_role_name(current_user.id)
 
         if await self.repository.role_exists(role_name):
             raise DbAccessException(key="db_access.already_activated")
@@ -79,7 +92,7 @@ class DbAccessService:
 
         # Clear token - using repository update
         await self.repository.update(
-            user.id,
+            current_user.id,
             {"db_activation_token": None, "db_activation_token_created_at": None},
         )
         await self.repository.session.commit()
@@ -98,34 +111,6 @@ class DbAccessService:
         """
         role_name = self._get_role_name(user_id)
         return await self.repository.drop_role(role_name)
-
-    async def _get_valid_user_by_token(self, token: str) -> User:
-        """
-        Find user by activation token and validate permissions & expiry.
-        """
-        user = await self.repository.get_by_activation_token(token)
-
-        if not user:
-            raise AuthenticationException(key="db_access.invalid_token")
-
-        if UserRole.WITHDBACCESS not in user.roles:
-            raise PermissionDeniedException(key="db_access.no_access")
-
-        if user.db_activation_token_created_at:
-            created_at = user.db_activation_token_created_at
-            if created_at.tzinfo is None:
-                created_at = created_at.replace(tzinfo=timezone.utc)
-
-            now = datetime.now(timezone.utc)
-            if now - created_at > self.TOKEN_VALIDITY_DURATION:
-                raise DbAccessException(key="db_access.token_expired")
-
-        return user
-
-
-# =============================================================================
-# Dependencies
-# =============================================================================
 
 
 def get_db_access_service(

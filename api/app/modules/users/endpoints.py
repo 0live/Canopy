@@ -76,8 +76,6 @@ async def update_user_roles(
     """
     Update user roles (Admin only).
 
-    If WITHDBACCESS is granted, returns an activation token that the admin
-    should share with the user to activate their database access.
     """
     user, activation_token = await service.update_user_roles(
         user_id, role_update, current_user

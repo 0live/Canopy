@@ -82,67 +82,55 @@ class TestActivateDatabaseAccess:
 
     @pytest.mark.asyncio
     async def test_invalid_token_raises_exception(self, service):
-        service.repository.get_by_activation_token = AsyncMock(return_value=None)
         current_user = MagicMock(spec=User)
         current_user.id = 99
+        current_user.roles = [UserRole.WITHDBACCESS]
+        current_user.db_activation_token = None  # No token
 
-        with pytest.raises(AuthenticationException):
-            await service.activate_database_access(
-                "invalid_token", "securepassword", current_user
-            )
+        with pytest.raises(AuthenticationException) as exc_info:
+            await service.activate_database_access("securepassword", current_user)
+
+        assert exc_info.value.key == "db_access.invalid_token"
 
     @pytest.mark.asyncio
-    async def test_token_mismatch_raises_exception(self, service):
-        mock_user = MagicMock(spec=User)
-        mock_user.id = 42
-        mock_user.roles = [UserRole.WITHDBACCESS]
-        mock_user.db_activation_token_created_at = None
-        service.repository.get_by_activation_token = AsyncMock(return_value=mock_user)
-
+    async def test_no_access_raises_exception(self, service):
         current_user = MagicMock(spec=User)
-        current_user.id = 99  # Different user
+        current_user.id = 99
+        current_user.roles = [UserRole.USER]  # Missing WITHDBACCESS
 
         with pytest.raises(PermissionDeniedException) as exc_info:
-            await service.activate_database_access("valid_token", "pwd", current_user)
+            await service.activate_database_access("securepassword", current_user)
 
-        assert exc_info.value.key == "db_access.token_mismatch"
+        assert exc_info.value.key == "db_access.no_access"
 
     @pytest.mark.asyncio
     async def test_already_activated_raises_exception(self, service, mock_repository):
-        mock_user = MagicMock(spec=User)
-        mock_user.id = 1
-        mock_user.roles = [UserRole.WITHDBACCESS]
-        mock_user.db_activation_token_created_at = None
-
-        service.repository.get_by_activation_token = AsyncMock(return_value=mock_user)
-        mock_repository.role_exists = AsyncMock(return_value=True)
-
         current_user = MagicMock(spec=User)
         current_user.id = 1
+        current_user.roles = [UserRole.WITHDBACCESS]
+        current_user.db_activation_token = "valid_token"
+        current_user.db_activation_token_created_at = None
+
+        mock_repository.role_exists = AsyncMock(return_value=True)
 
         with pytest.raises(DbAccessException) as exc_info:
-            await service.activate_database_access(
-                "valid_token", "securepassword", current_user
-            )
+            await service.activate_database_access("securepassword", current_user)
 
         assert exc_info.value.key == "db_access.already_activated"
 
     @pytest.mark.asyncio
     async def test_successful_activation(self, service, mock_repository):
-        mock_user = MagicMock(spec=User)
-        mock_user.id = 42
-        mock_user.roles = [UserRole.WITHDBACCESS]
-        mock_user.db_activation_token_created_at = None  # valid
+        current_user = MagicMock(spec=User)
+        current_user.id = 42
+        current_user.roles = [UserRole.WITHDBACCESS]
+        current_user.db_activation_token = "valid_token"
+        current_user.db_activation_token_created_at = None  # valid
 
-        service.repository.get_by_activation_token = AsyncMock(return_value=mock_user)
         mock_repository.role_exists = AsyncMock(return_value=False)
         mock_repository.create_role = AsyncMock()
         mock_repository.update = AsyncMock()
         mock_repository.session = MagicMock()
         mock_repository.session.commit = AsyncMock()
-
-        current_user = MagicMock(spec=User)
-        current_user.id = 42
 
         # Mock MessageService
         with patch(
@@ -150,7 +138,7 @@ class TestActivateDatabaseAccess:
         ) as MockMessageService:
             MockMessageService.get_message.side_effect = lambda key: key
             result = await service.activate_database_access(
-                "valid_token", "securepassword123", current_user
+                "securepassword123", current_user
             )
 
         assert result.role_name == "user_42"

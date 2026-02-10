@@ -196,14 +196,14 @@ async def test_activate_with_invalid_token(
     response = await client.post(
         "/database-access/activate",
         json={
-            "token": "invalid_token_that_does_not_exist",
             "password": "secure_password_123",
         },
         headers={"Authorization": f"Bearer {token}"},
     )
-    # Should be 401 (AuthenticationException) or 403?
-    # Service raises AuthenticationException("invalid_token") -> 401.
-    assert response.status_code == 401
+    # No WITHDBACCESS role + no token in DB -> authentication exception or permission denied
+    # Service raises PermissionDeniedException("db_access.no_access") if role missing
+    # or AuthenticationException("db_access.invalid_token") if token missing
+    assert response.status_code in [401, 403]
 
 
 @pytest.mark.asyncio
@@ -226,7 +226,7 @@ async def test_activate_password_too_short(
     response = await client.post(
         "/database-access/activate",
         json={
-            "token": "some_token",
+            # "token" removed
             "password": "short",  # Less than 12 chars
         },
         headers={"Authorization": f"Bearer {token}"},

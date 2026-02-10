@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 class DatabaseActivateRequest(BaseModel):
     """Request to activate database access with token and password."""
 
-    token: str
     password: str = Field(..., min_length=12)
 
 

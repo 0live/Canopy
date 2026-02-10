@@ -20,12 +20,8 @@ async def activate_database_access(
 ):
     """
     Activate database access using activation token.
-
-    The token is provided by an administrator after granting WITHDBACCESS role.
     """
-    return await service.activate_database_access(
-        request.token, request.password, current_user
-    )
+    return await service.activate_database_access(request.password, current_user)
 
 
 @databaseAccessRouter.get("/status", response_model=DatabaseAccessStatus)
