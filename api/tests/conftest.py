@@ -11,6 +11,7 @@ from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 from testcontainers.core.waiting_utils import wait_for_logs
 from testcontainers.postgres import PostgresContainer
+from testcontainers.redis import RedisContainer
 
 POSTGRES_IMAGE = "postgres:16-alpine"
 POSTGRES_USER = "tester"
@@ -35,10 +36,30 @@ def postgres_container_fixture():
         yield postgres
 
 
+@pytest.fixture(name="redis_container", scope="session")
+def redis_container_fixture():
+    """Starts a Redis container once per session."""
+    redis = RedisContainer("redis:7-alpine")
+    with redis:
+        yield redis
+
+
 @pytest.fixture(name="settings", scope="session")
-def settings_fixture(postgres_container: PostgresContainer):
+def settings_fixture(
+    postgres_container: PostgresContainer, redis_container: RedisContainer
+):
     """Provides test-specific settings to override environment variables."""
-    return Settings(
+    import os
+
+    from app.core.config import get_settings
+
+    redis_url = f"redis://{redis_container.get_container_host_ip()}:{redis_container.get_exposed_port(6379)}/0"
+
+    # Set env vars for direct usage (e.g. in non-dependency calls)
+    os.environ["REDIS_URL"] = redis_url
+    get_settings.cache_clear()
+
+    settings = Settings(
         env="test",
         private_key="test_secret_key_very_long_for_jwt_requirements_123",
         postgres_user=POSTGRES_USER,
@@ -47,8 +68,23 @@ def settings_fixture(postgres_container: PostgresContainer):
         database_url=postgres_container.get_connection_url()
         .replace("postgresql+psycopg2://", "postgresql+psycopg://")
         .replace("postgresql://", "postgresql+psycopg://"),
+        redis_url=redis_url,
         allow_self_registration=True,
     )
+    return settings
+
+
+@pytest.fixture(autouse=True)
+def reset_singletons():
+    """Reset singletons between tests."""
+    from app.core.config import get_settings
+    from app.core.notifications.service import NotificationService
+
+    NotificationService._instance = None
+    get_settings.cache_clear()
+    yield
+    NotificationService._instance = None
+    get_settings.cache_clear()
 
 
 @pytest_asyncio.fixture(name="engine", scope="session")

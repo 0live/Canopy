@@ -23,11 +23,22 @@ class TestUserRoleUpdates:
         return AsyncMock()
 
     @pytest.fixture
-    def service(self, mock_repo, mock_settings, mock_db_access_service):
+    def mock_notification_service(self):
+        return AsyncMock()
+
+    @pytest.fixture
+    def service(
+        self,
+        mock_repo,
+        mock_settings,
+        mock_db_access_service,
+        mock_notification_service,
+    ):
         return UserService(
             repository=mock_repo,
             settings=mock_settings,
             db_access_service=mock_db_access_service,
+            notification_service=mock_notification_service,
         )
 
     @pytest.mark.asyncio
