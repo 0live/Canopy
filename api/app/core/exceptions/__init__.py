@@ -78,3 +78,12 @@ class ExternalServiceException(APIException):
 
     def __init__(self, key: str, params: Optional[Dict[str, Any]] = None):
         super().__init__(key=key, params=params)
+
+
+class DbAccessException(DomainException):
+    """Exception for db_access module errors."""
+
+    def __init__(
+        self, key: str = "db_access.error", params: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(key=key, params=params)

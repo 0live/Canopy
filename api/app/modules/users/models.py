@@ -1,3 +1,4 @@
+import datetime
 from enum import Enum
 from typing import List, Optional
 
@@ -15,6 +16,7 @@ class UserRole(str, Enum):
     MANAGE_ATLASES_AND_MAPS = "MANAGE_ATLASES_AND_MAPS"
     LOAD_DATA = "LOAD_DATA"
     LOAD_ICONS = "LOAD_ICONS"
+    WITHDBACCESS = "WITHDBACCESS"
 
 
 class User(SQLModel, table=True):
@@ -24,7 +26,11 @@ class User(SQLModel, table=True):
     hashed_password: str
     is_verified: bool = Field(default=False)
     verification_token: Optional[str] = Field(default=None)
-    roles: List[UserRole] = Field(sa_column=Column(ARRAY(SAEnum(UserRole))))
+    db_activation_token: Optional[str] = Field(default=None)
+    db_activation_token_created_at: Optional[datetime.datetime] = Field(default=None)
+    roles: List[UserRole] = Field(
+        sa_column=Column(ARRAY(SAEnum(UserRole, schema="app_data")))
+    )
     teams: List["Team"] = Relationship(
         back_populates="users",
         link_model=UserTeamLink,

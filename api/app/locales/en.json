@@ -72,5 +72,15 @@
   },
   "validation": {
     "password_too_short": "Password must be at least {length} characters long."
+  },
+  "db_access": {
+    "activation_success": "Database access activated successfully.",
+    "invalid_token": "Invalid or expired activation token.",
+    "already_activated": "Database access is already activated.",
+    "role_creation_failed": "Failed to create database role.",
+    "role_revoked": "Database access has been revoked.",
+    "no_access": "You do not have database access permissions.",
+    "token_mismatch": "This token does not belong to you.",
+    "token_expired": "Activation token has expired."
   }
 }

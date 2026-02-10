@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -32,10 +33,21 @@ class UserCreate(UserBase):
         return validate_password(v)
 
 
+class UserRoleUpdate(BaseModel):
+    roles: List[UserRole]
+
+
+class UserRoleUpdateResponse(BaseModel):
+    """Response for role update, includes activation token if WITHDBACCESS was granted."""
+
+    user: UserDetail
+    db_activation_token: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+
 class UserUpdate(BaseModel):
     email: Optional[EmailStr] = Field(default=None)
     username: Optional[str] = Field(default=None)
-    roles: Optional[List[UserRole]] = Field(default=None)
     password: Optional[str] = Field(default=None)
 
     @field_validator("password")
@@ -44,3 +56,11 @@ class UserUpdate(BaseModel):
         if v is None:
             return v
         return validate_password(v)
+
+
+class UserInternalUpdate(BaseModel):
+    """Schema for internal user updates (system fields)."""
+
+    roles: Optional[List[UserRole]] = None
+    db_activation_token: Optional[str] = None
+    db_activation_token_created_at: Optional[datetime] = None

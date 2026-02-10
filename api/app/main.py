@@ -8,6 +8,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from app.core import models  # noqa: F401
 from app.core.config import get_settings
 from app.core.database import sessionmanager
 from app.core.exceptions.handlers import add_all_exception_handlers
@@ -15,6 +16,7 @@ from app.core.messages import MessageService
 from app.core.rate_limit import limiter
 from app.modules.atlases.endpoints import atlasesRouter
 from app.modules.auth.endpoints import authRouter
+from app.modules.db_access.endpoints import databaseAccessRouter
 from app.modules.maps.endpoints import mapsRouter
 from app.modules.teams.endpoints import teamsRouter
 from app.modules.users.endpoints import userRouter
@@ -78,3 +80,4 @@ app.include_router(userRouter)
 app.include_router(teamsRouter)
 app.include_router(atlasesRouter)
 app.include_router(mapsRouter)
+app.include_router(databaseAccessRouter)

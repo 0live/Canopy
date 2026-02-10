@@ -9,6 +9,7 @@ class AccessPolicyMixin(SQLModel):
         sa_type=SAEnum(
             AccessPolicy,
             name="accesspolicy",
+            schema="app_data",
             values_callable=lambda obj: [e.value for e in obj],
         ),
         sa_column_kwargs={"server_default": text("'standard'")},

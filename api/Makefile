@@ -10,10 +10,14 @@ apply-migration:
 seed:
 	$(DOCKER_COMPOSE) exec api uv run python -m app.core.seeds
 
-setup-db: apply-migration seed
+apply-init-db:
+	$(DOCKER_COMPOSE) exec -T postgis psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} < docker/postgis/init_db.sql
+
+setup-db: apply-init-db apply-migration seed
 
 reset-db:
 	$(DOCKER_COMPOSE) down -v
+	sudo rm -rf docker/postgis/data/*
 	$(MAKE) start
 	$(MAKE) apply-migration
 	$(MAKE) seed
