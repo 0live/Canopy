@@ -339,7 +339,7 @@ async def get_user_service(
     db_access_service: DbAccessServiceDep,
 ) -> UserService:
     repo = UserRepository(session, User)
-    notification_service = get_notification_service()
+    notification_service = get_notification_service(session)
     return UserService(
         repo,
         settings,

@@ -14,7 +14,7 @@ from app.core.database import sessionmanager
 from app.core.exceptions.handlers import add_all_exception_handlers
 from app.core.messages import MessageService
 from app.core.notifications import notificationsRouter
-from app.core.notifications.service import get_notification_service
+from app.core.notifications.service import get_notification_broadcaster
 from app.core.rate_limit import limiter
 from app.modules.atlases.endpoints import atlasesRouter
 from app.modules.auth.endpoints import authRouter
@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     sessionmanager.init(str(get_settings().database_url))
     MessageService.load_messages()
     yield
-    await get_notification_service().shutdown()
+    await get_notification_broadcaster().shutdown()
     await sessionmanager.close()
 
 

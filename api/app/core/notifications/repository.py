@@ -3,12 +3,16 @@ from typing import List, Optional
 from sqlalchemy import update
 from sqlmodel import select
 
+from app.core.database import SessionDep
 from app.core.notifications.models import Notification
 from app.core.repository import BaseRepository
 
 
 class NotificationRepository(BaseRepository[Notification]):
     """Repository for Notification entities."""
+
+    def __init__(self, session: SessionDep):
+        super().__init__(session, Notification)
 
     async def get_for_user(
         self, user_id: int, skip: int = 0, limit: int = 50, unread_only: bool = False

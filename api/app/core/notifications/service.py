@@ -109,6 +109,27 @@ class NotificationBroadcaster:
         channel = f"user:{user_id}"
         await self.redis.publish(channel, message.model_dump_json())
 
+    async def handle_session(self, user_id: int, websocket: WebSocket):
+        """
+        Manages the WebSocket session lifecycle: connect, loop, disconnect.
+        """
+        try:
+            await self.connect(user_id, websocket)
+
+            # Keep connection alive
+            try:
+                while True:
+                    # We expect to receive nothing, or maybe pings.
+                    # If the client sends data, we just ignore it or log it.
+                    await websocket.receive_text()
+            except WebSocketDisconnect:
+                self.disconnect(user_id, websocket)
+
+        except Exception as e:
+            logger.error(f"WebSocket error: {e}")
+            if user_id:
+                self.disconnect(user_id, websocket)
+
     async def shutdown(self):
         """Cleanup resources on app shutdown."""
         # Cancel all listeners
@@ -155,7 +176,7 @@ class NotificationService:
             )
 
         notification.is_read = True
-        await self.repository.session.add(notification)
+        self.repository.session.add(notification)
         await self.repository.session.commit()
         await self.repository.session.refresh(notification)
         return notification
@@ -230,32 +251,9 @@ class NotificationService:
             logger.error(f"WebSocket auth failed: {e}")
             raise AuthenticationException("Auth failed")
 
-    async def handle_session(self, user_id: int, websocket: WebSocket):
-        """
-        Manages the WebSocket session lifecycle: connect, loop, disconnect.
-        """
-        try:
-            await self.broadcaster.connect(user_id, websocket)
 
-            # Keep connection alive
-            try:
-                while True:
-                    # We expect to receive nothing, or maybe pings.
-                    # If the client sends data, we just ignore it or log it.
-                    await websocket.receive_text()
-            except WebSocketDisconnect:
-                self.broadcaster.disconnect(user_id, websocket)
-
-        except Exception as e:
-            logger.error(f"WebSocket error: {e}")
-            if user_id:
-                self.broadcaster.disconnect(user_id, websocket)
-
-
-def get_notification_service(
-    session: SessionDep,
-) -> NotificationService:
-    repository = NotificationRepository(session, Notification)
+def get_notification_service(session: SessionDep) -> NotificationService:
+    repository = NotificationRepository(session)
     broadcaster = get_notification_broadcaster()
     return NotificationService(repository, broadcaster)
 
