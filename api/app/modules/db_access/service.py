@@ -18,7 +18,8 @@ from app.modules.db_access.schemas import (
     DatabaseAccessStatus,
     DatabaseActivateResponse,
 )
-from app.modules.users.models import User, UserRole
+from app.modules.users.enums import UserRole
+from app.modules.users.models import User
 
 logger = logging.getLogger(__name__)
 

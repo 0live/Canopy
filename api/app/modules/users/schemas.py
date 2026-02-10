@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.core.password_validation import validate_password
 from app.modules.teams.schemas import TeamSummary
-from app.modules.users.models import UserRole
+from app.modules.users.enums import UserRole
 
 
 class UserBase(BaseModel):

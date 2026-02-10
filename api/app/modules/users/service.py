@@ -16,10 +16,13 @@ from app.core.exceptions import (
 )
 from app.core.hashing import hash_password, verify_password
 from app.core.messages import MessageService
+from app.core.notifications.schemas import NotificationMessage, NotificationType
+from app.core.notifications.service import NotificationService, get_notification_service
 from app.core.permissions import has_any_role
 from app.modules.db_access.service import DbAccessService, DbAccessServiceDep
 from app.modules.teams.models import Team
-from app.modules.users.models import User, UserRole
+from app.modules.users.enums import UserRole
+from app.modules.users.models import User
 from app.modules.users.repository import UserRepository
 from app.modules.users.schemas import (
     UserCreate,
@@ -39,10 +42,12 @@ class UserService:
         repository: UserRepository,
         settings: Settings,
         db_access_service: DbAccessService,
+        notification_service: NotificationService,
     ):
         self.repository = repository
         self.settings = settings
         self.db_access_service = db_access_service
+        self.notification_service = notification_service
 
     async def get_all_users(self, current_user: UserDetail) -> list[UserSummary]:
         if not has_any_role(current_user, [UserRole.ADMIN]):
@@ -267,6 +272,23 @@ class UserService:
         result_user = await self.repository.get(
             user_id, options=[selectinload(User.teams).selectinload(Team.users)]
         )
+        result_user = await self.repository.get(
+            user_id, options=[selectinload(User.teams).selectinload(Team.users)]
+        )
+
+        # Send notification
+        await self.notification_service.send_to_user(
+            user_id,
+            NotificationMessage(
+                type=NotificationType.INFO,
+                payload={
+                    "old_roles": [r.value for r in old_roles],
+                    "new_roles": [r.value for r in new_roles],
+                },
+            ),
+            session=self.repository.session,
+        )
+
         return result_user, activation_token
 
     def _ensure_update_permissions(self, user_id: int, current_user: UserDetail):
@@ -317,7 +339,13 @@ async def get_user_service(
     db_access_service: DbAccessServiceDep,
 ) -> UserService:
     repo = UserRepository(session, User)
-    return UserService(repo, settings, db_access_service=db_access_service)
+    notification_service = get_notification_service()
+    return UserService(
+        repo,
+        settings,
+        db_access_service=db_access_service,
+        notification_service=notification_service,
+    )
 
 
 UserServiceDep = Annotated[UserService, Depends(get_user_service)]

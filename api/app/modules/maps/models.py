@@ -11,11 +11,15 @@ if TYPE_CHECKING:
 
 
 class Map(AuditMixin, AccessPolicyMixin, SQLModel, table=True):
+    __table_args__ = (
+        UniqueConstraint("atlas_id", "name", name="uix_map_atlas_name"),
+        {"schema": "app_data"},
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     description: str = Field(sa_column=Column(TEXT))
     style: str
-    atlas_id: int = Field(sa_column=Column(ForeignKey("atlas.id", ondelete="CASCADE")))
+    atlas_id: int = Field(
+        sa_column=Column(ForeignKey("app_data.atlas.id", ondelete="CASCADE"))
+    )
     atlas: "Atlas" = Relationship(back_populates="maps")
-
-    __table_args__ = (UniqueConstraint("atlas_id", "name", name="uix_map_atlas_name"),)

@@ -25,7 +25,7 @@ from app.modules.atlases.schemas import (
     AtlasTeamLinkUpdate,
     AtlasUpdate,
 )
-from app.modules.users.models import UserRole
+from app.modules.users.enums import UserRole
 from app.modules.users.schemas import UserDetail
 
 

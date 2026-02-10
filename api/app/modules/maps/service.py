@@ -15,7 +15,7 @@ from app.modules.atlases.models import Atlas, AtlasTeamLink
 from app.modules.maps.models import Map
 from app.modules.maps.repository import MapRepository
 from app.modules.maps.schemas import MapCreate, MapDetail, MapSummary, MapUpdate
-from app.modules.users.models import UserRole
+from app.modules.users.enums import UserRole
 from app.modules.users.schemas import UserDetail
 
 

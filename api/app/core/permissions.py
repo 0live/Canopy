@@ -2,7 +2,7 @@
 Centralized permission checking utilities.
 """
 
-from app.modules.users.models import UserRole
+from app.modules.users.enums import UserRole
 from app.modules.users.schemas import UserDetail
 
 

@@ -8,8 +8,10 @@ from sqlmodel import SQLModel
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core import models  # noqa: F401
+from app.core.notifications.models import Notification  # noqa
 from app.modules.atlases.models import Atlas, AtlasTeamLink  # noqa
 from app.modules.auth.models import RefreshToken  # noqa
+from app.modules.maps.models import Map  # noqa
 from app.modules.teams.models import Team, UserTeamLink  # noqa
 from app.modules.users.models import User  # noqa
 
@@ -27,6 +29,7 @@ db_url = f"postgresql+psycopg://{postgres_user}:{postgres_password}@{host}:5432/
 config.set_main_option("sqlalchemy.url", db_url)
 config.set_main_option("version_table_schema", "app_data")
 
+
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 if config.config_file_name is not None:
@@ -43,6 +46,7 @@ naming_convention = {
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s",
 }
+SQLModel.metadata.schema = "app_data"
 target_metadata = SQLModel.metadata
 target_metadata.naming_convention = naming_convention
 # other values from the config, defined by the needs of env.py,
@@ -54,33 +58,10 @@ target_metadata.naming_convention = naming_convention
 def include_object(object, name, type_, reflected, compare_to):
     """
     Determine which database objects should be included in the autogeneration process.
-    We exclude PostGIS, Tiger Geocoder, and Topology internal tables.
     """
-    # List of prefixes to ignore
-    ignored_prefixes = ["tiger", "topology", "spatial_ref_sys"]
-
-    # Specific table names to ignore
-    ignored_tables = [
-        "geometry_columns",
-        "geography_columns",
-        "spatial_ref_sys",
-        "raster_columns",
-        "raster_overviews",
-        "layer",
-        "topology",
-    ]
-
     if type_ == "table":
-        # Ignore if name is in the list or starts with a reserved prefix
-        if name in ignored_tables or any(name.startswith(p) for p in ignored_prefixes):
+        if object.schema != "app_data":
             return False
-
-        # Only include tables in app_data and users_data (and public if necessary, but we are moving away)
-        # reflected is True if the table already exists in the DB
-        if getattr(object, "schema", None) not in ["app_data", "users_data"]:
-            return False
-
-    return True
 
     return True
 
@@ -94,6 +75,8 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         include_object=include_object,
+        include_schemas=True,
+        version_table_schema="app_data",
     )
 
     with context.begin_transaction():
@@ -113,6 +96,8 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             include_object=include_object,
+            include_schemas=True,
+            version_table_schema="app_data",
         )
 
         with context.begin_transaction():

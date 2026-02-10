@@ -13,14 +13,19 @@ if TYPE_CHECKING:
 
 class UserTeamLink(SQLModel, table=True):
     user_id: int = Field(
-        sa_column=Column(ForeignKey("user.id", ondelete="CASCADE"), primary_key=True)
+        sa_column=Column(
+            ForeignKey("app_data.user.id", ondelete="CASCADE"), primary_key=True
+        )
     )
     team_id: int = Field(
-        sa_column=Column(ForeignKey("team.id", ondelete="CASCADE"), primary_key=True)
+        sa_column=Column(
+            ForeignKey("app_data.team.id", ondelete="CASCADE"), primary_key=True
+        )
     )
 
 
 class Team(AuditMixin, AccessPolicyMixin, SQLModel, table=True):
+    __table_args__ = {"schema": "app_data"}
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True, index=True)
     users: List["User"] = Relationship(

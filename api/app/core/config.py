@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Any, List
 
-from pydantic import ValidationInfo, field_validator
+from pydantic import RedisDsn, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.exceptions import SecurityException
@@ -74,6 +74,9 @@ class Settings(BaseSettings):
     smtp_from_email: str = "noreply@canopy.dev"
     smtp_use_tls: bool = False
     smtp_starttls: bool = False
+
+    # Redis
+    redis_url: RedisDsn = "redis://redis:6379/0"
 
     model_config = SettingsConfigDict(
         env_file=("../.env", "../.env.local", ".env", ".env.local"), extra="ignore"

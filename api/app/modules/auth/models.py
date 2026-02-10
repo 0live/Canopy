@@ -10,8 +10,9 @@ class RefreshToken(SQLModel, table=True):
     Stores a hash of the token to prevent database leaks from compromising accounts.
     """
 
+    __table_args__ = {"schema": "app_data"}
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", index=True)
+    user_id: int = Field(foreign_key="app_data.user.id", index=True)
     token_hash: str = Field(index=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: datetime

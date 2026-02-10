@@ -7,9 +7,11 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core import models  # noqa: F401
 from app.core.hashing import hash_password
+from app.core.notifications.models import Notification  # noqa: F401
 from app.modules.atlases.models import Atlas, AtlasTeamLink
 from app.modules.teams.models import Team
-from app.modules.users.models import User, UserRole
+from app.modules.users.enums import UserRole
+from app.modules.users.models import User
 
 
 class Seeder:

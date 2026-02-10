@@ -18,7 +18,7 @@ from app.modules.teams.schemas import (
     TeamDetail,
     TeamSummary,
 )
-from app.modules.users.models import UserRole
+from app.modules.users.enums import UserRole
 from app.modules.users.schemas import UserDetail
 
 

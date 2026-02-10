@@ -1,6 +1,5 @@
 import datetime
-from enum import Enum
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 from pydantic import EmailStr
 from sqlalchemy import Enum as SAEnum
@@ -8,18 +7,15 @@ from sqlmodel import ARRAY, Column, Field, Relationship, SQLModel
 
 from app.modules.teams.models import Team, UserTeamLink
 
+if TYPE_CHECKING:
+    from app.core.notifications.models import Notification
 
-class UserRole(str, Enum):
-    ADMIN = "ADMIN"
-    USER = "USER"
-    MANAGE_TEAMS = "MANAGE_TEAMS"
-    MANAGE_ATLASES_AND_MAPS = "MANAGE_ATLASES_AND_MAPS"
-    LOAD_DATA = "LOAD_DATA"
-    LOAD_ICONS = "LOAD_ICONS"
-    WITHDBACCESS = "WITHDBACCESS"
+
+from app.modules.users.enums import UserRole
 
 
 class User(SQLModel, table=True):
+    __table_args__ = {"schema": "app_data"}
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(unique=True, index=True)
     email: EmailStr = Field(unique=True, index=True)
@@ -35,4 +31,7 @@ class User(SQLModel, table=True):
         back_populates="users",
         link_model=UserTeamLink,
         sa_relationship_kwargs={"passive_deletes": True},
+    )
+    notifications: List["Notification"] = Relationship(
+        back_populates="user", sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
