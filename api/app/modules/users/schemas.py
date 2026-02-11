@@ -24,6 +24,11 @@ class UserDetail(UserSummary):
     is_verified: bool = False
 
 
+class UserDetailWithDbAccess(UserDetail):
+    db_activation_token: Optional[str] = None
+    db_activation_token_created_at: Optional[datetime] = None
+
+
 class UserCreate(UserBase):
     password: str
 
@@ -38,10 +43,9 @@ class UserRoleUpdate(BaseModel):
 
 
 class UserRoleUpdateResponse(BaseModel):
-    """Response for role update, includes activation token if WITHDBACCESS was granted."""
+    """Response for role update."""
 
     user: UserDetail
-    db_activation_token: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 

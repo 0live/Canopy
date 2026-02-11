@@ -223,8 +223,8 @@ class UserService:
 
     async def update_user_roles(
         self, user_id: int, role_update: UserRoleUpdate, current_user: UserDetail
-    ) -> tuple[UserDetail, Optional[str]]:
-        """Update user roles. Returns (user, activation_token) where token is set if WITHDBACCESS was granted."""
+    ) -> UserDetail:
+        """Update user roles."""
         if not has_any_role(current_user, [UserRole.ADMIN]):
             raise PermissionDeniedException(
                 params={"detail": "user.role_permission_denied"}
@@ -287,7 +287,7 @@ class UserService:
             session=self.repository.session,
         )
 
-        return result_user, activation_token
+        return result_user
 
     def _ensure_update_permissions(self, user_id: int, current_user: UserDetail):
         if user_id != current_user.id and not has_any_role(

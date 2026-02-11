@@ -9,7 +9,7 @@ from jwt.exceptions import InvalidTokenError
 from app.core.config import Settings
 from app.core.exceptions import AuthenticationException
 from app.modules.auth.schemas import Token
-from app.modules.users.schemas import UserDetail
+from app.modules.users.schemas import UserDetail, UserDetailWithDbAccess
 from app.modules.users.service import UserServiceDep
 
 
@@ -55,7 +55,7 @@ def get_token(user: UserDetail, settings: Settings) -> Token:
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     service: UserServiceDep,
-) -> UserDetail:
+) -> UserDetailWithDbAccess:
     """Get current authenticated user from token."""
     try:
         payload = decode_token(token, settings=service.settings)
@@ -72,4 +72,4 @@ async def get_current_user(
     if not user.is_verified:
         raise AuthenticationException(params={"detail": "auth.account_not_verified"})
 
-    return UserDetail.model_validate(user)
+    return UserDetailWithDbAccess.model_validate(user)

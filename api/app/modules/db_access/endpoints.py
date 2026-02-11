@@ -7,7 +7,7 @@ from app.modules.db_access.schemas import (
     DatabaseActivateResponse,
 )
 from app.modules.db_access.service import DbAccessServiceDep
-from app.modules.users.schemas import UserDetail
+from app.modules.users.schemas import UserDetail, UserDetailWithDbAccess
 
 databaseAccessRouter = APIRouter(prefix="/database-access", tags=["Database Access"])
 
@@ -16,7 +16,7 @@ databaseAccessRouter = APIRouter(prefix="/database-access", tags=["Database Acce
 async def activate_database_access(
     request: DatabaseActivateRequest,
     service: DbAccessServiceDep,
-    current_user: UserDetail = Depends(get_current_user),
+    current_user: UserDetailWithDbAccess = Depends(get_current_user),
 ):
     """
     Activate database access using activation token.
