@@ -1,13 +1,16 @@
+# ------------------------------------------------------------------------------------
 # Stage 1: Builder
+# ------------------------------------------------------------------------------------
+# CORRECTION: On utilise 3.12 partout (ou 3.11 partout, mais pas un mix)
 FROM python:3.12-slim AS builder
 
-# Install uv
+# Install uv (Méthode officielle, très bien)
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# Set working directory
 WORKDIR /code
 
-# Install system dependencies needed for building some Python packages
+# Install system dependencies
+# On nettoie le cache apt dans la même couche pour réduire la taille (même si c'est le builder)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libc6-dev \
@@ -16,26 +19,42 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies into a specific path
-# --frozen ensures we use the exact versions from uv.lock
-# --no-dev excludes development dependencies
+# Install dependencies
+# OPTIMISATION: UV_COMPILE_BYTECODE=1 force uv à compiler les .pyc des libs installées
+ENV UV_COMPILE_BYTECODE=1
 RUN uv sync --frozen --no-dev --no-install-project --no-editable
 
+# ------------------------------------------------------------------------------------
 # Stage 2: Final Runtime Image
-FROM python:3.11-slim
+# ------------------------------------------------------------------------------------
+FROM python:3.12-slim
 
-# Copy the installed packages from the builder
-# uv installs by default in .venv unless configured otherwise
-COPY --from=builder /code/.venv /code/.venv
-
-# Ensure the virtualenv is used by adding it to the PATH
-ENV PATH="/code/.venv/bin:$PATH"
+# SÉCURITÉ: Création d'un utilisateur non-root
+RUN groupadd -r appuser && useradd -r -g appuser appuser
 
 WORKDIR /code
 
-# Copy the application code
+# Copy the virtualenv from builder
+# Note: On copie aussi les bins pour s'assurer que tout est là
+COPY --from=builder /code/.venv /code/.venv
+
+# Activate venv
+ENV PATH="/code/.venv/bin:$PATH"
+
+# Copy application code
 COPY . .
 
-# Run the application
-# No need for 'uv' here to keep the final image minimal
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+# OPTIMISATION: Compilation du code de VOTRE application (pas juste les libs)
+# Cela accélère le démarrage
+RUN python -m compileall .
+
+# SÉCURITÉ: On change les droits pour l'utilisateur appuser
+RUN chown -R appuser:appuser /code
+
+# SÉCURITÉ: On bascule sur l'utilisateur restreint
+USER appuser
+
+# EXECUTION PROD: Utilisation de Gunicorn avec workers Uvicorn
+# On utilise la config JSON pour éviter les problèmes de parsing de ligne de commande
+# Ajustez "-w 4" selon vos cœurs comme discuté
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8000", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--access-logfile", "-", "--error-logfile", "-"]
