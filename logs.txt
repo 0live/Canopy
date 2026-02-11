@@ -1,0 +1,100 @@
+    return self._connection_cls(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 143, in __init__
+    self._dbapi_connection = engine.raw_connection()
+                             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 3309, in raw_connection
+    return self.pool.connect()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 447, in connect
+    return _ConnectionFairy._checkout(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 1264, in _checkout
+    fairy = _ConnectionRecord.checkout(pool)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 711, in checkout
+    rec = pool._do_get()
+          ^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 177, in _do_get
+    with util.safe_reraise():
+         ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/pool/impl.py", line 175, in _do_get
+    return self._create_connection()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 388, in _create_connection
+    return _ConnectionRecord(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 673, in __init__
+    self.__connect()
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/pool/base.py", line 913, in __connect
+    )._exec_w_sync_on_first_run(self.dbapi_connection, self)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/event/attr.py", line 501, in _exec_w_sync_on_first_run
+    self(*args, **kw)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/event/attr.py", line 515, in __call__
+    fn(*args, **kw)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/langhelpers.py", line 2000, in go
+    return once_fn(*arg, **kw)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 767, in first_connect
+    dialect.initialize(c)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/psycopg.py", line 467, in initialize
+    super().initialize(connection)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/base.py", line 3327, in initialize
+    super().initialize(connection)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 528, in initialize
+    self.server_version_info = self._get_server_version_info(
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/base.py", line 3597, in _get_server_version_info
+    v = connection.exec_driver_sql("select pg_catalog.version()").scalar()
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1779, in exec_driver_sql
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2366, in _handle_dbapi_exception
+    raise exc_info[1].with_traceback(exc_info[2])
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/dialects/postgresql/psycopg.py", line 673, in execute
+    result = self.await_(self._cursor.execute(query, params, **kw))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
+    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/psycopg/cursor_async.py", line 113, in execute
+    await self._conn.wait(
+  File "/usr/local/lib/python3.12/site-packages/psycopg/connection_async.py", line 518, in wait
+    return await waiting.wait_async(gen, self.pgconn.socket, interval=interval)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/psycopg/waiting.py", line 177, in wait_async
+    s = gen.send(ready)
+        ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/psycopg/_cursor_base.py", line 206, in _execute_gen
+    yield from self._maybe_prepare_gen(pgq, prepare=prepare, binary=binary)
+  File "/usr/local/lib/python3.12/site-packages/psycopg/_cursor_base.py", line 283, in _maybe_prepare_gen
+    prep, name = self._get_prepared(pgq, prepare)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/psycopg/_cursor_base.py", line 322, in _get_prepared
+    return self._conn._prepared.get(pgq, prepare)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/site-packages/psycopg/_preparing.py", line 72, in get
+    if count >= self.prepare_threshold or prepare:
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: '>=' not supported between instances of 'int' and 'str'
+INFO:     127.0.0.1:44112 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35244 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52826 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37822 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46982 - "GET /health HTTP/1.1" 200 OK

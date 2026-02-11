@@ -32,6 +32,8 @@ services:
       - ./api:/code
     environment:
       - PYTHONUNBUFFERED=1
+      - POSTGRES_HOST=pgbouncer
+      - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB}?prepare_threshold=0
     env_file:
       - .env
       - .env.local
@@ -61,6 +63,8 @@ services:
     depends_on:
       postgis:
         condition: service_healthy
+      pgbouncer:
+        condition: service_healthy
       redis:
         condition: service_healthy
 
@@ -89,6 +93,31 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: canopy-pgbouncer
+    restart: unless-stopped
+    environment:
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
+      - DB_HOST=postgis
+      - DB_PORT=5432
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=1000
+      - DEFAULT_POOL_SIZE=20
+      - ADMIN_USERS=${POSTGRES_USER}
+      - AUTH_TYPE=scram-sha-256
+    networks:
+      - backend
+    depends_on:
+      postgis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   martin:
     container_name: canopy-martin
     image: ghcr.io/maplibre/martin:1.3.0
@@ -99,11 +128,11 @@ services:
       - .env
       - .env.local
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgis:5432/${POSTGRES_DB}
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB}
     networks:
       - backend
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/catalog"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/catalog"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -114,7 +143,7 @@ services:
         max-size: "10m"
         max-file: "3"
     depends_on:
-      postgis:
+      pgbouncer:
         condition: service_healthy
 
   docs:

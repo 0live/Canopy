@@ -17,6 +17,7 @@ dependencies = [
     "aiosmtplib>=3.0.0",
     "slowapi>=0.1.9",
     "redis>=7.1.1",
+    "orjson",
 ]
 
 [dependency-groups]

@@ -1,4 +1,5 @@
 from typing import Annotated, AsyncGenerator
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
@@ -10,7 +11,28 @@ class DatabaseSessionManager:
         self.engine: AsyncEngine | None = None
 
     def init(self, host: str, echo: bool = False):
-        self.engine = create_async_engine(host, echo=echo, future=True)
+        connect_args = {}
+        # Handle prepare_threshold separately for pgbouncer compatibility with psycopg
+        if "prepare_threshold" in host:
+            parsed = urlparse(host)
+            query_params = parse_qsl(parsed.query)
+            new_params = []
+            for key, value in query_params:
+                if key == "prepare_threshold":
+                    try:
+                        connect_args["prepare_threshold"] = int(value)
+                    except ValueError:
+                        pass
+                else:
+                    new_params.append((key, value))
+
+            new_query = urlencode(new_params)
+            parsed = parsed._replace(query=new_query)
+            host = urlunparse(parsed)
+
+        self.engine = create_async_engine(
+            host, echo=echo, future=True, connect_args=connect_args
+        )
 
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
         if self.engine is None:
