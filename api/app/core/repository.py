@@ -55,11 +55,15 @@ class BaseRepository(Generic[ModelType]):
         result = await self.session.exec(query)
         return result.first()
 
-    async def get_all(self, options: Optional[List[Any]] = None) -> List[ModelType]:
+    async def get_all(
+        self, options: Optional[List[Any]] = None, limit: int = 100, offset: int = 0
+    ) -> List[ModelType]:
         query = select(self.model)
         if options:
             for option in options:
                 query = query.options(option)
+
+        query = query.limit(limit).offset(offset)
         result = await self.session.exec(query)
         return list(result.all())
 

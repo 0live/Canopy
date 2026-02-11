@@ -2,7 +2,6 @@ from typing import Annotated, List
 
 from fastapi import Depends
 from sqlalchemy.orm import selectinload
-from sqlmodel import select
 
 from app.core.config import Settings, get_settings
 from app.core.database import SessionDep
@@ -14,7 +13,7 @@ from app.core.exceptions import (
     PermissionDeniedException,
 )
 from app.core.permissions import has_any_role
-from app.modules.atlases.models import Atlas, AtlasTeamLink
+from app.modules.atlases.models import Atlas
 from app.modules.atlases.repository import AtlasRepository
 from app.modules.atlases.schemas import (
     AtlasBase,
@@ -220,16 +219,9 @@ class AtlasService:
         self, atlas_id: int, user: UserDetail
     ) -> bool:
         user_team_ids = [t.id for t in user.teams]
-        if not user_team_ids:
-            return False
-
-        statement = select(AtlasTeamLink).where(
-            AtlasTeamLink.atlas_id == atlas_id,
-            AtlasTeamLink.team_id.in_(user_team_ids),
-            AtlasTeamLink.can_manage_atlas,
+        return await self.repository.check_team_manage_permission(
+            atlas_id, user_team_ids
         )
-        result = await self.repository.session.exec(statement)
-        return bool(result.first())
 
 
 # Dependencies

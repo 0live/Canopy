@@ -104,3 +104,18 @@ class AtlasRepository(BaseRepository[Atlas]):
         await self.session.delete(link)
         await self.session.flush()
         return True
+
+    async def check_team_manage_permission(
+        self, atlas_id: int, team_ids: List[int]
+    ) -> bool:
+        """Check if any of the provided teams have manage permission on the atlas."""
+        if not team_ids:
+            return False
+
+        statement = select(AtlasTeamLink).where(
+            AtlasTeamLink.atlas_id == atlas_id,
+            AtlasTeamLink.team_id.in_(team_ids),
+            AtlasTeamLink.can_manage_atlas,
+        )
+        result = await self.session.exec(statement)
+        return result.first() is not None

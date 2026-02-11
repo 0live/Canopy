@@ -9,8 +9,8 @@ class DatabaseSessionManager:
     def __init__(self):
         self.engine: AsyncEngine | None = None
 
-    def init(self, host: str):
-        self.engine = create_async_engine(host, echo=True, future=True)
+    def init(self, host: str, echo: bool = False):
+        self.engine = create_async_engine(host, echo=echo, future=True)
 
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
         if self.engine is None:

@@ -115,6 +115,7 @@ class TestTeamService:
         )
         team.name = "Private Team"
         mock_repo.get_or_raise.return_value = team
+        mock_repo.is_member = AsyncMock(return_value=False)
 
         with pytest.raises(PermissionDeniedException) as exc:
             await service.get_team_by_id(10, user)
@@ -132,6 +133,7 @@ class TestTeamService:
         )
         team.name = "Private Team"
         mock_repo.get_or_raise.return_value = team
+        mock_repo.is_member = AsyncMock(return_value=True)
 
         result = await service.get_team_by_id(10, user)
         assert result.id == 10

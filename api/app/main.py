@@ -26,7 +26,9 @@ from app.modules.users.endpoints import userRouter
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    sessionmanager.init(str(get_settings().database_url))
+    sessionmanager.init(
+        str(get_settings().database_url), echo=get_settings().postgres_echo
+    )
     MessageService.load_messages()
     yield
     await get_notification_broadcaster().shutdown()

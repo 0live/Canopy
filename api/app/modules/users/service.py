@@ -71,7 +71,7 @@ class UserService:
             user_id,
             "User",
             "user.not_found",
-            options=[selectinload(User.teams).selectinload(Team.users)],
+            options=[selectinload(User.teams)],
         )
 
     async def get_user_internal(self, user_id: int) -> UserDetail:
@@ -83,7 +83,7 @@ class UserService:
             user_id,
             "User",
             "user.not_found",
-            options=[selectinload(User.teams).selectinload(Team.users)],
+            options=[selectinload(User.teams)],
         )
 
     async def get_by_username(
@@ -114,7 +114,7 @@ class UserService:
         new_user = await self.repository.create(user_data)
         await self.repository.session.commit()
         return await self.repository.get(
-            new_user.id, options=[selectinload(User.teams).selectinload(Team.users)]
+            new_user.id, options=[selectinload(User.teams)]
         )
 
     async def create_user_by_admin(
@@ -175,7 +175,7 @@ class UserService:
     async def authenticate_user(self, username: str, password: str) -> Optional[User]:
         """Authenticate a user and return the user object."""
         user = await self.repository.get_by_username(
-            username, options=[selectinload(User.teams).selectinload(Team.users)]
+            username, options=[selectinload(User.teams)]
         )
 
         if user and verify_password(password, user.hashed_password):
@@ -219,9 +219,7 @@ class UserService:
         except IntegrityError as e:
             await self._handle_update_integrity_error(e, user_update)
 
-        return await self.repository.get(
-            user_id, options=[selectinload(User.teams).selectinload(Team.users)]
-        )
+        return await self.repository.get(user_id, options=[selectinload(User.teams)])
 
     async def update_user_roles(
         self, user_id: int, role_update: UserRoleUpdate, current_user: UserDetail
@@ -270,10 +268,10 @@ class UserService:
         await self.repository.session.commit()
 
         result_user = await self.repository.get(
-            user_id, options=[selectinload(User.teams).selectinload(Team.users)]
+            user_id, options=[selectinload(User.teams)]
         )
         result_user = await self.repository.get(
-            user_id, options=[selectinload(User.teams).selectinload(Team.users)]
+            user_id, options=[selectinload(User.teams)]
         )
 
         # Send notification

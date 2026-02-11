@@ -61,7 +61,7 @@ class TeamService:
             has_any_role(current_user, [UserRole.ADMIN, UserRole.MANAGE_TEAMS])
             or team.created_by_id == current_user.id
             or team.access_policy == AccessPolicy.PUBLIC
-            or any(user.id == current_user.id for user in team.users)
+            or await self.repository.is_member(id, current_user.id)
         )
 
         if not can_view:

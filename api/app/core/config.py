@@ -54,6 +54,7 @@ class Settings(BaseSettings):
     postgres_host: str = "localhost"
     postgres_port: str = "5432"
     database_url: str = "postgresql+psycopg://default:default@localhost:5432/default"
+    postgres_echo: bool = False
 
     # Martin tile server (internal network)
     martin_internal_url: str = "http://martin:3000"

@@ -32,3 +32,12 @@ class TeamRepository(BaseRepository[Team]):
 
         result = await self.session.exec(query)
         return list(result.all())
+
+    async def is_member(self, team_id: int, user_id: int) -> bool:
+        """Check if a user is a member of a team efficiently."""
+        query = select(UserTeamLink).where(
+            UserTeamLink.team_id == team_id,
+            UserTeamLink.user_id == user_id,
+        )
+        result = await self.session.exec(query)
+        return result.first() is not None
