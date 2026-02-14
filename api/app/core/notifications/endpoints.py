@@ -1,34 +1,20 @@
 import logging
 from typing import Annotated, List
 
-from fastapi import APIRouter, Depends, Query, WebSocket
+from fastapi import APIRouter, Depends, WebSocket
 
-from app.core.config import Settings, get_settings
 from app.core.notifications.schemas import NotificationRead
 from app.core.notifications.service import (
     NotificationBroadcaster,
     NotificationServiceDep,
     get_notification_broadcaster,
 )
-from app.core.security import get_current_user
+from app.core.security import get_current_user, get_current_user_ws
 from app.modules.users.schemas import UserDetail
-from app.modules.users.service import UserServiceDep
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
-
-
-async def get_current_user_ws(
-    token: Annotated[str, Query()],
-    user_service: UserServiceDep,
-    notification_service: NotificationServiceDep,
-    settings: Annotated[Settings, Depends(get_settings)],
-) -> int:
-    """
-    Validate the token from the query string and return the user ID.
-    """
-    return await notification_service.authenticate(token, settings, user_service)
 
 
 @router.websocket("/ws-notifications")

@@ -1,14 +1,14 @@
 import asyncio
 import logging
 from functools import lru_cache
-from typing import Annotated, Any, Dict, List, Optional
+from typing import Annotated, Dict, List, Optional
 
 from fastapi import Depends, WebSocket, WebSocketDisconnect
 from redis.asyncio import from_url
 
 from app.core.config import Settings, get_settings
 from app.core.database import AsyncSession, SessionDep
-from app.core.exceptions import AuthenticationException, EntityNotFoundException
+from app.core.exceptions import EntityNotFoundException
 from app.core.notifications.models import Notification
 from app.core.notifications.repository import NotificationRepository
 from app.core.notifications.schemas import NotificationMessage
@@ -218,38 +218,6 @@ class NotificationService:
 
         # 2. Publish to Redis via Broadcaster
         await self.broadcaster.publish_to_user(user_id, message)
-
-    async def authenticate(
-        self, token: str, settings: Settings, user_service: Any
-    ) -> int:
-        """
-        Validates the token from the query string and return the user ID.
-        """
-        # 1. Decode token (no DB needed yet)
-        try:
-            from app.core.security import decode_token
-
-            payload = decode_token(token, settings)
-            username = payload.get("username")
-            if username is None:
-                raise AuthenticationException(
-                    params={"detail": "auth.invalid_credentials"}
-                )
-        except Exception:
-            # We can't raise HTTP exceptions in WebSocket handshake easily
-            raise AuthenticationException("Invalid token")
-
-        # 2. Access DB to verify user exists and is active
-        try:
-            user = await user_service.get_by_username(username)
-            if not user:
-                raise AuthenticationException("User not found")
-            if not user.is_verified:
-                raise AuthenticationException("User not verified")
-            return user.id
-        except Exception as e:
-            logger.error(f"WebSocket auth failed: {e}")
-            raise AuthenticationException("Auth failed")
 
 
 def get_notification_service(session: SessionDep) -> NotificationService:

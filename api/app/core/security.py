@@ -2,11 +2,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
 
 import jwt
-from fastapi import Depends
+from fastapi import Depends, Query
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 
-from app.core.config import Settings
+from app.core.config import Settings, get_settings
 from app.core.exceptions import AuthenticationException
 from app.modules.auth.schemas import Token
 from app.modules.users.schemas import UserDetail, UserDetailWithDbAccess
@@ -73,3 +73,37 @@ async def get_current_user(
         raise AuthenticationException(params={"detail": "auth.account_not_verified"})
 
     return UserDetailWithDbAccess.model_validate(user)
+
+
+async def get_current_user_ws(
+    token: Annotated[str, Query()],
+    user_service: UserServiceDep,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> int:
+    """
+    Validate the token from the query string and return the user ID.
+    """
+    # 1. Decode token (no DB needed yet)
+    try:
+        payload = decode_token(token, settings)
+        username = payload.get("username")
+        if username is None:
+            raise AuthenticationException(params={"detail": "auth.invalid_credentials"})
+    except InvalidTokenError:
+        raise AuthenticationException(params={"detail": "auth.invalid_credentials"})
+
+    # 2. Access DB to verify user exists and is active
+    try:
+        user = await user_service.get_by_username(username)
+        if not user:
+            raise AuthenticationException(params={"detail": "auth.user_not_found"})
+        if not user.is_verified:
+            raise AuthenticationException(
+                params={"detail": "auth.account_not_verified"}
+            )
+        return user.id
+    except AuthenticationException:
+        raise
+    except Exception:
+        # logger.error(f"WebSocket auth failed: {e}")
+        raise AuthenticationException(params={"detail": "auth.failed"})
