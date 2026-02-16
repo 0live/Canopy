@@ -19,7 +19,7 @@ class DbAccessRepository(BaseRepository[User]):
     Handles PostgreSQL role operations and User activation token queries.
     """
 
-    ROLE_NAME_PATTERN = re.compile(r"^user_\d+$")
+    ROLE_NAME_PATTERN = re.compile(r"^canopy_user_\d+$")
 
     def __init__(self, session: SessionDep):
         super().__init__(session, User)

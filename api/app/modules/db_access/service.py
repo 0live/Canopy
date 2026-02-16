@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class DbAccessService:
-    """Service for managing database access provisioning."""
+    """Service for managing postgresql database access provisioning."""
 
     # Activation token validity duration
     TOKEN_VALIDITY_DURATION = timedelta(hours=8)
@@ -36,7 +36,7 @@ class DbAccessService:
     @staticmethod
     def _get_role_name(user_id: int) -> str:
         """Generate PostgreSQL role name for a user."""
-        return f"user_{user_id}"
+        return f"canopy_user_{user_id}"
 
     async def get_access_status(self, user: User) -> DatabaseAccessStatus:
         """Get database access status for a user."""
@@ -57,19 +57,14 @@ class DbAccessService:
         self, password: str, current_user: User
     ) -> DatabaseActivateResponse:
         """
-        Activate database access using activation token.
-
-        Validates the token (existence & expiry) from the user record.
+        Activate postgresql database access using activation token.
         """
-        # Validate that the user has the required role
         if UserRole.WITHDBACCESS not in current_user.roles:
             raise PermissionDeniedException(key="db_access.no_access")
 
-        # Validate token existence
         if not current_user.db_activation_token:
             raise AuthenticationException(key="db_access.invalid_token")
 
-        # Validate token expiry
         if current_user.db_activation_token_created_at:
             created_at = current_user.db_activation_token_created_at
             if created_at.tzinfo is None:
@@ -90,7 +85,6 @@ class DbAccessService:
             logger.error(f"Failed to create role {role_name}: {e}")
             raise DbAccessException(key="db_access.role_creation_failed") from e
 
-        # Clear token - using repository update
         await self.repository.update(
             current_user.id,
             {"db_activation_token": None, "db_activation_token_created_at": None},
@@ -104,10 +98,7 @@ class DbAccessService:
 
     async def revoke_database_access(self, user_id: int) -> bool:
         """
-        Revoke database access for a user.
-
-        Drops the PostgreSQL role if it exists.
-        Returns True if role was dropped.
+        Revoke postgresql database access for a user by dropping the role.
         """
         role_name = self._get_role_name(user_id)
         return await self.repository.drop_role(role_name)
