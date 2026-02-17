@@ -87,6 +87,9 @@
   "notification": {
     "error": "Notification service error.",
     "connection_error": "WebSocket connection error.",
-    "redis_error": "Redis listener error."
+    "redis_error": "Redis listener error.",
+    "fetch_failed": "Failed to fetch notifications.",
+    "update_failed": "Failed to update notification.",
+    "send_failed": "Failed to send notification."
   }
 }

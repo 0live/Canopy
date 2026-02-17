@@ -24,25 +24,15 @@ class NotificationBroadcaster:
     _instance: Optional["NotificationBroadcaster"] = None
 
     def __init__(self, settings: Settings):
-        # We still need to keep track of local websockets to send messages to them
         self.active_connections: Dict[int, List[WebSocket]] = {}
-        # We key listeners by user_id to know if we already have a subscription task running
         self.listeners: Dict[int, asyncio.Task] = {}
-
-        # Create a Redis client. This client manages a connection pool automatically.
-        # decode_responses=True ensures we get strings instead of bytes.
         self.redis = from_url(str(settings.redis_url), decode_responses=True)
 
     async def connect(self, user_id: int, websocket: WebSocket):
         await websocket.accept()
-
         if user_id not in self.active_connections:
             self.active_connections[user_id] = []
-
         self.active_connections[user_id].append(websocket)
-
-        # If this is the first connection for this user on this instance,
-        # start listening to their Redis channel.
         if user_id not in self.listeners:
             self.listeners[user_id] = asyncio.create_task(self._redis_listener(user_id))
 
@@ -50,8 +40,6 @@ class NotificationBroadcaster:
         if user_id in self.active_connections:
             if websocket in self.active_connections[user_id]:
                 self.active_connections[user_id].remove(websocket)
-
-            # If no more connections for this user locally, stop the Redis listener
             if not self.active_connections[user_id]:
                 del self.active_connections[user_id]
                 if user_id in self.listeners:
@@ -71,30 +59,24 @@ class NotificationBroadcaster:
             async for message in pubsub.listen():
                 if message["type"] == "message":
                     data = message["data"]
-                    # Data is already a string (JSON) because decode_responses=True
-
-                    # Forward to all local websockets
                     if user_id in self.active_connections:
-                        # Copy list to avoid issues if a connection drops during iteration
                         connections = list(self.active_connections[user_id])
                         for connection in connections:
                             try:
                                 await connection.send_text(data)
                             except Exception:
-                                # If sending fails, we assume the connection is dead/broken
                                 self.disconnect(user_id, connection)
         except asyncio.CancelledError:
-            # Expected when user disconnects
-            pass
             pass
         except Exception as e:
-            raise NotificationException(key="notification.redis_error") from e
+            raise NotificationException(
+                key="notification.redis_error", params={"error": str(e)}
+            ) from e
         finally:
             try:
                 await pubsub.unsubscribe(channel)
                 await pubsub.aclose()
             except (Exception, RuntimeError):
-                # Ignore errors during cleanup (e.g. if loop is closed)
                 pass
 
     async def publish_to_user(self, user_id: int, message: NotificationMessage):
@@ -108,12 +90,8 @@ class NotificationBroadcaster:
         """
         try:
             await self.connect(user_id, websocket)
-
-            # Keep connection alive
             try:
                 while True:
-                    # We expect to receive nothing, or maybe pings.
-                    # If the client sends data, we just ignore it or log it.
                     await websocket.receive_text()
             except WebSocketDisconnect:
                 self.disconnect(user_id, websocket)
@@ -121,15 +99,13 @@ class NotificationBroadcaster:
         except Exception as e:
             if user_id:
                 self.disconnect(user_id, websocket)
-            raise NotificationException(key="notification.connection_error") from e
+            raise NotificationException(
+                key="notification.connection_error", params={"error": str(e)}
+            ) from e
 
     async def shutdown(self):
-        """Cleanup resources on app shutdown."""
-        # Cancel all listeners
         for task in self.listeners.values():
             task.cancel()
-
-        # Close Redis connection
         await self.redis.aclose()
 
 
@@ -154,7 +130,12 @@ class NotificationService:
         self, user_id: int, skip: int = 0, limit: int = 50, unread_only: bool = False
     ) -> List[Notification]:
         """Get notifications for a specific user."""
-        return await self.repository.get_for_user(user_id, skip, limit, unread_only)
+        try:
+            return await self.repository.get_for_user(user_id, skip, limit, unread_only)
+        except Exception as e:
+            raise NotificationException(
+                key="notification.fetch_failed", params={"error": str(e)}
+            ) from e
 
     async def mark_read(self, notification_id: int, user_id: int) -> Notification:
         """Mark a notification as read."""
@@ -169,15 +150,25 @@ class NotificationService:
             )
 
         notification.is_read = True
-        self.repository.session.add(notification)
-        await self.repository.session.commit()
-        await self.repository.session.refresh(notification)
+        try:
+            self.repository.session.add(notification)
+            await self.repository.session.commit()
+            await self.repository.session.refresh(notification)
+        except Exception as e:
+            raise NotificationException(
+                key="notification.update_failed", params={"error": str(e)}
+            ) from e
         return notification
 
     async def mark_all_read(self, user_id: int) -> dict:
         """Mark all notifications as read for a user."""
-        await self.repository.mark_all_as_read(user_id)
-        await self.repository.session.commit()
+        try:
+            await self.repository.mark_all_as_read(user_id)
+            await self.repository.session.commit()
+        except Exception as e:
+            raise NotificationException(
+                key="notification.update_failed", params={"error": str(e)}
+            ) from e
         return {"message": "All notifications marked as read"}
 
     async def send_to_user(
@@ -189,28 +180,28 @@ class NotificationService:
         """
         Persists the notification to DB and publishes it to Redis.
         """
-        # 1. Persist to DB
-        # Use provided session or fallback to repository session (though usually provided in this context)
         db_session = session or self.repository.session
 
-        notification = Notification(
-            user_id=user_id,
-            type=message.type,
-            payload=message.payload,
-            created_at=message.timestamp,
-            is_read=False,
-        )
-        db_session.add(notification)
-        await db_session.commit()
-        await db_session.refresh(notification)
+        try:
+            notification = Notification(
+                user_id=user_id,
+                type=message.type,
+                payload=message.payload,
+                created_at=message.timestamp,
+                is_read=False,
+            )
+            db_session.add(notification)
+            await db_session.commit()
+            await db_session.refresh(notification)
 
-        # Update message payload with ID for frontend reference
-        if message.payload is None:
-            message.payload = {}
-        message.payload["id"] = notification.id
-
-        # 2. Publish to Redis via Broadcaster
-        await self.broadcaster.publish_to_user(user_id, message)
+            if message.payload is None:
+                message.payload = {}
+            message.payload["id"] = notification.id
+            await self.broadcaster.publish_to_user(user_id, message)
+        except Exception as e:
+            raise NotificationException(
+                key="notification.send_failed", params={"error": str(e)}
+            ) from e
 
 
 def get_notification_service(session: SessionDep) -> NotificationService:
