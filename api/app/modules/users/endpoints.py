@@ -7,7 +7,6 @@ from app.modules.users.schemas import (
     UserCreate,
     UserDetail,
     UserRoleUpdate,
-    UserRoleUpdateResponse,
     UserSummary,
     UserUpdate,
 )
@@ -66,7 +65,7 @@ async def delete_user(
     return await service.delete_user(user_id, current_user)
 
 
-@userRouter.put("/{user_id}/roles", response_model=UserRoleUpdateResponse)
+@userRouter.put("/{user_id}/roles", response_model=UserDetail)
 async def update_user_roles(
     user_id: int,
     role_update: UserRoleUpdate,
@@ -76,5 +75,4 @@ async def update_user_roles(
     """
     Update user roles (Admin only).
     """
-    user = await service.update_user_roles(user_id, role_update, current_user)
-    return UserRoleUpdateResponse(user=user)
+    return await service.update_user_roles(user_id, role_update, current_user)

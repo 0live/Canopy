@@ -38,7 +38,7 @@ async def test_put_user_roles_admin(
     )
     assert response.status_code == 200
     data = response.json()
-    assert "ADMIN" in data["user"]["roles"]
+    assert "ADMIN" in data["roles"]
 
     # 2. Verify persistence
     response = await client.get(

@@ -15,11 +15,13 @@ class UserBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class UserSummary(UserBase):
+class UserSummary(BaseModel):
     id: int
+    username: str
 
 
-class UserDetail(UserSummary):
+class UserDetail(UserBase):
+    id: int
     teams: List[TeamSummary] = []
     is_verified: bool = False
 
@@ -40,13 +42,6 @@ class UserCreate(UserBase):
 
 class UserRoleUpdate(BaseModel):
     roles: List[UserRole]
-
-
-class UserRoleUpdateResponse(BaseModel):
-    """Response for role update."""
-
-    user: UserDetail
-    model_config = ConfigDict(from_attributes=True)
 
 
 class UserUpdate(BaseModel):

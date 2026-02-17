@@ -41,8 +41,7 @@ async def test_grant_withdbaccess_generates_token(
 
     assert response.status_code == 200
     data = response.json()
-    assert "WITHDBACCESS" in data["user"]["roles"]
-    assert "WITHDBACCESS" in data["user"]["roles"]
+    assert "WITHDBACCESS" in data["roles"]
 
     # Verify token in DB
     user = await session.get(User, target_user_id)
