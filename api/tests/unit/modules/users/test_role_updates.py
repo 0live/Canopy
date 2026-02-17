@@ -64,9 +64,7 @@ class TestUserRoleUpdates:
             )
         )
 
-        result, activation_token = await service.update_user_roles(
-            1, update_data, admin_user
-        )
+        result = await service.update_user_roles(1, update_data, admin_user)
 
         assert UserRole.ADMIN in result.roles
         mock_repo.update.assert_awaited_once()

@@ -63,6 +63,8 @@ class TestBaseRepository:
         """Test getting all entities."""
         mock_query = MagicMock()
         mock_select.return_value = mock_query
+        mock_query.limit.return_value = mock_query
+        mock_query.offset.return_value = mock_query
 
         mock_result = Mock()
         mock_result.all.return_value = [

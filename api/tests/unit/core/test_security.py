@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 from app.core.config import Settings
@@ -10,6 +10,7 @@ from app.core.security import (
     get_current_user,
     get_token,
 )
+from app.modules.users.models import User
 from app.modules.users.schemas import UserDetail
 
 
@@ -58,17 +59,17 @@ class TestSecurity:
 
         service_mock = Mock()
         service_mock.settings = settings
-        service_mock.get_by_username = AsyncMock(
-            return_value=Mock(
-                id=1,
-                username="test_user",
-                email="test@example.com",
-                hashed_password="hash",
-                roles=[],
-                teams=[],
-                is_verified=True,
-            )
-        )
+        mock_user = MagicMock(spec=User)
+        mock_user.id = 1
+        mock_user.username = "test_user"
+        mock_user.email = "test@example.com"
+        mock_user.hashed_password = "hash"
+        mock_user.is_verified = True
+        mock_user.roles = []
+        mock_user.teams = []
+        mock_user.db_activation_token = None
+        mock_user.db_activation_token_created_at = None
+        service_mock.get_by_username = AsyncMock(return_value=mock_user)
 
         user = await get_current_user(token, service_mock)
         assert user.username == "test_user"

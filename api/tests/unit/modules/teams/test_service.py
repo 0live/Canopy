@@ -68,7 +68,7 @@ class TestTeamService:
 
         assert result.name == "New Team"
         mock_repo.create.assert_called_once()
-        mock_repo.session.commit.assert_awaited_once()
+        mock_repo.session.flush.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_create_team_permission_denied(self, service, mock_repo, user):

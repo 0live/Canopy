@@ -14,9 +14,9 @@ class TestGetRoleName:
     """Tests for DbAccessService._get_role_name static method."""
 
     def test_get_role_name_formats_correctly(self):
-        assert DbAccessService._get_role_name(1) == "user_1"
-        assert DbAccessService._get_role_name(42) == "user_42"
-        assert DbAccessService._get_role_name(12345) == "user_12345"
+        assert DbAccessService._get_role_name(1) == "canopy_user_1"
+        assert DbAccessService._get_role_name(42) == "canopy_user_42"
+        assert DbAccessService._get_role_name(12345) == "canopy_user_12345"
 
 
 class TestGetAccessStatus:
@@ -66,7 +66,7 @@ class TestGetAccessStatus:
 
         assert status.has_access is True
         assert status.is_activated is True
-        assert status.role_name == "user_42"
+        assert status.role_name == "canopy_user_42"
 
 
 class TestActivateDatabaseAccess:
@@ -141,10 +141,10 @@ class TestActivateDatabaseAccess:
                 "securepassword123", current_user
             )
 
-        assert result.role_name == "user_42"
+        assert result.role_name == "canopy_user_42"
         assert result.message == "db_access.activation_success"
         mock_repository.create_role.assert_called_once_with(
-            "user_42", "securepassword123"
+            "canopy_user_42", "securepassword123"
         )
         mock_repository.update.assert_called_once()
         # Ensure we cleared token
@@ -171,7 +171,7 @@ class TestRevokeDatabaseAccess:
         result = await service.revoke_database_access(42)
 
         assert result is True
-        mock_repository.drop_role.assert_called_once_with("user_42")
+        mock_repository.drop_role.assert_called_once_with("canopy_user_42")
 
     @pytest.mark.asyncio
     async def test_revoke_returns_false_if_role_not_exists(

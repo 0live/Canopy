@@ -67,7 +67,7 @@ class TestMapService:
 
         assert result.id == 10
         mock_repo.create.assert_awaited_once()
-        mock_repo.session.commit.assert_awaited_once()
+        mock_repo.session.flush.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_create_map_permission_denied(self, service, mock_repo, user):

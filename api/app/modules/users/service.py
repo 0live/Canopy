@@ -171,6 +171,7 @@ class UserService:
 
         user.is_verified = True
         user.verification_token = None
+        await self.repository.session.flush()
 
         return True
 

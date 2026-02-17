@@ -19,6 +19,7 @@ class TestAtlasService:
     def mock_repo(self):
         repo = AsyncMock()
         repo.session = AsyncMock()
+        repo.session.add = Mock()
         return repo
 
     @pytest.fixture
@@ -72,7 +73,7 @@ class TestAtlasService:
 
         assert result.name == "New Atlas"
         mock_repo.session.add.assert_called_once()
-        mock_repo.session.commit.assert_awaited_once()
+        mock_repo.session.flush.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_create_atlas_permission_denied(self, service, mock_repo, user):

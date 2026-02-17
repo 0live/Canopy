@@ -75,9 +75,6 @@ async def update_user_roles(
 ):
     """
     Update user roles (Admin only).
-
     """
-    user, activation_token = await service.update_user_roles(
-        user_id, role_update, current_user
-    )
-    return UserRoleUpdateResponse(user=user, db_activation_token=activation_token)
+    user = await service.update_user_roles(user_id, role_update, current_user)
+    return UserRoleUpdateResponse(user=user)

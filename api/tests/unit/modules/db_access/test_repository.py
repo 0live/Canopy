@@ -11,9 +11,9 @@ class TestRoleNameValidation:
         repo = DbAccessRepository(MagicMock())
 
         # These should not raise
-        repo._validate_role_name("user_1")
-        repo._validate_role_name("user_42")
-        repo._validate_role_name("user_12345")
+        repo._validate_role_name("canopy_user_1")
+        repo._validate_role_name("canopy_user_42")
+        repo._validate_role_name("canopy_user_12345")
 
     def test_invalid_role_names_raise_error(self):
         repo = DbAccessRepository(MagicMock())

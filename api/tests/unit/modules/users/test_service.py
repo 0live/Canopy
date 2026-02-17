@@ -402,7 +402,7 @@ class TestUserService:
 
         role_update = UserRoleUpdate(roles=[UserRole.USER, UserRole.WITHDBACCESS])
 
-        result_user, token = await service.update_user_roles(1, role_update, admin_user)
+        await service.update_user_roles(1, role_update, admin_user)
 
         # Check that update was called with dict dump of UserInternalUpdate
         args, kwargs = mock_repo.update.call_args
@@ -410,4 +410,3 @@ class TestUserService:
         assert isinstance(update_data, dict)
         assert update_data["roles"] == [UserRole.USER, UserRole.WITHDBACCESS]
         assert update_data["db_activation_token"] is not None
-        assert token is not None

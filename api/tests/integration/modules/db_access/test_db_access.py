@@ -42,8 +42,12 @@ async def test_grant_withdbaccess_generates_token(
     assert response.status_code == 200
     data = response.json()
     assert "WITHDBACCESS" in data["user"]["roles"]
-    assert data["db_activation_token"] is not None
-    assert len(data["db_activation_token"]) > 20  # Token should be substantial
+    assert "WITHDBACCESS" in data["user"]["roles"]
+
+    # Verify token in DB
+    user = await session.get(User, target_user_id)
+    assert user.db_activation_token is not None
+    assert len(user.db_activation_token) > 20
 
 
 @pytest.mark.asyncio
@@ -77,7 +81,12 @@ async def test_grant_withdbaccess_twice_regenerates_token(
         headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response1.status_code == 200
-    token1 = response1.json()["db_activation_token"]
+    assert response1.status_code == 200
+
+    # Check first token
+    session.expire_all()
+    user = await session.get(User, user_id)
+    token1 = user.db_activation_token
     assert token1 is not None
 
     # Second update with same roles - should NOT regenerate token
@@ -87,9 +96,13 @@ async def test_grant_withdbaccess_twice_regenerates_token(
         headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert response2.status_code == 200
-    token2 = response2.json()["db_activation_token"]
-    # No new token generated since role wasn't added
-    assert token2 is None
+
+    # Check second token
+    session.expire_all()
+    user = await session.get(User, user_id)
+    token2 = user.db_activation_token
+    # Token should remain the same
+    assert token2 == token1
 
 
 @pytest.mark.asyncio
@@ -122,7 +135,7 @@ async def test_revoke_withdbaccess_clears_token(
         headers={"Authorization": f"Bearer {admin_token}"},
     )
     assert grant_response.status_code == 200
-    assert grant_response.json()["db_activation_token"] is not None
+    assert grant_response.status_code == 200
 
     # Verify token exists in database
     stmt = select(User).where(User.id == user_id)

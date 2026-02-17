@@ -31,6 +31,8 @@ async def test_repository_flush_behavior(session, user_data):
 
     # This should flush but not commit
     team = await repo.create(team_data)
+    await session.flush()
+    await session.refresh(team)
 
     assert team.id is not None
     assert team.name == "Rolled Back Team"
