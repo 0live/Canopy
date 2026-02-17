@@ -1,4 +1,3 @@
-import logging
 import re
 from typing import Annotated, Optional
 
@@ -9,8 +8,6 @@ from sqlmodel import select
 from app.core.database import SessionDep
 from app.core.repository import BaseRepository
 from app.modules.users.models import User
-
-logger = logging.getLogger(__name__)
 
 
 class DbAccessRepository(BaseRepository[User]):
@@ -69,13 +66,10 @@ class DbAccessRepository(BaseRepository[User]):
             text(f"GRANT SELECT ON ALL TABLES IN SCHEMA public TO {role_name}")
         )
 
-        logger.info(f"Created PostgreSQL role: {role_name}")
-
     async def drop_role(self, role_name: str) -> bool:
         self._validate_role_name(role_name)
 
         if not await self.role_exists(role_name):
-            logger.info(f"Role {role_name} does not exist, nothing to drop")
             return False
 
         await self.session.execute(
@@ -84,7 +78,6 @@ class DbAccessRepository(BaseRepository[User]):
         await self.session.execute(text(f"DROP OWNED BY {role_name}"))
         await self.session.execute(text(f"DROP ROLE IF EXISTS {role_name}"))
 
-        logger.info(f"Dropped PostgreSQL role: {role_name}")
         return True
 
 

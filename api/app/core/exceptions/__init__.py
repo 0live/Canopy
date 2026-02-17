@@ -87,3 +87,12 @@ class DbAccessException(DomainException):
         self, key: str = "db_access.error", params: Optional[Dict[str, Any]] = None
     ):
         super().__init__(key=key, params=params)
+
+
+class NotificationException(APIException):
+    """Exception raised for notification service errors."""
+
+    def __init__(
+        self, key: str = "notification.error", params: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(key=key, params=params)

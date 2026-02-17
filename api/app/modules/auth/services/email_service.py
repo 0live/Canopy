@@ -4,7 +4,6 @@ import aiosmtplib
 
 from app.core.config import Settings
 from app.core.exceptions import EmailSendException
-from app.core.logging_config import logger
 from app.core.messages import MessageService
 
 
@@ -60,9 +59,7 @@ class EmailService:
                 kwargs["password"] = self.settings.smtp_password
 
             await aiosmtplib.send(message, **kwargs)
-            logger.info(f"Email sent successfully to {to_email}")
         except aiosmtplib.SMTPException as e:
-            logger.error(f"Failed to send email to {to_email}: {e}")
             raise EmailSendException(params={"recipient": to_email, "error": str(e)})
 
     def _build_verification_body(self, verification_link: str) -> str:

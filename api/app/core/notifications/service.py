@@ -1,5 +1,4 @@
 import asyncio
-import logging
 from functools import lru_cache
 from typing import Annotated, Dict, List, Optional
 
@@ -8,12 +7,13 @@ from redis.asyncio import from_url
 
 from app.core.config import Settings, get_settings
 from app.core.database import AsyncSession, SessionDep
-from app.core.exceptions import EntityNotFoundException
+from app.core.exceptions import (
+    EntityNotFoundException,
+    NotificationException,
+)
 from app.core.notifications.models import Notification
 from app.core.notifications.repository import NotificationRepository
 from app.core.notifications.schemas import NotificationMessage
-
-logger = logging.getLogger(__name__)
 
 
 class NotificationBroadcaster:
@@ -46,10 +46,6 @@ class NotificationBroadcaster:
         if user_id not in self.listeners:
             self.listeners[user_id] = asyncio.create_task(self._redis_listener(user_id))
 
-        logger.info(
-            f"User {user_id} connected. Active connections: {len(self.active_connections.get(user_id, []))}"
-        )
-
     def disconnect(self, user_id: int, websocket: WebSocket):
         if user_id in self.active_connections:
             if websocket in self.active_connections[user_id]:
@@ -61,8 +57,6 @@ class NotificationBroadcaster:
                 if user_id in self.listeners:
                     self.listeners[user_id].cancel()
                     del self.listeners[user_id]
-
-        logger.info(f"User {user_id} disconnected")
 
     async def _redis_listener(self, user_id: int):
         """
@@ -86,16 +80,15 @@ class NotificationBroadcaster:
                         for connection in connections:
                             try:
                                 await connection.send_text(data)
-                            except Exception as e:
-                                logger.error(
-                                    f"Failed to send message to user {user_id}: {e}"
-                                )
-                                # We could potentially disconnect here, but usually disconnect() handles cleanup
+                            except Exception:
+                                # If sending fails, we assume the connection is dead/broken
+                                self.disconnect(user_id, connection)
         except asyncio.CancelledError:
             # Expected when user disconnects
             pass
+            pass
         except Exception as e:
-            logger.error(f"Redis listener error for user {user_id}: {e}")
+            raise NotificationException(key="notification.redis_error") from e
         finally:
             try:
                 await pubsub.unsubscribe(channel)
@@ -126,9 +119,9 @@ class NotificationBroadcaster:
                 self.disconnect(user_id, websocket)
 
         except Exception as e:
-            logger.error(f"WebSocket error: {e}")
             if user_id:
                 self.disconnect(user_id, websocket)
+            raise NotificationException(key="notification.connection_error") from e
 
     async def shutdown(self):
         """Cleanup resources on app shutdown."""

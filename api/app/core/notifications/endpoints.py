@@ -1,4 +1,3 @@
-import logging
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, WebSocket
@@ -11,8 +10,6 @@ from app.core.notifications.service import (
 )
 from app.core.security import get_current_user, get_current_user_ws
 from app.modules.users.schemas import UserDetail
-
-logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 

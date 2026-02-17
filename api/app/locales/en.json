@@ -78,9 +78,15 @@
     "invalid_token": "Invalid or expired activation token.",
     "already_activated": "Database access is already activated.",
     "role_creation_failed": "Failed to create database role.",
+    "role_revocation_failed": "Failed to revoke database role.",
     "role_revoked": "Database access has been revoked.",
     "no_access": "You do not have database access permissions.",
     "token_mismatch": "This token does not belong to you.",
     "token_expired": "Activation token has expired."
+  },
+  "notification": {
+    "error": "Notification service error.",
+    "connection_error": "WebSocket connection error.",
+    "redis_error": "Redis listener error."
   }
 }

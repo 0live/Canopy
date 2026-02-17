@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
@@ -20,8 +19,6 @@ from app.modules.db_access.schemas import (
 )
 from app.modules.users.enums import UserRole
 from app.modules.users.models import User
-
-logger = logging.getLogger(__name__)
 
 
 class DbAccessService:
@@ -82,7 +79,6 @@ class DbAccessService:
         try:
             await self.repository.create_role(role_name, password)
         except Exception as e:
-            logger.error(f"Failed to create role {role_name}: {e}")
             raise DbAccessException(key="db_access.role_creation_failed") from e
 
         await self.repository.update(
@@ -101,7 +97,10 @@ class DbAccessService:
         Revoke postgresql database access for a user by dropping the role.
         """
         role_name = self._get_role_name(user_id)
-        return await self.repository.drop_role(role_name)
+        try:
+            return await self.repository.drop_role(role_name)
+        except Exception as e:
+            raise DbAccessException(key="db_access.role_revocation_failed") from e
 
 
 def get_db_access_service(

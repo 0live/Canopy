@@ -1,12 +1,9 @@
-import logging
 from typing import Any, Generic, List, Optional, Type, TypeVar
 
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import RelationshipProperty
 from sqlmodel import SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
-
-logger = logging.getLogger(__name__)
 
 ModelType = TypeVar("ModelType", bound=SQLModel)
 
@@ -79,12 +76,6 @@ class BaseRepository(Generic[ModelType]):
             return None
 
         relationship_fields = self._get_relationship_fields()
-
-        filtered_fields = set(attributes.keys()) & relationship_fields
-        if filtered_fields:
-            logger.debug(
-                f"Filtered relationship fields from {self.model.__name__} update: {filtered_fields}"
-            )
 
         safe_attributes = {
             k: v for k, v in attributes.items() if k not in relationship_fields

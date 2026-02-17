@@ -9,6 +9,7 @@ from app.core.exceptions import (
     DuplicateEntityException,
     EntityNotFoundException,
     ExternalServiceException,
+    NotificationException,
     PermissionDeniedException,
     SecurityException,
 )
@@ -113,6 +114,17 @@ async def security_exception_handler(request: Request, exc: SecurityException):
     )
 
 
+async def notification_exception_handler(
+    request: Request, exc: "NotificationException"
+):
+    logger.error(f"Notification error: {exc.key}", extra={"params": exc.params})
+    msg = MessageService.get_message(exc.key, **exc.params)
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": msg, "key": exc.key, "params": exc.params},
+    )
+
+
 async def external_service_exception_handler(
     request: Request, exc: "ExternalServiceException"
 ):
@@ -133,6 +145,7 @@ def add_all_exception_handlers(app):
     app.add_exception_handler(AuthenticationException, authentication_exception_handler)
     app.add_exception_handler(DomainException, domain_exception_handler)
     app.add_exception_handler(SecurityException, security_exception_handler)
+    app.add_exception_handler(NotificationException, notification_exception_handler)
     app.add_exception_handler(
         ExternalServiceException, external_service_exception_handler
     )

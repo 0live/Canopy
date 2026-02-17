@@ -78,9 +78,15 @@
     "invalid_token": "Token d'activation invalide ou expiré.",
     "already_activated": "L'accès à la base de données est déjà activé.",
     "role_creation_failed": "Échec de la création du rôle base de données.",
+    "role_revocation_failed": "Échec de la révocation du rôle base de données.",
     "role_revoked": "L'accès à la base de données a été révoqué.",
     "no_access": "Vous n'avez pas les permissions d'accès à la base de données.",
     "token_mismatch": "Ce token ne vous appartient pas.",
     "token_expired": "Le token d'activation a expiré."
+  },
+  "notification": {
+    "error": "Erreur du service de notification.",
+    "connection_error": "Erreur de connexion WebSocket.",
+    "redis_error": "Erreur du listener Redis."
   }
 }
