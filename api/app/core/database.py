@@ -39,7 +39,13 @@ class DatabaseSessionManager:
             raise Exception("DatabaseSessionManager is not initialized")
 
         async with AsyncSession(self.engine, expire_on_commit=False) as session:
-            yield session
+            try:
+                yield session
+            except Exception:
+                await session.rollback()
+                raise
+            else:
+                await session.commit()
 
     async def close(self):
         if self.engine is None:

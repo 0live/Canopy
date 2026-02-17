@@ -39,7 +39,6 @@ class BaseRepository(Generic[ModelType]):
     async def create(self, attributes: dict) -> ModelType:
         db_obj = self.model(**attributes)
         self.session.add(db_obj)
-        await self.session.flush()
         return db_obj
 
     async def get(
@@ -85,7 +84,6 @@ class BaseRepository(Generic[ModelType]):
             setattr(db_obj, key, value)
 
         self.session.add(db_obj)
-        await self.session.flush()
         return db_obj
 
     async def delete(self, id: int) -> bool:
@@ -95,7 +93,6 @@ class BaseRepository(Generic[ModelType]):
             return False
 
         await self.session.delete(db_obj)
-        await self.session.flush()
         return True
 
     async def get_by_name(self, name: str) -> Optional[ModelType]:

@@ -4,5 +4,4 @@
 
 Todo:
 
-- Review token/refresh token/cookie policy
-- File upload
+- Review session management -> Centralize commit/rollback

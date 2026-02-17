@@ -74,7 +74,6 @@ class AtlasRepository(BaseRepository[Atlas]):
 
         new_link = AtlasTeamLink(**link_data)
         self.session.add(new_link)
-        await self.session.flush()
         return new_link
 
     async def update_team_link(
@@ -86,7 +85,6 @@ class AtlasRepository(BaseRepository[Atlas]):
         for key, value in update_data.items():
             setattr(link, key, value)
         self.session.add(link)
-        await self.session.flush()
         return link
 
     async def delete_team_link(self, atlas_id: int, team_id: int) -> bool:
@@ -102,7 +100,6 @@ class AtlasRepository(BaseRepository[Atlas]):
             return False
 
         await self.session.delete(link)
-        await self.session.flush()
         return True
 
     async def check_team_manage_permission(

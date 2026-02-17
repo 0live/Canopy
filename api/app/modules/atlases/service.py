@@ -48,7 +48,7 @@ class AtlasService:
         atlas_data = Atlas.add_audit_info(atlas.model_dump(), current_user.id)
         new_atlas = Atlas(**atlas_data)
         self.repository.session.add(new_atlas)
-        await self.repository.session.commit()
+        await self.repository.session.flush()
         await self.repository.session.refresh(new_atlas)
 
         return await self.repository.get(
@@ -108,7 +108,6 @@ class AtlasService:
         atlas_dict = Atlas.add_audit_info(atlas_dict, current_user.id)
 
         await self.repository.update(atlas_id, atlas_dict)
-        await self.repository.session.commit()
 
         return await self.repository.get(
             atlas_id, options=[selectinload(Atlas.teams), selectinload(Atlas.maps)]
@@ -127,7 +126,6 @@ class AtlasService:
             raise EntityNotFoundException(
                 entity="Atlas", key="atlas.not_found", params={"id": atlas_id}
             )
-        await self.repository.session.commit()
         return True
 
     async def add_team_to_atlas(
@@ -155,7 +153,6 @@ class AtlasService:
 
         try:
             result = await self.repository.create_team_link(link.model_dump())
-            await self.repository.session.commit()
             return AtlasTeamLinkRead(**result.model_dump())
         except ValueError as e:
             raise EntityNotFoundException(
@@ -188,7 +185,6 @@ class AtlasService:
 
         update_data = link_update.model_dump(exclude_unset=True)
         result = await self.repository.update_team_link(link, update_data)
-        await self.repository.session.commit()
         return AtlasTeamLinkRead(**result.model_dump())
 
     async def delete_atlas_team_link(
@@ -204,7 +200,6 @@ class AtlasService:
         deleted = await self.repository.delete_team_link(atlas_id, team_id)
         if not deleted:
             raise DomainException(key="atlas.team_link_not_found")
-        await self.repository.session.commit()
         return True
 
     async def _has_manage_permission(self, atlas: Atlas, user: UserDetail) -> bool:

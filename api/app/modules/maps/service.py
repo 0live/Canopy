@@ -55,7 +55,8 @@ class MapService:
 
         map_data = Map.add_audit_info(map.model_dump(), current_user.id)
         new_map = await self.repository.create(map_data)
-        await self.repository.session.commit()
+        await self.repository.session.flush()
+        await self.repository.session.refresh(new_map)
         return new_map
 
     async def get_map(self, map_id: int, current_user: UserDetail) -> MapDetail:
@@ -120,7 +121,6 @@ class MapService:
 
         update_data = Map.add_audit_info(update_data, current_user.id)
         updated_map = await self.repository.update(map_id, update_data)
-        await self.repository.session.commit()
         return updated_map
 
     async def delete_map(self, map_id: int, current_user: UserDetail) -> bool:
@@ -144,7 +144,6 @@ class MapService:
             raise EntityNotFoundException(
                 entity="Map", key="map.not_found", params={"id": map_id}
             )
-        await self.repository.session.commit()
         return True
 
     async def _check_team_map_permission(

@@ -17,7 +17,7 @@ from app.core.exceptions import (
 from app.core.hashing import hash_password, verify_password
 from app.core.messages import MessageService
 from app.core.notifications.schemas import NotificationMessage, NotificationType
-from app.core.notifications.service import NotificationService, get_notification_service
+from app.core.notifications.service import NotificationService, NotificationServiceDep
 from app.core.permissions import has_any_role
 from app.modules.db_access.service import DbAccessService, DbAccessServiceDep
 from app.modules.teams.models import Team
@@ -112,7 +112,9 @@ class UserService:
             user, is_verified, verification_token, force_roles
         )
         new_user = await self.repository.create(user_data)
-        await self.repository.session.commit()
+        await self.repository.session.flush()
+        await self.repository.session.refresh(new_user)
+
         return await self.repository.get(
             new_user.id, options=[selectinload(User.teams)]
         )
@@ -169,7 +171,7 @@ class UserService:
 
         user.is_verified = True
         user.verification_token = None
-        await self.repository.session.commit()
+
         return True
 
     async def authenticate_user(self, username: str, password: str) -> Optional[User]:
@@ -201,7 +203,6 @@ class UserService:
             await self.db_access_service.revoke_database_access(user_id)
 
         await self.repository.delete(user_id)
-        await self.repository.session.commit()
 
         return {"message": MessageService.get_message("user.deleted_success")}
 
@@ -215,7 +216,7 @@ class UserService:
             await self.repository.update(
                 user_id, update_data, options=[selectinload(User.teams)]
             )
-            await self.repository.session.commit()
+            await self.repository.session.flush()
         except IntegrityError as e:
             await self._handle_update_integrity_error(e, user_update)
 
@@ -265,11 +266,7 @@ class UserService:
             update_data.model_dump(exclude_unset=True),
             options=[selectinload(User.teams)],
         )
-        await self.repository.session.commit()
 
-        result_user = await self.repository.get(
-            user_id, options=[selectinload(User.teams)]
-        )
         result_user = await self.repository.get(
             user_id, options=[selectinload(User.teams)]
         )
@@ -284,7 +281,6 @@ class UserService:
                     "new_roles": [r.value for r in new_roles],
                 },
             ),
-            session=self.repository.session,
         )
 
         return result_user
@@ -310,7 +306,6 @@ class UserService:
     async def _handle_update_integrity_error(
         self, e: IntegrityError, user_update: UserUpdate
     ):
-        await self.repository.session.rollback()
         error_msg = str(e)
         if "user_username" in error_msg:
             raise DuplicateEntityException(
@@ -335,9 +330,9 @@ async def get_user_service(
     session: SessionDep,
     settings: SettingsDep,
     db_access_service: DbAccessServiceDep,
+    notification_service: NotificationServiceDep,
 ) -> UserService:
     repo = UserRepository(session, User)
-    notification_service = get_notification_service(session)
     return UserService(
         repo,
         settings,

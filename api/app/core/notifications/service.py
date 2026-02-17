@@ -6,7 +6,7 @@ from fastapi import Depends, WebSocket, WebSocketDisconnect
 from redis.asyncio import from_url
 
 from app.core.config import Settings, get_settings
-from app.core.database import AsyncSession, SessionDep
+from app.core.database import SessionDep
 from app.core.exceptions import (
     EntityNotFoundException,
     NotificationException,
@@ -152,8 +152,7 @@ class NotificationService:
         notification.is_read = True
         try:
             self.repository.session.add(notification)
-            await self.repository.session.commit()
-            await self.repository.session.refresh(notification)
+            await self.repository.session.flush()
         except Exception as e:
             raise NotificationException(
                 key="notification.update_failed", params={"error": str(e)}
@@ -164,7 +163,6 @@ class NotificationService:
         """Mark all notifications as read for a user."""
         try:
             await self.repository.mark_all_as_read(user_id)
-            await self.repository.session.commit()
         except Exception as e:
             raise NotificationException(
                 key="notification.update_failed", params={"error": str(e)}
@@ -175,13 +173,10 @@ class NotificationService:
         self,
         user_id: int,
         message: NotificationMessage,
-        session: Optional[AsyncSession] = None,
     ):
         """
         Persists the notification to DB and publishes it to Redis.
         """
-        db_session = session or self.repository.session
-
         try:
             notification = Notification(
                 user_id=user_id,
@@ -190,9 +185,8 @@ class NotificationService:
                 created_at=message.timestamp,
                 is_read=False,
             )
-            db_session.add(notification)
-            await db_session.commit()
-            await db_session.refresh(notification)
+            self.repository.session.add(notification)
+            await self.repository.session.flush()
 
             if message.payload is None:
                 message.payload = {}

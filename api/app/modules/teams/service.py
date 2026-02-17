@@ -38,7 +38,8 @@ class TeamService:
         team_data = Team.add_audit_info(team.model_dump(), current_user.id)
 
         team_obj = await self.repository.create(team_data)
-        await self.repository.session.commit()
+        await self.repository.session.flush()
+        await self.repository.session.refresh(team_obj)
 
         return await self.repository.get(
             team_obj.id, options=[selectinload(Team.users)]
@@ -88,7 +89,6 @@ class TeamService:
         update_data = Team.add_audit_info(update_data, current_user.id)
 
         await self.repository.update(id, update_data)
-        await self.repository.session.commit()
 
         # Return detail
         return await self.repository.get(id, options=[selectinload(Team.users)])
@@ -104,7 +104,6 @@ class TeamService:
             raise EntityNotFoundException(
                 entity="Team", key="team.not_found", params={"id": id}
             )
-        await self.repository.session.commit()
         return True
 
     async def add_member(
@@ -128,7 +127,7 @@ class TeamService:
 
         if user not in team.users:
             team.users.append(user)
-            await self.repository.session.commit()
+            await self.repository.session.flush()
             await self.repository.session.refresh(team)
 
         return team
@@ -152,7 +151,7 @@ class TeamService:
             )
 
         team.users.remove(user_to_remove)
-        await self.repository.session.commit()
+        await self.repository.session.flush()
         await self.repository.session.refresh(team)
 
         return team

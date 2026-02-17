@@ -33,7 +33,6 @@ class TestBaseRepository:
 
         assert result.name == "Test Item"
         mock_session.add.assert_called_once()
-        mock_session.flush.assert_called_once()
 
     @pytest.mark.asyncio
     @patch("app.core.repository.select")
@@ -99,7 +98,6 @@ class TestBaseRepository:
 
         assert result.name == "New"
         mock_session.add.assert_called_with(existing_obj)
-        mock_session.flush.assert_called_once()
 
     @pytest.mark.asyncio
     @patch("app.core.repository.select")
@@ -135,7 +133,6 @@ class TestBaseRepository:
 
         assert result is True
         mock_session.delete.assert_called_with(existing_obj)
-        mock_session.flush.assert_called_once()
 
     @pytest.mark.asyncio
     @patch("app.core.repository.select")

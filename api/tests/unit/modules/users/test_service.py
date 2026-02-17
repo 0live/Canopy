@@ -153,7 +153,6 @@ class TestUserService:
 
         assert "message" in result
         mock_repo.delete.assert_awaited_once_with(1)
-        mock_repo.session.commit.assert_awaited_once()
 
     @pytest.mark.asyncio
     async def test_delete_user_not_found(self, service, mock_repo):

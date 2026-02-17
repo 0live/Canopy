@@ -13,8 +13,6 @@ class AuthRepository(BaseRepository):
 
     async def create_refresh_token(self, token: RefreshToken) -> RefreshToken:
         self.session.add(token)
-        await self.session.flush()
-        await self.session.refresh(token)
         return token
 
     async def get_refresh_token_by_hash(
@@ -32,4 +30,3 @@ class AuthRepository(BaseRepository):
         token = result.scalars().first()
         if token:
             token.revoked = True
-            await self.session.flush()

@@ -85,7 +85,6 @@ class DbAccessService:
             current_user.id,
             {"db_activation_token": None, "db_activation_token_created_at": None},
         )
-        await self.repository.session.commit()
 
         return DatabaseActivateResponse(
             role_name=role_name,
