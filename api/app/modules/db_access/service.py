@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from app.core.enums.app_parameters import AppParameters
 from app.core.exceptions import (
     AuthenticationException,
     DbAccessException,
@@ -33,7 +34,7 @@ class DbAccessService:
     @staticmethod
     def _get_role_name(user_id: int) -> str:
         """Generate PostgreSQL role name for a user."""
-        return f"canopy_user_{user_id}"
+        return f"{AppParameters.DB_ROLE_PREFIX}{user_id}"
 
     async def get_access_status(self, user: User) -> DatabaseAccessStatus:
         """Get database access status for a user."""

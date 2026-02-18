@@ -7,10 +7,12 @@ from redis.asyncio import from_url
 
 from app.core.config import Settings, get_settings
 from app.core.database import SessionDep
+from app.core.enums.app_parameters import AppParameters
 from app.core.exceptions import (
     EntityNotFoundException,
     NotificationException,
 )
+from app.core.messages import MessageService
 from app.core.notifications.models import Notification
 from app.core.notifications.repository import NotificationRepository
 from app.core.notifications.schemas import NotificationMessage
@@ -52,7 +54,7 @@ class NotificationBroadcaster:
         to all connected WebSockets for that user on this instance.
         """
         pubsub = self.redis.pubsub()
-        channel = f"user:{user_id}"
+        channel = f"{AppParameters.REDIS_USER_CHANNEL_PREFIX}{user_id}"
         await pubsub.subscribe(channel)
 
         try:
@@ -81,7 +83,7 @@ class NotificationBroadcaster:
 
     async def publish_to_user(self, user_id: int, message: NotificationMessage):
         """Publish a message to Redis for the given user."""
-        channel = f"user:{user_id}"
+        channel = f"{AppParameters.REDIS_USER_CHANNEL_PREFIX}{user_id}"
         await self.redis.publish(channel, message.model_dump_json())
 
     async def handle_session(self, user_id: int, websocket: WebSocket):
@@ -167,7 +169,8 @@ class NotificationService:
             raise NotificationException(
                 key="notification.update_failed", params={"error": str(e)}
             ) from e
-        return {"message": "All notifications marked as read"}
+        msg = MessageService.get_message("notification.all_read")
+        return {"message": msg}
 
     async def send_to_user(
         self,

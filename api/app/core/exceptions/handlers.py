@@ -2,6 +2,7 @@ from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from app.core.enums.app_parameters import AppParameters
 from app.core.exceptions import (
     APIException,
     AuthenticationException,
@@ -20,7 +21,7 @@ from app.core.messages import MessageService
 async def duplicate_entity_exception_handler(
     request: Request, exc: DuplicateEntityException
 ):
-    logger.warning(f"Duplicate entity error: {exc.key}", extra={"params": exc.params})
+    logger.warning("Duplicate entity error: %s", exc.key, extra={"params": exc.params})
     msg = MessageService.get_message(exc.key, **exc.params)
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT,
@@ -28,8 +29,8 @@ async def duplicate_entity_exception_handler(
     )
 
 
-async def entity_not_found_handler(request: Request, exc: DomainException):
-    logger.info(f"Entity not found: {exc.key}", extra={"params": exc.params})
+async def entity_not_found_handler(request: Request, exc: EntityNotFoundException):
+    logger.info("Entity not found: %s", exc.key, extra={"params": exc.params})
     msg = MessageService.get_message(exc.key, **exc.params)
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -37,14 +38,16 @@ async def entity_not_found_handler(request: Request, exc: DomainException):
     )
 
 
-async def permission_denied_handler(request: Request, exc: DomainException):
+async def permission_denied_handler(request: Request, exc: PermissionDeniedException):
     user_id = (
         request.scope.get("user").id
         if "user" in request.scope and hasattr(request.scope["user"], "id")
         else "unknown"
     )
     logger.warning(
-        f"Permission denied for user {user_id}: {exc.key}",
+        "Permission denied for user %s: %s",
+        user_id,
+        exc.key,
         extra={"params": exc.params},
     )
     msg = MessageService.get_message(exc.key, **exc.params)
@@ -54,18 +57,20 @@ async def permission_denied_handler(request: Request, exc: DomainException):
     )
 
 
-async def authentication_exception_handler(request: Request, exc: DomainException):
-    logger.warning(f"Authentication failed: {exc.key}", extra={"params": exc.params})
+async def authentication_exception_handler(
+    request: Request, exc: AuthenticationException
+):
+    logger.warning("Authentication failed: %s", exc.key, extra={"params": exc.params})
     msg = MessageService.get_message(exc.key, **exc.params)
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
         content={"detail": msg, "key": exc.key, "params": exc.params},
-        headers={"WWW-Authenticate": "Bearer"},
+        headers={"WWW-Authenticate": AppParameters.TOKEN_TYPE},
     )
 
 
 async def domain_exception_handler(request: Request, exc: DomainException):
-    logger.warning(f"Domain exception: {exc.key}", extra={"params": exc.params})
+    logger.warning("Domain exception: %s", exc.key, extra={"params": exc.params})
     msg = MessageService.get_message(exc.key, **exc.params)
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -97,42 +102,36 @@ async def request_validation_exception_handler(
 
 async def api_exception_handler(request: Request, exc: APIException):
     # Fallback for generic exceptions. Log with traceback.
-    logger.error(f"Internal Server Error: {exc.key}", exc_info=True)
-    msg = MessageService.get_message(exc.key, **exc.params)
+    logger.error("Internal Server Error: %s", exc.key, exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": msg, "key": exc.key, "params": exc.params},
+        content={"detail": "Internal server error"},
     )
 
 
 async def security_exception_handler(request: Request, exc: SecurityException):
-    logger.critical(f"Security error: {exc.key}", extra={"params": exc.params})
-    msg = MessageService.get_message(exc.key, **exc.params)
+    logger.critical("Security error: %s", exc.key, extra={"params": exc.params})
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": msg, "key": exc.key, "params": exc.params},
+        content={"detail": "Internal server error"},
     )
 
 
-async def notification_exception_handler(
-    request: Request, exc: "NotificationException"
-):
-    logger.error(f"Notification error: {exc.key}", extra={"params": exc.params})
-    msg = MessageService.get_message(exc.key, **exc.params)
+async def notification_exception_handler(request: Request, exc: NotificationException):
+    logger.error("Notification error: %s", exc.key, extra={"params": exc.params})
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": msg, "key": exc.key, "params": exc.params},
+        content={"detail": "Internal server error"},
     )
 
 
 async def external_service_exception_handler(
-    request: Request, exc: "ExternalServiceException"
+    request: Request, exc: ExternalServiceException
 ):
-    logger.error(f"External Service Error: {exc.key}", extra={"params": exc.params})
-    msg = MessageService.get_message(exc.key, **exc.params)
+    logger.error("External Service Error: %s", exc.key, extra={"params": exc.params})
     return JSONResponse(
         status_code=status.HTTP_502_BAD_GATEWAY,
-        content={"detail": msg, "key": exc.key, "params": exc.params},
+        content={"detail": "External service error"},
     )
 
 

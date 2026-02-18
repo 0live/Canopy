@@ -1,10 +1,12 @@
 from pydantic import BaseModel, Field
 
+from app.core.enums.app_parameters import AppParameters
+
 
 class DatabaseActivateRequest(BaseModel):
     """Request to activate database access with token and password."""
 
-    password: str = Field(..., min_length=12)
+    password: str = Field(..., min_length=AppParameters.MIN_PASSWORD_LENGTH)
 
 
 class DatabaseActivateResponse(BaseModel):

@@ -6,6 +6,8 @@ from sqlalchemy import text
 from sqlmodel import select
 
 from app.core.database import SessionDep
+from app.core.enums.app_parameters import AppParameters
+from app.core.enums.postgresql_schemas import PostgreSQLSchemas
 from app.core.repository import BaseRepository
 from app.modules.users.models import User
 
@@ -16,7 +18,7 @@ class DbAccessRepository(BaseRepository[User]):
     Handles PostgreSQL role operations and User activation token queries.
     """
 
-    ROLE_NAME_PATTERN = re.compile(r"^canopy_user_\d+$")
+    ROLE_NAME_PATTERN = re.compile(rf"^{re.escape(AppParameters.DB_ROLE_PREFIX)}\d+$")
 
     def __init__(self, session: SessionDep):
         super().__init__(session, User)
@@ -56,14 +58,20 @@ class DbAccessRepository(BaseRepository[User]):
             text(f"GRANT CONNECT ON DATABASE {db_name} TO {role_name}")
         )
         await self.session.execute(
-            text(f"GRANT USAGE ON SCHEMA users_data TO {role_name}")
+            text(f"GRANT USAGE ON SCHEMA {PostgreSQLSchemas.USERS_DATA} TO {role_name}")
         )
         await self.session.execute(
-            text(f"GRANT CREATE ON SCHEMA users_data TO {role_name}")
+            text(
+                f"GRANT CREATE ON SCHEMA {PostgreSQLSchemas.USERS_DATA} TO {role_name}"
+            )
         )
-        await self.session.execute(text(f"GRANT USAGE ON SCHEMA public TO {role_name}"))
         await self.session.execute(
-            text(f"GRANT SELECT ON ALL TABLES IN SCHEMA public TO {role_name}")
+            text(f"GRANT USAGE ON SCHEMA {PostgreSQLSchemas.PUBLIC} TO {role_name}")
+        )
+        await self.session.execute(
+            text(
+                f"GRANT SELECT ON ALL TABLES IN SCHEMA {PostgreSQLSchemas.PUBLIC} TO {role_name}"
+            )
         )
 
     async def drop_role(self, role_name: str) -> bool:

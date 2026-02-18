@@ -7,6 +7,7 @@ from fastapi import Depends, Request, Response
 
 from app.core.config import Settings, get_settings
 from app.core.database import SessionDep
+from app.core.enums.app_parameters import AppParameters
 from app.core.exceptions import AuthenticationException, PermissionDeniedException
 from app.core.security import get_token
 from app.modules.auth.models import RefreshToken
@@ -57,7 +58,7 @@ class AuthService:
         if not self.settings.allow_self_registration:
             raise PermissionDeniedException(key="auth.registration_disabled")
 
-        verification_token = secrets.token_urlsafe(32)
+        verification_token = secrets.token_urlsafe(AppParameters.TOKEN_LENGTH)
         new_user = await self.user_service.create_user(
             user, is_verified=False, verification_token=verification_token
         )
@@ -70,7 +71,7 @@ class AuthService:
     def set_refresh_cookie(self, response: Response, token: str) -> None:
         """Helper to set the refresh token cookie."""
         response.set_cookie(
-            key="refresh_token",
+            key=AppParameters.REFRESH_TOKEN_COOKIE_NAME,
             value=token,
             httponly=True,
             secure=False if self.settings.env == "dev" else True,
@@ -80,7 +81,7 @@ class AuthService:
 
     async def create_refresh_token(self, user_id: int) -> str:
         """Generate, hash, and store a new refresh token."""
-        token_str = secrets.token_urlsafe(32)
+        token_str = secrets.token_urlsafe(AppParameters.TOKEN_LENGTH)
         token_hash = self._hash_token(token_str)
 
         expires_at = datetime.now(timezone.utc) + timedelta(
@@ -109,7 +110,7 @@ class AuthService:
     ) -> AuthResponse:
         """Validate refresh token and rotate it."""
         if not refresh_token:
-            response.delete_cookie("refresh_token")
+            response.delete_cookie(AppParameters.REFRESH_TOKEN_COOKIE_NAME)
             raise AuthenticationException(
                 params={"detail": "auth.refresh_token_missing"}
             )
@@ -118,7 +119,7 @@ class AuthService:
         stored_token = await self.repository.get_refresh_token_by_hash(token_hash)
 
         if not stored_token:
-            response.delete_cookie("refresh_token")
+            response.delete_cookie(AppParameters.REFRESH_TOKEN_COOKIE_NAME)
             raise AuthenticationException(
                 params={"detail": "auth.refresh_token_invalid"}
             )
@@ -129,7 +130,7 @@ class AuthService:
 
         if expires_at < datetime.now(timezone.utc):
             await self.repository.revoke_refresh_token(stored_token.id)
-            response.delete_cookie("refresh_token")
+            response.delete_cookie(AppParameters.REFRESH_TOKEN_COOKIE_NAME)
             raise AuthenticationException(
                 params={"detail": "auth.refresh_token_invalid"}
             )
@@ -150,7 +151,7 @@ class AuthService:
             if stored_token:
                 await self.repository.revoke_refresh_token(stored_token.id)
 
-        response.delete_cookie("refresh_token")
+        response.delete_cookie(AppParameters.REFRESH_TOKEN_COOKIE_NAME)
 
     async def verify_email(self, token: str) -> None:
         """Verify user email."""

@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 
 from app.core.config import Settings, get_settings
+from app.core.enums.app_parameters import AppParameters
 from app.core.exceptions import AuthenticationException
 from app.modules.auth.schemas import Token
 from app.modules.users.schemas import UserDetail, UserDetailWithDbAccess
@@ -44,7 +45,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 def get_token(user: UserDetail, settings: Settings) -> Token:
     """Generate a Token response for a user."""
     token = create_access_token(data={**user.model_dump()}, settings=settings)
-    return Token(access_token=token, token_type="bearer")
+    return Token(access_token=token, token_type=AppParameters.TOKEN_TYPE)
 
 
 # =============================================================================

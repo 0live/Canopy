@@ -1,4 +1,5 @@
 import pytest
+from app.core.enums.app_parameters import AppParameters
 from fastapi import status
 from httpx import AsyncClient
 
@@ -35,4 +36,4 @@ async def test_auth_error_headers(client: AsyncClient):
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert "WWW-Authenticate" in response.headers
-    assert response.headers["WWW-Authenticate"] == "Bearer"
+    assert response.headers["WWW-Authenticate"] == AppParameters.TOKEN_TYPE

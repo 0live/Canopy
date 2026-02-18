@@ -1,4 +1,5 @@
 import pytest
+from app.core.enums.app_parameters import AppParameters
 from app.modules.users.models import User
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -20,8 +21,8 @@ async def test_refresh_token_flow(
     assert "access_token" in data
 
     # Check Cookie
-    assert "refresh_token" in response.cookies
-    refresh_token_cookie = response.cookies["refresh_token"]
+    assert AppParameters.REFRESH_TOKEN_COOKIE_NAME in response.cookies
+    refresh_token_cookie = response.cookies[AppParameters.REFRESH_TOKEN_COOKIE_NAME]
     assert refresh_token_cookie is not None
 
     # 2. Access protected endpoint with access token
@@ -33,7 +34,8 @@ async def test_refresh_token_flow(
     # 3. Refresh Access Token
     # Send refresh request with cookie
     resp_refresh = await client.post(
-        "/auth/refresh", cookies={"refresh_token": refresh_token_cookie}
+        "/auth/refresh",
+        cookies={AppParameters.REFRESH_TOKEN_COOKIE_NAME: refresh_token_cookie},
     )
     assert resp_refresh.status_code == 200
     new_data = resp_refresh.json()
@@ -41,19 +43,21 @@ async def test_refresh_token_flow(
     assert new_data["access_token"] != data["access_token"]
 
     # Check new cookie set (Rotation)
-    assert "refresh_token" in resp_refresh.cookies
-    new_refresh_cookie = resp_refresh.cookies["refresh_token"]
+    assert AppParameters.REFRESH_TOKEN_COOKIE_NAME in resp_refresh.cookies
+    new_refresh_cookie = resp_refresh.cookies[AppParameters.REFRESH_TOKEN_COOKIE_NAME]
     assert new_refresh_cookie != refresh_token_cookie
 
     # 4. Logout
     resp_logout = await client.post(
-        "/auth/logout", cookies={"refresh_token": new_refresh_cookie}
+        "/auth/logout",
+        cookies={AppParameters.REFRESH_TOKEN_COOKIE_NAME: new_refresh_cookie},
     )
     assert resp_logout.status_code == 200
 
     # 5. Try Refresh with old cookie (Should fail - Revoked)
     resp_fail = await client.post(
-        "/auth/refresh", cookies={"refresh_token": refresh_token_cookie}
+        "/auth/refresh",
+        cookies={AppParameters.REFRESH_TOKEN_COOKIE_NAME: refresh_token_cookie},
     )
     assert resp_fail.status_code == 401
 

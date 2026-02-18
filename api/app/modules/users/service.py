@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import Settings, get_settings
 from app.core.database import SessionDep
+from app.core.enums.app_parameters import AppParameters
 from app.core.exceptions import (
     AuthenticationException,
     DuplicateEntityException,
@@ -142,7 +143,7 @@ class UserService:
         user_create = UserCreate(
             email=email,
             username=username,
-            password=secrets.token_urlsafe(15),
+            password=secrets.token_urlsafe(AppParameters.MIN_PASSWORD_LENGTH),
         )
         return await self.create_user(user_create, is_verified=True)
 
@@ -249,7 +250,7 @@ class UserService:
             UserRole.WITHDBACCESS in new_roles
             and UserRole.WITHDBACCESS not in old_roles
         ):
-            activation_token = secrets.token_urlsafe(32)
+            activation_token = secrets.token_urlsafe(AppParameters.TOKEN_LENGTH)
             update_data.db_activation_token = activation_token
             update_data.db_activation_token_created_at = datetime.now(timezone.utc)
 

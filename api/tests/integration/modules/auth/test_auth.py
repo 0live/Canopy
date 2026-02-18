@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 import pytest
+from app.core.enums.app_parameters import AppParameters
 from app.modules.users.schemas import UserDetail
 from httpx import AsyncClient
 
@@ -75,7 +76,7 @@ async def test_google_callback(client: AsyncClient):
 
         # Verify token is returned
         assert "access_token" in data
-        assert data["token_type"] == "bearer"
+        assert data["token_type"] == AppParameters.TOKEN_TYPE
 
         # Verify user persistence
         token = data["access_token"]

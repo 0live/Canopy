@@ -90,6 +90,7 @@
     "redis_error": "Redis listener error.",
     "fetch_failed": "Failed to fetch notifications.",
     "update_failed": "Failed to update notification.",
-    "send_failed": "Failed to send notification."
+    "send_failed": "Failed to send notification.",
+    "all_read": "All notifications marked as read."
   }
 }

@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from app.core.config import Settings
+from app.core.enums.app_parameters import AppParameters
 from app.core.exceptions import AuthenticationException
 from app.modules.auth.services.auth_service import AuthService
 from app.modules.users.schemas import UserCreate, UserDetail
@@ -114,7 +115,7 @@ class TestAuthService:
         result = await service.login("testuser", "password", mock_response)
 
         assert result.access_token is not None
-        assert result.token_type == "bearer"
+        assert result.token_type == AppParameters.TOKEN_TYPE
         assert result.refresh_token is not None
         mock_response.set_cookie.assert_called_once()
 

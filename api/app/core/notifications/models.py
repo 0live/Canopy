@@ -5,6 +5,7 @@ from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 
+from app.core.enums.postgresql_schemas import PostgreSQLSchemas
 from app.core.notifications.schemas import NotificationType
 
 if TYPE_CHECKING:
@@ -12,9 +13,11 @@ if TYPE_CHECKING:
 
 
 class Notification(SQLModel, table=True):
-    __table_args__ = {"schema": "app_data"}
+    __table_args__ = {"schema": PostgreSQLSchemas.APP_DATA}
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="app_data.user.id", index=True)
+    user_id: int = Field(
+        foreign_key=f"{PostgreSQLSchemas.APP_DATA}.user.id", index=True
+    )
     type: NotificationType
     payload: Dict[str, Any] = Field(default={}, sa_column=Column(JSONB))
     is_read: bool = Field(default=False, index=True)

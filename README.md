@@ -4,5 +4,4 @@
 
 Todo:
 
-- Review session management -> Centralize commit/rollback
 - Create constants
