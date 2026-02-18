@@ -1,7 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.core.enums.app_parameters import AppParameters
+from app.core.enums.app_parameter import AppParameter
 from app.core.exceptions import (
     AuthenticationException,
     DbAccessException,
@@ -15,11 +15,11 @@ class TestGetRoleName:
     """Tests for DbAccessService._get_role_name static method."""
 
     def test_get_role_name_formats_correctly(self):
-        assert DbAccessService._get_role_name(1) == f"{AppParameters.DB_ROLE_PREFIX}1"
-        assert DbAccessService._get_role_name(42) == f"{AppParameters.DB_ROLE_PREFIX}42"
+        assert DbAccessService._get_role_name(1) == f"{AppParameter.DB_ROLE_PREFIX}1"
+        assert DbAccessService._get_role_name(42) == f"{AppParameter.DB_ROLE_PREFIX}42"
         assert (
             DbAccessService._get_role_name(12345)
-            == f"{AppParameters.DB_ROLE_PREFIX}12345"
+            == f"{AppParameter.DB_ROLE_PREFIX}12345"
         )
 
 
@@ -70,7 +70,7 @@ class TestGetAccessStatus:
 
         assert status.has_access is True
         assert status.is_activated is True
-        assert status.role_name == f"{AppParameters.DB_ROLE_PREFIX}42"
+        assert status.role_name == f"{AppParameter.DB_ROLE_PREFIX}42"
 
 
 class TestActivateDatabaseAccess:
@@ -145,10 +145,10 @@ class TestActivateDatabaseAccess:
                 "securepassword123", current_user
             )
 
-        assert result.role_name == f"{AppParameters.DB_ROLE_PREFIX}42"
+        assert result.role_name == f"{AppParameter.DB_ROLE_PREFIX}42"
         assert result.message == "db_access.activation_success"
         mock_repository.create_role.assert_called_once_with(
-            f"{AppParameters.DB_ROLE_PREFIX}42", "securepassword123"
+            f"{AppParameter.DB_ROLE_PREFIX}42", "securepassword123"
         )
         mock_repository.update.assert_called_once()
         # Ensure we cleared token
@@ -176,7 +176,7 @@ class TestRevokeDatabaseAccess:
 
         assert result is True
         mock_repository.drop_role.assert_called_once_with(
-            f"{AppParameters.DB_ROLE_PREFIX}42"
+            f"{AppParameter.DB_ROLE_PREFIX}42"
         )
 
     @pytest.mark.asyncio

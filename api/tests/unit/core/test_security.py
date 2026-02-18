@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 from app.core.config import Settings
-from app.core.enums.app_parameters import AppParameters
+from app.core.enums.app_parameter import AppParameter
 from app.core.exceptions import AuthenticationException
 from app.core.hashing import hash_password, verify_password
 from app.core.security import (
@@ -47,7 +47,7 @@ class TestSecurity:
         user = UserDetail(id=1, username="test", email="test@example.com", roles=[])
 
         token_response = get_token(user, settings)
-        assert token_response.token_type == AppParameters.TOKEN_TYPE
+        assert token_response.token_type == AppParameter.TOKEN_TYPE
         assert token_response.access_token
 
     @pytest.mark.asyncio

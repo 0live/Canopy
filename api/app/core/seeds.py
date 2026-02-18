@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core import models  # noqa: F401
-from app.core.enums.postgresql_schemas import PostgreSQLSchemas
+from app.core.enums.postgresql_schema import PostgreSQLSchema
 from app.core.hashing import hash_password
 from app.core.notifications.models import Notification  # noqa: F401
 from app.modules.atlases.models import Atlas, AtlasTeamLink
@@ -38,7 +38,7 @@ class Seeder:
         # Order matters because of Foreign Key constraints
         await session.exec(
             text(
-                f'TRUNCATE TABLE {PostgreSQLSchemas.APP_DATA}.userteamlink, {PostgreSQLSchemas.APP_DATA}.atlasteamlink, {PostgreSQLSchemas.APP_DATA}.atlas, {PostgreSQLSchemas.APP_DATA}.map, {PostgreSQLSchemas.APP_DATA}.team, {PostgreSQLSchemas.APP_DATA}."user" RESTART IDENTITY CASCADE;'
+                f'TRUNCATE TABLE {PostgreSQLSchema.APP_DATA}.userteamlink, {PostgreSQLSchema.APP_DATA}.atlasteamlink, {PostgreSQLSchema.APP_DATA}.atlas, {PostgreSQLSchema.APP_DATA}.map, {PostgreSQLSchema.APP_DATA}.team, {PostgreSQLSchema.APP_DATA}."user" RESTART IDENTITY CASCADE;'
             )
         )
         if commit:

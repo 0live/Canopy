@@ -1,11 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from sqlalchemy import Column
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlmodel import Field, Relationship, SQLModel
 
-from app.core.enums.postgresql_schemas import PostgreSQLSchemas
+from app.core.enums.postgresql_schema import PostgreSQLSchema
 from app.core.notifications.schemas import NotificationType
 
 if TYPE_CHECKING:
@@ -13,15 +13,13 @@ if TYPE_CHECKING:
 
 
 class Notification(SQLModel, table=True):
-    __table_args__ = {"schema": PostgreSQLSchemas.APP_DATA}
+    __table_args__ = {"schema": PostgreSQLSchema.APP_DATA}
     id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(
-        foreign_key=f"{PostgreSQLSchemas.APP_DATA}.user.id", index=True
-    )
+    user_id: int = Field(foreign_key=f"{PostgreSQLSchema.APP_DATA}.user.id", index=True)
     type: NotificationType
     payload: Dict[str, Any] = Field(default={}, sa_column=Column(JSONB))
     is_read: bool = Field(default=False, index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user: "User" = Relationship(back_populates="notifications")

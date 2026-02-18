@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from app.core.enums.app_parameters import AppParameters
+from app.core.enums.app_parameter import AppParameter
 from app.modules.db_access.repository import DbAccessRepository
 
 
@@ -12,9 +12,9 @@ class TestRoleNameValidation:
         repo = DbAccessRepository(MagicMock())
 
         # These should not raise
-        repo._validate_role_name(f"{AppParameters.DB_ROLE_PREFIX}1")
-        repo._validate_role_name(f"{AppParameters.DB_ROLE_PREFIX}42")
-        repo._validate_role_name(f"{AppParameters.DB_ROLE_PREFIX}12345")
+        repo._validate_role_name(f"{AppParameter.DB_ROLE_PREFIX}1")
+        repo._validate_role_name(f"{AppParameter.DB_ROLE_PREFIX}42")
+        repo._validate_role_name(f"{AppParameter.DB_ROLE_PREFIX}12345")
 
     def test_invalid_role_names_raise_error(self):
         repo = DbAccessRepository(MagicMock())

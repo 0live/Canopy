@@ -8,7 +8,7 @@ from sqlmodel import SQLModel
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core import models  # noqa: F401
-from app.core.enums.postgresql_schemas import PostgreSQLSchemas
+from app.core.enums.postgresql_schema import PostgreSQLSchema
 from app.core.notifications.models import Notification  # noqa
 from app.modules.atlases.models import Atlas, AtlasTeamLink  # noqa
 from app.modules.auth.models import RefreshToken  # noqa
@@ -28,7 +28,7 @@ host = os.getenv("POSTGRES_HOST", default_host)
 
 db_url = f"postgresql+psycopg://{postgres_user}:{postgres_password}@{host}:5432/{postgres_db}"
 config.set_main_option("sqlalchemy.url", db_url)
-config.set_main_option("version_table_schema", PostgreSQLSchemas.APP_DATA)
+config.set_main_option("version_table_schema", PostgreSQLSchema.APP_DATA)
 
 
 # Interpret the config file for Python logging.
@@ -47,7 +47,7 @@ naming_convention = {
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s",
 }
-SQLModel.metadata.schema = PostgreSQLSchemas.APP_DATA
+SQLModel.metadata.schema = PostgreSQLSchema.APP_DATA
 target_metadata = SQLModel.metadata
 target_metadata.naming_convention = naming_convention
 # other values from the config, defined by the needs of env.py,
@@ -61,7 +61,7 @@ def include_object(object, name, type_, reflected, compare_to):
     Determine which database objects should be included in the autogeneration process.
     """
     if type_ == "table":
-        if object.schema != PostgreSQLSchemas.APP_DATA:
+        if object.schema != PostgreSQLSchema.APP_DATA:
             return False
 
     return True
@@ -77,7 +77,7 @@ def run_migrations_offline() -> None:
         dialect_opts={"paramstyle": "named"},
         include_object=include_object,
         include_schemas=True,
-        version_table_schema=PostgreSQLSchemas.APP_DATA,
+        version_table_schema=PostgreSQLSchema.APP_DATA,
     )
 
     with context.begin_transaction():
@@ -98,7 +98,7 @@ def run_migrations_online() -> None:
             target_metadata=target_metadata,
             include_object=include_object,
             include_schemas=True,
-            version_table_schema=PostgreSQLSchemas.APP_DATA,
+            version_table_schema=PostgreSQLSchema.APP_DATA,
         )
 
         with context.begin_transaction():

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import ForeignKey
 from sqlmodel import TEXT, Column, Field, Relationship, SQLModel, UniqueConstraint
 
-from app.core.enums.postgresql_schemas import PostgreSQLSchemas
+from app.core.enums.postgresql_schema import PostgreSQLSchema
 from app.core.mixins.access_policy_mixin import AccessPolicyMixin
 from app.core.mixins.audit_mixin import AuditMixin
 
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 class Map(AuditMixin, AccessPolicyMixin, SQLModel, table=True):
     __table_args__ = (
         UniqueConstraint("atlas_id", "name", name="uix_map_atlas_name"),
-        {"schema": PostgreSQLSchemas.APP_DATA},
+        {"schema": PostgreSQLSchema.APP_DATA},
     )
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
@@ -22,7 +22,7 @@ class Map(AuditMixin, AccessPolicyMixin, SQLModel, table=True):
     style: str
     atlas_id: int = Field(
         sa_column=Column(
-            ForeignKey(f"{PostgreSQLSchemas.APP_DATA}.atlas.id", ondelete="CASCADE")
+            ForeignKey(f"{PostgreSQLSchema.APP_DATA}.atlas.id", ondelete="CASCADE")
         )
     )
     atlas: "Atlas" = Relationship(back_populates="maps")

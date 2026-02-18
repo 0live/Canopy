@@ -12,6 +12,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from app.core import models  # noqa: F401
 from app.core.config import get_settings
 from app.core.database import sessionmanager
+from app.core.enums.environment import Environment
 from app.core.exceptions.handlers import add_all_exception_handlers
 from app.core.messages import MessageService
 from app.core.notifications import notificationsRouter
@@ -55,8 +56,8 @@ app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     SessionMiddleware,
     secret_key=get_settings().private_key,
-    same_site="lax" if get_settings().env == "dev" else "strict",
-    https_only=False if get_settings().env == "dev" else True,
+    same_site="lax" if get_settings().env == Environment.DEV else "strict",
+    https_only=False if get_settings().env == Environment.DEV else True,
 )
 
 if get_settings().cors_origins:

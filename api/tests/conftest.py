@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 from app.core.config import Settings, get_settings
 from app.core.database import get_session
-from app.core.enums.postgresql_schemas import PostgreSQLSchemas
+from app.core.enums.postgresql_schema import PostgreSQLSchema
 from app.core.seeds import Seeder
 from app.main import app
 from httpx import ASGITransport, AsyncClient
@@ -94,10 +94,10 @@ async def engine_fixture(settings: Settings):
     engine = create_async_engine(settings.database_url, poolclass=pool.NullPool)
     async with engine.begin() as conn:
         await conn.execute(
-            text(f"CREATE SCHEMA IF NOT EXISTS {PostgreSQLSchemas.APP_DATA}")
+            text(f"CREATE SCHEMA IF NOT EXISTS {PostgreSQLSchema.APP_DATA}")
         )
         await conn.execute(
-            text(f"CREATE SCHEMA IF NOT EXISTS {PostgreSQLSchemas.USERS_DATA}")
+            text(f"CREATE SCHEMA IF NOT EXISTS {PostgreSQLSchema.USERS_DATA}")
         )
         await conn.run_sync(SQLModel.metadata.create_all)
     yield engine

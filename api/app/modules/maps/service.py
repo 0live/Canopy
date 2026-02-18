@@ -12,6 +12,7 @@ from app.core.exceptions import (
 )
 from app.core.permissions import has_any_role
 from app.modules.atlases.models import Atlas, AtlasTeamLink
+from app.modules.maps.enums import MapPermission
 from app.modules.maps.models import Map
 from app.modules.maps.repository import MapRepository
 from app.modules.maps.schemas import MapCreate, MapDetail, MapSummary, MapUpdate
@@ -40,7 +41,7 @@ class MapService:
             )
             or atlas_obj.created_by_id == current_user.id
             or await self._check_team_map_permission(
-                map.atlas_id, current_user, "create"
+                map.atlas_id, current_user, MapPermission.CREATE
             )
         )
 
@@ -69,7 +70,7 @@ class MapService:
             or map_obj.access_policy == AccessPolicy.PUBLIC
             or map_obj.created_by_id == current_user.id
             or await self._check_team_map_permission(
-                map_obj.atlas_id, current_user, "read"
+                map_obj.atlas_id, current_user, MapPermission.READ
             )
         )
 
@@ -101,7 +102,7 @@ class MapService:
             has_any_role(current_user, [UserRole.ADMIN])
             or map_db.created_by_id == current_user.id
             or await self._check_team_map_permission(
-                map_db.atlas_id, current_user, "edit"
+                map_db.atlas_id, current_user, MapPermission.EDIT
             )
         )
 
@@ -130,7 +131,7 @@ class MapService:
             has_any_role(current_user, [UserRole.ADMIN])
             or map_obj.created_by_id == current_user.id
             or await self._check_team_map_permission(
-                map_obj.atlas_id, current_user, "edit"
+                map_obj.atlas_id, current_user, MapPermission.EDIT
             )
         )
 
@@ -147,7 +148,10 @@ class MapService:
         return True
 
     async def _check_team_map_permission(
-        self, atlas_id: int, user: UserDetail, permission_type: str = "read"
+        self,
+        atlas_id: int,
+        user: UserDetail,
+        permission_type: str = MapPermission.READ,
     ) -> bool:
         user_team_ids = [t.id for t in user.teams]
         if not user_team_ids:
@@ -158,11 +162,11 @@ class MapService:
             AtlasTeamLink.team_id.in_(user_team_ids),
         )
 
-        if permission_type == "create":
+        if permission_type == MapPermission.CREATE:
             query = query.where(AtlasTeamLink.can_create_maps)
-        elif permission_type == "edit":
+        elif permission_type == MapPermission.EDIT:
             query = query.where(AtlasTeamLink.can_edit_maps)
-        elif permission_type == "read":
+        elif permission_type == MapPermission.READ:
             query = query.where(AtlasTeamLink.team_id.in_(user_team_ids))
 
         result = await self.repository.session.exec(query)

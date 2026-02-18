@@ -12,10 +12,11 @@ class UserBase(BaseModel):
     email: EmailStr
     username: str
     roles: List[UserRole] = [UserRole.USER]
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, frozen=True)
 
 
 class UserSummary(BaseModel):
+    model_config = ConfigDict(frozen=True)
     id: int
     username: str
 
@@ -41,10 +42,12 @@ class UserCreate(UserBase):
 
 
 class UserRoleUpdate(BaseModel):
+    model_config = ConfigDict(frozen=True)
     roles: List[UserRole]
 
 
 class UserUpdate(BaseModel):
+    model_config = ConfigDict(frozen=True)
     email: Optional[EmailStr] = Field(default=None)
     username: Optional[str] = Field(default=None)
     password: Optional[str] = Field(default=None)
@@ -59,6 +62,8 @@ class UserUpdate(BaseModel):
 
 class UserInternalUpdate(BaseModel):
     """Schema for internal user updates (system fields)."""
+
+    model_config = ConfigDict(frozen=True)
 
     roles: Optional[List[UserRole]] = None
     db_activation_token: Optional[str] = None

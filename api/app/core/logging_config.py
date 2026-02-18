@@ -2,10 +2,11 @@ import logging
 import sys
 
 from app.core.config import get_settings
+from app.core.enums.environment import Environment
 
 
 def setup_logging():
-    log_level = logging.DEBUG if get_settings().env == "dev" else logging.INFO
+    log_level = logging.DEBUG if get_settings().env == Environment.DEV else logging.INFO
 
     logger = logging.getLogger("canopy")
     logger.setLevel(log_level)

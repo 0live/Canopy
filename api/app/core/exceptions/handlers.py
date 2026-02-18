@@ -2,7 +2,7 @@ from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.core.enums.app_parameters import AppParameters
+from app.core.enums.app_parameter import AppParameter
 from app.core.exceptions import (
     APIException,
     AuthenticationException,
@@ -65,7 +65,7 @@ async def authentication_exception_handler(
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
         content={"detail": msg, "key": exc.key, "params": exc.params},
-        headers={"WWW-Authenticate": AppParameters.TOKEN_TYPE},
+        headers={"WWW-Authenticate": AppParameter.TOKEN_TYPE},
     )
 
 

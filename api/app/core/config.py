@@ -4,11 +4,12 @@ from typing import Any, List
 from pydantic import RedisDsn, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.enums.environment import Environment
 from app.core.exceptions import SecurityException
 
 
 class Settings(BaseSettings):
-    env: str = "dev"
+    env: Environment = Environment.DEV
     private_key: str = "your_default_secret_key_change_me"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 15
@@ -28,7 +29,7 @@ class Settings(BaseSettings):
     @property
     def allowed_hosts(self) -> List[str]:
         """Derive allowed hosts from SITE_ADDRESS."""
-        if self.env in ["dev", "test"]:
+        if self.env in [Environment.DEV, Environment.TEST]:
             return ["*"]
 
         if self.site_address:
@@ -43,7 +44,10 @@ class Settings(BaseSettings):
     @field_validator("private_key")
     def validate_secret_key(cls, v: str, info: ValidationInfo) -> str:
         values = info.data
-        if values.get("env") == "prod" and v == "your_default_secret_key_change_me":
+        if (
+            values.get("env") == Environment.PROD
+            and v == "your_default_secret_key_change_me"
+        ):
             raise SecurityException(key="config.insecure_secret_key")
         return v
 

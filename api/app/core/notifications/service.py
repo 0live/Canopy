@@ -7,7 +7,7 @@ from redis.asyncio import from_url
 
 from app.core.config import Settings, get_settings
 from app.core.database import SessionDep
-from app.core.enums.app_parameters import AppParameters
+from app.core.enums.app_parameter import AppParameter
 from app.core.exceptions import (
     EntityNotFoundException,
     NotificationException,
@@ -54,7 +54,7 @@ class NotificationBroadcaster:
         to all connected WebSockets for that user on this instance.
         """
         pubsub = self.redis.pubsub()
-        channel = f"{AppParameters.REDIS_USER_CHANNEL_PREFIX}{user_id}"
+        channel = f"{AppParameter.REDIS_USER_CHANNEL_PREFIX}{user_id}"
         await pubsub.subscribe(channel)
 
         try:
@@ -83,7 +83,7 @@ class NotificationBroadcaster:
 
     async def publish_to_user(self, user_id: int, message: NotificationMessage):
         """Publish a message to Redis for the given user."""
-        channel = f"{AppParameters.REDIS_USER_CHANNEL_PREFIX}{user_id}"
+        channel = f"{AppParameter.REDIS_USER_CHANNEL_PREFIX}{user_id}"
         await self.redis.publish(channel, message.model_dump_json())
 
     async def handle_session(self, user_id: int, websocket: WebSocket):
@@ -191,10 +191,9 @@ class NotificationService:
             self.repository.session.add(notification)
             await self.repository.session.flush()
 
-            if message.payload is None:
-                message.payload = {}
-            message.payload["id"] = notification.id
-            await self.broadcaster.publish_to_user(user_id, message)
+            updated_payload = {**(message.payload or {}), "id": notification.id}
+            updated_message = message.model_copy(update={"payload": updated_payload})
+            await self.broadcaster.publish_to_user(user_id, updated_message)
         except Exception as e:
             raise NotificationException(
                 key="notification.send_failed", params={"error": str(e)}

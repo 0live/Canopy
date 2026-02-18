@@ -5,7 +5,7 @@ from pydantic import EmailStr
 from sqlalchemy import Enum as SAEnum
 from sqlmodel import ARRAY, Column, Field, Relationship, SQLModel
 
-from app.core.enums.postgresql_schemas import PostgreSQLSchemas
+from app.core.enums.postgresql_schema import PostgreSQLSchema
 from app.modules.teams.models import Team, UserTeamLink
 
 if TYPE_CHECKING:
@@ -16,7 +16,7 @@ from app.modules.users.enums import UserRole
 
 
 class User(SQLModel, table=True):
-    __table_args__ = {"schema": PostgreSQLSchemas.APP_DATA}
+    __table_args__ = {"schema": PostgreSQLSchema.APP_DATA}
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(unique=True, index=True)
     email: EmailStr = Field(unique=True, index=True)
@@ -26,7 +26,7 @@ class User(SQLModel, table=True):
     db_activation_token: Optional[str] = Field(default=None)
     db_activation_token_created_at: Optional[datetime.datetime] = Field(default=None)
     roles: List[UserRole] = Field(
-        sa_column=Column(ARRAY(SAEnum(UserRole, schema=PostgreSQLSchemas.APP_DATA)))
+        sa_column=Column(ARRAY(SAEnum(UserRole, schema=PostgreSQLSchema.APP_DATA)))
     )
     teams: List["Team"] = Relationship(
         back_populates="users",

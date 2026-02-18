@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import ForeignKey
 from sqlmodel import Column, Field, Relationship, SQLModel
 
-from app.core.enums.postgresql_schemas import PostgreSQLSchemas
+from app.core.enums.postgresql_schema import PostgreSQLSchema
 from app.core.mixins.access_policy_mixin import AccessPolicyMixin
 from app.core.mixins.audit_mixin import AuditMixin
 from app.modules.atlases.models import Atlas, AtlasTeamLink
@@ -15,20 +15,20 @@ if TYPE_CHECKING:
 class UserTeamLink(SQLModel, table=True):
     user_id: int = Field(
         sa_column=Column(
-            ForeignKey(f"{PostgreSQLSchemas.APP_DATA}.user.id", ondelete="CASCADE"),
+            ForeignKey(f"{PostgreSQLSchema.APP_DATA}.user.id", ondelete="CASCADE"),
             primary_key=True,
         )
     )
     team_id: int = Field(
         sa_column=Column(
-            ForeignKey(f"{PostgreSQLSchemas.APP_DATA}.team.id", ondelete="CASCADE"),
+            ForeignKey(f"{PostgreSQLSchema.APP_DATA}.team.id", ondelete="CASCADE"),
             primary_key=True,
         )
     )
 
 
 class Team(AuditMixin, AccessPolicyMixin, SQLModel, table=True):
-    __table_args__ = {"schema": PostgreSQLSchemas.APP_DATA}
+    __table_args__ = {"schema": PostgreSQLSchema.APP_DATA}
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(unique=True, index=True)
     users: List["User"] = Relationship(

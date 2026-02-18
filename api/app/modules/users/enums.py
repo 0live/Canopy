@@ -1,7 +1,4 @@
-from enum import Enum
-
-
-class UserRole(str, Enum):
+class UserRole:
     ADMIN = "ADMIN"
     USER = "USER"
     MANAGE_TEAMS = "MANAGE_TEAMS"

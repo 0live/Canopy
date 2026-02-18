@@ -1,14 +1,14 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from app.core.enums.postgresql_schemas import PostgreSQLSchemas
+from app.core.enums.postgresql_schema import PostgreSQLSchema
 from sqlalchemy import DateTime, func
 from sqlmodel import Field, SQLModel
 
 
 class AuditMixin(SQLModel):
     created_by_id: Optional[int] = Field(
-        default=None, foreign_key=f"{PostgreSQLSchemas.APP_DATA}.user.id"
+        default=None, foreign_key=f"{PostgreSQLSchema.APP_DATA}.user.id"
     )
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
@@ -25,7 +25,7 @@ class AuditMixin(SQLModel):
         },
     )
     updated_by_id: Optional[int] = Field(
-        default=None, foreign_key=f"{PostgreSQLSchemas.APP_DATA}.user.id"
+        default=None, foreign_key=f"{PostgreSQLSchema.APP_DATA}.user.id"
     )
 
     @classmethod

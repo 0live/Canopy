@@ -8,7 +8,7 @@ class MapBase(BaseModel):
     name: str
     description: str
     atlas_id: int
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, frozen=True)
 
 
 class MapCreate(MapBase):
@@ -25,6 +25,7 @@ class MapDetail(MapSummary):
 
 
 class MapUpdate(BaseModel):
+    model_config = ConfigDict(frozen=True)
     atlas_id: Optional[int] = Field(default=None)
     name: Optional[str] = Field(default=None)
     description: Optional[str] = Field(default=None)
