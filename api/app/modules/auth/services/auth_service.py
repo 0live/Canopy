@@ -75,8 +75,12 @@ class AuthService:
             key=AppParameter.REFRESH_TOKEN_COOKIE_NAME,
             value=token,
             httponly=True,
-            secure=False if self.settings.env == Environment.DEV else True,
-            samesite="lax" if self.settings.env == Environment.DEV else "strict",
+            secure=False
+            if self.settings.env in [Environment.DEV, Environment.TEST]
+            else True,
+            samesite="lax"
+            if self.settings.env in [Environment.DEV, Environment.TEST]
+            else "strict",
             max_age=timedelta(
                 days=self.settings.refresh_token_expire_days
             ).total_seconds(),

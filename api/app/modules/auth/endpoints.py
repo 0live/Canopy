@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Cookie, Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
+from app.core.enums.app_parameter import AppParameter
 from app.core.messages import MessageService
 from app.core.rate_limit import limiter
 from app.modules.auth.schemas import Token
@@ -35,7 +36,9 @@ async def login(
 async def refresh_token(
     service: AuthServiceDep,
     response: Response,
-    refresh_token: Annotated[str | None, Cookie()] = None,
+    refresh_token: Annotated[
+        str | None, Cookie(alias=AppParameter.REFRESH_TOKEN_COOKIE_NAME)
+    ] = None,
 ):
     """Refresh access token using http-only cookie."""
     return await service.refresh_access_token(refresh_token, response)
@@ -45,7 +48,9 @@ async def refresh_token(
 async def logout(
     service: AuthServiceDep,
     response: Response,
-    refresh_token: Annotated[str | None, Cookie()] = None,
+    refresh_token: Annotated[
+        str | None, Cookie(alias=AppParameter.REFRESH_TOKEN_COOKIE_NAME)
+    ] = None,
 ):
     """Logout and revoke refresh token."""
     await service.logout(refresh_token, response)

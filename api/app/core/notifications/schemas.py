@@ -16,7 +16,7 @@ class NotificationMessage(BaseModel):
     model_config = ConfigDict(frozen=True)
     type: NotificationType
     payload: Optional[Dict[str, Any]] = None
-    timestamp: datetime = Field(default_factory=datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class NotificationRead(BaseModel):

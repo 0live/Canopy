@@ -143,7 +143,7 @@ async def client_fixture(session: AsyncSession, settings: Settings):
     app.dependency_overrides[get_settings] = lambda: settings
 
     async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
+        transport=ASGITransport(app=app), base_url="http://localhost"
     ) as client:
         yield client
 

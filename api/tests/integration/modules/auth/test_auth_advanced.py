@@ -21,8 +21,19 @@ async def test_refresh_token_flow(
     assert "access_token" in data
 
     # Check Cookie
-    assert AppParameter.REFRESH_TOKEN_COOKIE_NAME in response.cookies
-    refresh_token_cookie = response.cookies[AppParameter.REFRESH_TOKEN_COOKIE_NAME]
+    cookie_name = AppParameter.REFRESH_TOKEN_COOKIE_NAME
+    refresh_token_cookie = response.cookies.get(cookie_name)
+
+    if not refresh_token_cookie:
+        header = response.headers.get("set-cookie", "")
+        if f"{cookie_name}=" in header:
+            # Simple extraction
+            parts = header.split(";")
+            for part in parts:
+                if part.strip().startswith(f"{cookie_name}="):
+                    refresh_token_cookie = part.strip().split("=", 1)[1]
+                    break
+
     assert refresh_token_cookie is not None
 
     # 2. Access protected endpoint with access token
@@ -33,18 +44,25 @@ async def test_refresh_token_flow(
 
     # 3. Refresh Access Token
     # Send refresh request with cookie
-    resp_refresh = await client.post(
-        "/auth/refresh",
-        cookies={AppParameter.REFRESH_TOKEN_COOKIE_NAME: refresh_token_cookie},
-    )
+    client.cookies.set(AppParameter.REFRESH_TOKEN_COOKIE_NAME, refresh_token_cookie)
+    resp_refresh = await client.post("/auth/refresh")
     assert resp_refresh.status_code == 200
     new_data = resp_refresh.json()
     assert "access_token" in new_data
     assert new_data["access_token"] != data["access_token"]
 
     # Check new cookie set (Rotation)
-    assert AppParameter.REFRESH_TOKEN_COOKIE_NAME in resp_refresh.cookies
-    new_refresh_cookie = resp_refresh.cookies[AppParameter.REFRESH_TOKEN_COOKIE_NAME]
+    new_refresh_cookie = resp_refresh.cookies.get(cookie_name)
+    if not new_refresh_cookie:
+        header = resp_refresh.headers.get("set-cookie", "")
+        if f"{cookie_name}=" in header:
+            parts = header.split(";")
+            for part in parts:
+                if part.strip().startswith(f"{cookie_name}="):
+                    new_refresh_cookie = part.strip().split("=", 1)[1]
+                    break
+
+    assert new_refresh_cookie is not None
     assert new_refresh_cookie != refresh_token_cookie
 
     # 4. Logout

@@ -242,7 +242,7 @@ class UserService:
         old_roles = set(user.roles) if user.roles else set()
         new_roles = set(role_update.roles)
 
-        update_data = UserInternalUpdate(roles=role_update.roles)
+        update_dict = {"roles": role_update.roles}
         activation_token: Optional[str] = None
 
         # Handle WITHDBACCESS grant: generate activation token
@@ -251,8 +251,9 @@ class UserService:
             and UserRole.WITHDBACCESS not in old_roles
         ):
             activation_token = secrets.token_urlsafe(AppParameter.TOKEN_LENGTH)
-            update_data.db_activation_token = activation_token
-            update_data.db_activation_token_created_at = datetime.now(timezone.utc)
+            update_dict["db_activation_token"] = activation_token
+            # Use current time
+            update_dict["db_activation_token_created_at"] = datetime.now(timezone.utc)
 
         # Handle WITHDBACCESS revocation: clean up PostgreSQL role
         if (
@@ -260,8 +261,10 @@ class UserService:
             and UserRole.WITHDBACCESS not in new_roles
         ):
             await self.db_access_service.revoke_database_access(user_id)
-            update_data.db_activation_token = None
-            update_data.db_activation_token_created_at = None
+            update_dict["db_activation_token"] = None
+            update_dict["db_activation_token_created_at"] = None
+
+        update_data = UserInternalUpdate(**update_dict)
 
         await self.repository.update(
             user_id,
