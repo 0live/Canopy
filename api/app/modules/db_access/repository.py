@@ -2,6 +2,7 @@ import re
 from typing import Annotated, Optional
 
 from fastapi import Depends
+from psycopg import sql
 from sqlalchemy import text
 from sqlmodel import select
 
@@ -41,36 +42,67 @@ class DbAccessRepository(BaseRepository[User]):
         )
         return result.scalar() is not None
 
-    def _escape_sql_string(self, value: str) -> str:
-        return value.replace("'", "''")
-
     async def create_role(self, role_name: str, password: str) -> None:
+        """
+        Create a PostgreSQL role safely using psycopg.sql composition.
+        """
         self._validate_role_name(role_name)
-        escaped_password = self._escape_sql_string(password)
+
+        # Use default context (None) for string composition.
+        # This uses UTF-8 and standard quoting, which is safe and sufficient here.
+        context = None
 
         result = await self.session.execute(text("SELECT current_database()"))
         db_name = result.scalar()
 
-        await self.session.execute(
-            text(f"CREATE ROLE {role_name} LOGIN PASSWORD '{escaped_password}'")
+        # Compose SQL safely
+        create_role_query = (
+            sql.SQL("CREATE ROLE {} LOGIN PASSWORD {}")
+            .format(sql.Identifier(role_name), sql.Literal(password))
+            .as_string(context)
         )
-        await self.session.execute(
-            text(f"GRANT CONNECT ON DATABASE {db_name} TO {role_name}")
+
+        grant_connect = (
+            sql.SQL("GRANT CONNECT ON DATABASE {} TO {}")
+            .format(sql.Identifier(db_name), sql.Identifier(role_name))
+            .as_string(context)
         )
-        await self.session.execute(
-            text(f"GRANT USAGE ON SCHEMA {PostgreSQLSchema.USERS_DATA} TO {role_name}")
-        )
-        await self.session.execute(
-            text(f"GRANT CREATE ON SCHEMA {PostgreSQLSchema.USERS_DATA} TO {role_name}")
-        )
-        await self.session.execute(
-            text(f"GRANT USAGE ON SCHEMA {PostgreSQLSchema.PUBLIC} TO {role_name}")
-        )
-        await self.session.execute(
-            text(
-                f"GRANT SELECT ON ALL TABLES IN SCHEMA {PostgreSQLSchema.PUBLIC} TO {role_name}"
+
+        grant_usage_users = (
+            sql.SQL("GRANT USAGE ON SCHEMA {} TO {}")
+            .format(
+                sql.Identifier(PostgreSQLSchema.USERS_DATA), sql.Identifier(role_name)
             )
+            .as_string(context)
         )
+
+        grant_create_users = (
+            sql.SQL("GRANT CREATE ON SCHEMA {} TO {}")
+            .format(
+                sql.Identifier(PostgreSQLSchema.USERS_DATA), sql.Identifier(role_name)
+            )
+            .as_string(context)
+        )
+
+        grant_usage_public = (
+            sql.SQL("GRANT USAGE ON SCHEMA {} TO {}")
+            .format(sql.Identifier(PostgreSQLSchema.PUBLIC), sql.Identifier(role_name))
+            .as_string(context)
+        )
+
+        grant_select_public = (
+            sql.SQL("GRANT SELECT ON ALL TABLES IN SCHEMA {} TO {}")
+            .format(sql.Identifier(PostgreSQLSchema.PUBLIC), sql.Identifier(role_name))
+            .as_string(context)
+        )
+
+        # Execute composed strings as text()
+        await self.session.execute(text(create_role_query))
+        await self.session.execute(text(grant_connect))
+        await self.session.execute(text(grant_usage_users))
+        await self.session.execute(text(grant_create_users))
+        await self.session.execute(text(grant_usage_public))
+        await self.session.execute(text(grant_select_public))
 
     async def drop_role(self, role_name: str) -> bool:
         self._validate_role_name(role_name)
@@ -78,11 +110,29 @@ class DbAccessRepository(BaseRepository[User]):
         if not await self.role_exists(role_name):
             return False
 
-        await self.session.execute(
-            text(f"REASSIGN OWNED BY {role_name} TO CURRENT_USER")
+        context = None
+
+        reassign_query = (
+            sql.SQL("REASSIGN OWNED BY {} TO CURRENT_USER")
+            .format(sql.Identifier(role_name))
+            .as_string(context)
         )
-        await self.session.execute(text(f"DROP OWNED BY {role_name}"))
-        await self.session.execute(text(f"DROP ROLE IF EXISTS {role_name}"))
+
+        drop_owned_query = (
+            sql.SQL("DROP OWNED BY {}")
+            .format(sql.Identifier(role_name))
+            .as_string(context)
+        )
+
+        drop_role_query = (
+            sql.SQL("DROP ROLE IF EXISTS {}")
+            .format(sql.Identifier(role_name))
+            .as_string(context)
+        )
+
+        await self.session.execute(text(reassign_query))
+        await self.session.execute(text(drop_owned_query))
+        await self.session.execute(text(drop_role_query))
 
         return True
 
