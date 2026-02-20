@@ -1,6 +1,7 @@
 # Snippets
+
 (no_robots) {
-    header X-Robots-Tag "none"
+header X-Robots-Tag "none"
 }
 
 {$SITE_ADDRESS} {
@@ -19,6 +20,12 @@
         -Server
     }
 
+    # CSP - Strict by default (except for Maputnik editor)
+    @not_editor {
+        not path /editor/*
+    }
+    header @not_editor Content-Security-Policy "default-src 'self'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';"
+
     # Compression for performance
     encode zstd gzip
 
@@ -32,6 +39,8 @@
     # Route /editor/* with path stripping
     handle_path /editor/* {
         import no_robots
+        # Relaxed CSP for Maputnik (requires blob:, CDN loading for styles/tiles)
+        header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src * data: blob:; connect-src *; frame-ancestors 'self';"
         reverse_proxy maputnik:8000
     }
     # Route Maputnik assets (absolute paths in the HTML)
@@ -56,4 +65,5 @@
     handle_errors {
         respond "{err.status_code} {err.status_text}"
     }
+
 }
