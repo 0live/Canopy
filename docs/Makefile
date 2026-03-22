@@ -1,6 +1,6 @@
 # Docusaurus Makefile
 
-DOCKER_COMPOSE = docker compose --env-file ../.env --env-file ../.env.local -f ../docker-compose.yml -f ../docker-compose.override.yml
+DOCKER_COMPOSE = docker compose --env-file ../.env --env-file -f ../docker-compose.yml -f ../docker-compose.override.yml
 
 docs-build:
 	$(DOCKER_COMPOSE) build docs

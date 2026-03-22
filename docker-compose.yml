@@ -10,7 +10,7 @@ services:
     environment:
       - SITE_ADDRESS=${SITE_ADDRESS:-localhost}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./Caddyfile.prod:/etc/caddy/Caddyfile
       - caddy_data:/data
       - caddy_config:/config
     networks:
@@ -19,6 +19,30 @@ services:
     depends_on:
       api:
         condition: service_healthy
+      frontend:
+        condition: service_healthy
+
+  frontend:
+    container_name: canopy-frontend
+    restart: unless-stopped
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    expose:
+      - "3000"
+    networks:
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   api:
     container_name: canopy-api
@@ -36,7 +60,6 @@ services:
       - DATABASE_URL=postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB}?prepare_threshold=0
     env_file:
       - .env
-      - .env.local
     networks:
       - backend
     healthcheck:
@@ -76,7 +99,6 @@ services:
       - "5432"
     env_file:
       - .env
-      - .env.local
     volumes:
       - ./docker/postgis/data:/var/lib/postgresql/data
       - ./docker/postgis/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
@@ -126,7 +148,6 @@ services:
       - "3000"
     env_file:
       - .env
-      - .env.local
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pgbouncer:5432/${POSTGRES_DB}
     networks:

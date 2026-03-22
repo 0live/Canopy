@@ -9,12 +9,12 @@ async def test_team_visibility_for_member(client: AsyncClient, auth_token_factor
     Verify that a regular user can see teams they belong to,
     and cannot see private teams they are not a member of.
     """
-    # 1. Login as Admin and seeded 'user'
+    # 1. Login as Admin and seeded 'baseUser'
     admin_token = await auth_token_factory("admin", "admin")
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    # 'user' is already seeded and is in 'Atlas viewer' team (team2)
-    user_token = await auth_token_factory("user", "user")
+    # 'baseUser' is already seeded and is in 'Atlas viewer' team (team2)
+    user_token = await auth_token_factory("baseUser", "baseUser")
     user_headers = {"Authorization": f"Bearer {user_token}"}
 
     # Login as 'editor' who is not in 'Atlas viewer' team
@@ -44,13 +44,13 @@ async def test_team_visibility_for_member(client: AsyncClient, auth_token_factor
     # 5. User requests all teams -> should see it
     res = await client.get("/teams", headers=user_headers)
     assert res.status_code == 200
-    teams = res.json()
+    teams = res.json()["items"]
     assert any(t["id"] == team_id for t in teams)
 
     # 6. Editor (stranger) requests all teams -> should NOT see it
     res = await client.get("/teams", headers=editor_headers)
     assert res.status_code == 200
-    teams_editor = res.json()
+    teams_editor = res.json()["items"]
     assert not any(t["id"] == team_id for t in teams_editor)
 
 
@@ -63,7 +63,7 @@ async def test_team_modification_permission(client: AsyncClient, auth_token_fact
     admin_token = await auth_token_factory("admin", "admin")
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    user_token = await auth_token_factory("user", "user")
+    user_token = await auth_token_factory("baseUser", "baseUser")
     user_headers = {"Authorization": f"Bearer {user_token}"}
     user_id = (await client.get("/users/me", headers=user_headers)).json()["id"]
 
@@ -103,8 +103,8 @@ async def test_atlas_public_private_access(client: AsyncClient, auth_token_facto
     admin_token = await auth_token_factory("admin", "admin")
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    # 'user' is a regular user
-    user_token = await auth_token_factory("user", "user")
+    # 'baseUser' is a regular user
+    user_token = await auth_token_factory("baseUser", "baseUser")
     user_headers = {"Authorization": f"Bearer {user_token}"}
 
     # Admin creates Standard (Private) Atlas
@@ -145,7 +145,7 @@ async def test_atlas_team_access(client: AsyncClient, auth_token_factory):
     admin_token = await auth_token_factory("admin", "admin")
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    user_token = await auth_token_factory("user", "user")
+    user_token = await auth_token_factory("baseUser", "baseUser")
     user_headers = {"Authorization": f"Bearer {user_token}"}
     user_id = (await client.get("/users/me", headers=user_headers)).json()["id"]
 
@@ -196,9 +196,9 @@ async def test_atlas_management_permission(client: AsyncClient, auth_token_facto
     admin_token = await auth_token_factory("admin", "admin")
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    user_token = await auth_token_factory("user", "user")
+    user_token = await auth_token_factory("baseUser", "baseUser")
     user_headers = {"Authorization": f"Bearer {user_token}"}
-    # User is already in some teams, let's reset or just create new team/atlas context
+    # baseUser is already in some teams, let's reset or just create new team/atlas context
     user_id = (await client.get("/users/me", headers=user_headers)).json()["id"]
 
     # Create Atlas & Team
@@ -257,7 +257,7 @@ async def test_map_creation_permission(client: AsyncClient, auth_token_factory):
     admin_token = await auth_token_factory("admin", "admin")
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    user_token = await auth_token_factory("user", "user")
+    user_token = await auth_token_factory("baseUser", "baseUser")
     user_headers = {"Authorization": f"Bearer {user_token}"}
     user_id = (await client.get("/users/me", headers=user_headers)).json()["id"]
 
@@ -324,13 +324,13 @@ async def test_role_manage_atlases_limitation(client: AsyncClient, auth_token_fa
     manager_token = await auth_token_factory("editor", "editor")
     manager_headers = {"Authorization": f"Bearer {manager_token}"}
 
-    # 2. 'user' creates a Private Atlas (as they are a regular user, they can create?)
+    # 2. 'baseUser' creates a Private Atlas (as they are a regular user, they can create?)
     # Wait, usually regular creation depends on policy. User role usually can create?
     # Actually `test_atlases.py` creates as Admin.
     # Let's check permissions for standard user creating atlas.
     # `AtlasService.create_atlas` checks:
     # if all(role not in current_user.roles for role in [ADMIN, MANAGE_ATLASES_AND_MAPS]): raise PermissionDenied
-    # So regular 'user' CANNOT create atlases. Only Admin or Editor.
+    # So regular 'baseUser' CANNOT create atlases. Only Admin or Editor.
 
     # So we need Admin to create an atlas "owned" by someone else?
     # Or create a NEW user with MANAGE_ATLASES permission but distinct from 'editor'.

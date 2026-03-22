@@ -1,13 +1,13 @@
-from typing import List
+from fastapi import APIRouter, Depends, Query
 
-from fastapi import APIRouter, Depends
-
+from app.core.enums.app_parameter import AppParameter
+from app.core.schemas.paginated_response import PaginatedResponse
 from app.core.security import get_current_user
 from app.modules.users.schemas import (
+    AdminUserSummary,
     UserCreate,
     UserDetail,
     UserRoleUpdate,
-    UserSummary,
     UserUpdate,
 )
 from app.modules.users.service import UserServiceDep
@@ -25,11 +25,19 @@ async def create_user_as_admin(
     return await service.create_user_by_admin(user, current_user)
 
 
-@userRouter.get("", response_model=List[UserSummary])
+@userRouter.get("", response_model=PaginatedResponse[AdminUserSummary])
 async def get_all_users(
-    service: UserServiceDep, current_user: UserDetail = Depends(get_current_user)
+    service: UserServiceDep,
+    current_user: UserDetail = Depends(get_current_user),
+    skip: int = Query(default=AppParameter.PAGINATION_DEFAULT_SKIP, ge=0),
+    limit: int = Query(
+        default=AppParameter.PAGINATION_DEFAULT_LIMIT,
+        ge=1,
+        le=AppParameter.PAGINATION_MAX_LIMIT,
+    ),
 ):
-    return await service.get_all_users(current_user)
+    users, total = await service.get_all_users(current_user, skip=skip, limit=limit)
+    return PaginatedResponse(items=users, total=total, skip=skip, limit=limit)
 
 
 @userRouter.get("/me", response_model=UserDetail)

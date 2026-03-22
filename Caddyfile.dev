@@ -1,0 +1,57 @@
+# Snippets
+
+(no_robots) {
+header X-Robots-Tag "none"
+}
+
+{$SITE_ADDRESS} {
+
+    # WebSockets matcher for Vite HMR
+    @websockets {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+
+    # Compression for performance
+    encode zstd gzip
+
+    # 1. API
+    handle_path /api/* {
+        import no_robots
+        reverse_proxy api:8000
+    }
+
+    # 2. Maputnik style editor
+    # Route /editor/* with path stripping
+    handle_path /editor/* {
+        import no_robots
+        # Relaxed CSP for Maputnik (requires blob:, CDN loading for styles/tiles)
+        header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src * data: blob:; connect-src *; frame-ancestors 'self';"
+        reverse_proxy maputnik:8000
+    }
+    # Route Maputnik assets (absolute paths in the HTML)
+    @maputnik_assets {
+        path /assets/* /manifest*.json /favicon*.ico
+    }
+    handle @maputnik_assets {
+        reverse_proxy maputnik:8000
+    }
+
+    # 3. Documentation
+    handle /docs/* {
+        reverse_proxy docs:3000
+    }
+
+    # 4. Front-end (Development)
+    # Intercept WebSocket upgrades first for HMR
+    reverse_proxy @websockets frontend:3000
+    handle {
+        reverse_proxy frontend:3000
+    }
+
+    # Error handling
+    handle_errors {
+        respond "{err.status_code} {err.status_text}"
+    }
+
+}

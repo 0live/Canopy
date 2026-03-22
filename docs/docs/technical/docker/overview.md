@@ -21,7 +21,7 @@ docker compose down
 
 ## Environment Variables
 
-Create a `.env.local` file with your configuration:
+Create a `.env` file with your configuration:
 
 ```bash
 POSTGRES_USER=canopy

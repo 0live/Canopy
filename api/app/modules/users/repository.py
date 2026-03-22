@@ -1,5 +1,6 @@
 from typing import Any, List, Optional
 
+from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from app.core.exceptions import DuplicateEntityException
@@ -26,7 +27,7 @@ class UserRepository(BaseRepository[User]):
         return result.first()
 
     async def get_by_verification_token(self, token: str) -> Optional[User]:
-        query = select(User).where(User.verification_token == token)
+        query = select(User).where(User.verification_token == token).options(selectinload(User.teams))
         result = await self.session.exec(query)
         return result.first()
 

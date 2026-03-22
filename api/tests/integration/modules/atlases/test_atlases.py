@@ -36,9 +36,9 @@ async def test_get_all_atlases(client: AsyncClient, auth_token_factory):
     response = await client.get("/atlases", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert isinstance(data, list)
-    assert len(data) >= 1
-    assert any(a["name"] == "Another Atlas" for a in data)
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
+    assert any(a["name"] == "Another Atlas" for a in data["items"])
 
 
 @pytest.mark.asyncio
@@ -116,7 +116,7 @@ async def test_delete_atlas(client: AsyncClient, auth_token_factory):
     # Verify it's gone from list (or 404 on get by id if endpoint existed, but we only have get_all)
     response = await client.get("/atlases", headers=headers)
     data = response.json()
-    assert not any(a["id"] == atlas_id for a in data)
+    assert not any(a["id"] == atlas_id for a in data["items"])
 
 
 @pytest.mark.asyncio
@@ -181,6 +181,58 @@ async def test_manage_atlas_team_link_lifecycle(
     )
     assert resp.status_code == 404
     assert resp.json()["key"] == "atlas.team_not_linked"
+
+
+@pytest.mark.asyncio
+async def test_get_all_atlases_paginated_response_shape(
+    client: AsyncClient, auth_token_factory
+):
+    """GET /atlases returns a PaginatedResponse with correct structure."""
+    token = await auth_token_factory("admin", "admin")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    await client.post(
+        "/atlases",
+        json={"name": "Pagination Shape Atlas", "description": "desc"},
+        headers=headers,
+    )
+
+    response = await client.get("/atlases", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert "total" in data
+    assert "skip" in data
+    assert "limit" in data
+    assert isinstance(data["items"], list)
+    assert data["total"] >= len(data["items"])
+    assert data["skip"] == 0
+    assert data["limit"] == 25
+
+
+@pytest.mark.asyncio
+async def test_get_all_atlases_skip_limit(client: AsyncClient, auth_token_factory):
+    """GET /atlases respects skip and limit query parameters."""
+    token = await auth_token_factory("admin", "admin")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    await client.post(
+        "/atlases", json={"name": "Paginate Atlas A", "description": "desc"}, headers=headers
+    )
+    await client.post(
+        "/atlases", json={"name": "Paginate Atlas B", "description": "desc"}, headers=headers
+    )
+
+    full_response = await client.get("/atlases", headers=headers)
+    total = full_response.json()["total"]
+
+    response = await client.get("/atlases?skip=0&limit=1", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["items"]) == 1
+    assert data["total"] == total
+    assert data["skip"] == 0
+    assert data["limit"] == 1
 
 
 @pytest.mark.asyncio

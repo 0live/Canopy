@@ -6,7 +6,8 @@ from app.core.config import Settings
 from app.core.enums.app_parameter import AppParameter
 from app.core.exceptions import AuthenticationException
 from app.modules.auth.services.auth_service import AuthService
-from app.modules.users.schemas import UserCreate, UserDetail
+from app.modules.auth.schemas import RegisterPayload
+from app.modules.users.schemas import UserDetail
 
 
 class TestAuthService:
@@ -80,22 +81,24 @@ class TestAuthService:
         self, service, mock_user_service, mock_email_service
     ):
         """Test successful user registration."""
-        user_create = UserCreate(
-            username="newuser", email="new@test.com", password="password12345"
+        payload = RegisterPayload(
+            username="user_me", email="new@test.com", password="password12345",
+            altcha_payload="valid_payload"
         )
         expected_user = UserDetail(
             id=1,
-            username="newuser",
+            username="user_me",
             email="new@test.com",
             roles=[],
             teams=[],
             is_verified=False,
         )
         mock_user_service.create_user = AsyncMock(return_value=expected_user)
+        service._validate_captcha = Mock()
 
-        result = await service.register(user_create)
+        result = await service.register(payload)
 
-        assert result.username == "newuser"
+        assert result.username == "user_me"
         assert result.is_verified is False
         mock_user_service.create_user.assert_called_once()
         mock_email_service.send_verification_email.assert_called_once()
@@ -214,20 +217,23 @@ class TestAuthService:
     # =========================================================================
 
     @pytest.mark.asyncio
-    async def test_verify_email_success(self, service, mock_user_service):
+    async def test_verify_email_success(self, service, mock_user_service, mock_response, sample_user, mock_repo):
         """Test successful email verification."""
-        mock_user_service.verify_user = AsyncMock(return_value=True)
+        mock_user_service.verify_user = AsyncMock(return_value=sample_user)
+        mock_repo.delete_all_user_tokens = AsyncMock()
+        mock_repo.create_refresh_token = AsyncMock(return_value="refresh")
 
-        await service.verify_email("valid_token")
+        result = await service.verify_email("valid_token", mock_response)
 
+        assert result.access_token is not None
         mock_user_service.verify_user.assert_called_once_with("valid_token")
 
     @pytest.mark.asyncio
-    async def test_verify_email_invalid(self, service, mock_user_service):
+    async def test_verify_email_invalid(self, service, mock_user_service, mock_response):
         """Test invalid verification token raises exception."""
-        mock_user_service.verify_user = AsyncMock(return_value=False)
+        mock_user_service.verify_user = AsyncMock(return_value=None)
 
         with pytest.raises(AuthenticationException) as exc:
-            await service.verify_email("invalid_token")
+            await service.verify_email("invalid_token", mock_response)
 
         assert exc.value.params["detail"] == "auth.verification_failed"

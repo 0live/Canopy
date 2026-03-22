@@ -31,14 +31,14 @@ Canopy is configured entirely through environment variables. You must create a c
 1. Creating the configuration file:
 
    ```bash
-   touch .env.local
+   touch .env
    ```
 
 2. Open this file and add the following configuration blocks, replacing the values with your own.
 
 ### Configuration Values
 
-Copy and paste these blocks into your `.env.local` file and adjust the values.
+Copy and paste these blocks into your `.env` file and adjust the values.
 
 ---
 

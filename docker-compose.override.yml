@@ -1,5 +1,8 @@
 # Development overrides - exposes ports for local debugging
 services:
+  caddy:
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile
   api:
     build:
       context: ./api
@@ -9,7 +12,7 @@ services:
 
   martin:
     ports:
-      - "3000:3000"
+      - "3002:3000"
     networks:
       - backend
       - frontend
@@ -36,3 +39,17 @@ services:
     networks:
       - backend
       - frontend
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]

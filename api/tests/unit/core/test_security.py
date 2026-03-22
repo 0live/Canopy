@@ -44,7 +44,9 @@ class TestSecurity:
         settings = Settings(
             access_token_expire_minutes=15, algorithm="HS256", private_key="secret"
         )
-        user = UserDetail(id=1, username="test", email="test@example.com", roles=[])
+        user = UserDetail(
+            id=1, username="test_user", email="test@example.com", roles=[]
+        )
 
         token_response = get_token(user, settings)
         assert token_response.token_type == AppParameter.TOKEN_TYPE

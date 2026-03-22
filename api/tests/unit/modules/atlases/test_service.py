@@ -44,8 +44,8 @@ class TestAtlasService:
     def user(self):
         return UserDetail(
             id=2,
-            username="user",
-            email="user@test.com",
+            username="baseUser",
+            email="baseUser@test.com",
             roles=[UserRole.USER],
             teams=[],
         )

@@ -5,6 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import Settings, get_settings
 from app.core.database import SessionDep
+from app.core.logging_config import get_logger
 from app.core.enums.access_policy import AccessPolicy
 from app.core.exceptions import (
     EntityNotFoundException,
@@ -20,6 +21,9 @@ from app.modules.teams.schemas import (
 )
 from app.modules.users.enums import UserRole
 from app.modules.users.schemas import UserDetail
+
+
+_logger = get_logger("teams")
 
 
 class TeamService:
@@ -45,13 +49,18 @@ class TeamService:
             team_obj.id, options=[selectinload(Team.users)]
         )
 
-    async def get_all_teams(self, current_user: UserDetail) -> List[TeamSummary]:
+    async def get_all_teams(
+        self, current_user: UserDetail, skip: int = 0, limit: int = 25
+    ) -> tuple[List[TeamSummary], int]:
         can_view_all = has_any_role(
             current_user, [UserRole.ADMIN, UserRole.MANAGE_TEAMS]
         )
-        return await self.repository.get_all(
-            user=current_user, filter_by_access=not can_view_all
+        filter_by_access = not can_view_all
+        teams = await self.repository.get_all(
+            user=current_user, filter_by_access=filter_by_access, skip=skip, limit=limit
         )
+        total = await self.repository.count(user=current_user, filter_by_access=filter_by_access)
+        return teams, total
 
     async def get_team_by_id(self, id: int, current_user: UserDetail) -> TeamDetail:
         team = await self.repository.get_or_raise(
@@ -104,6 +113,7 @@ class TeamService:
             raise EntityNotFoundException(
                 entity="Team", key="team.not_found", params={"id": id}
             )
+        _logger.info("Team deleted", extra={"team_id": id, "user_id": current_user.id})
         return True
 
     async def add_member(
@@ -129,6 +139,7 @@ class TeamService:
             team.users.append(user)
             await self.repository.session.flush()
             await self.repository.session.refresh(team)
+            _logger.info("Member added to team", extra={"team_id": team_id, "user_id": user_id, "by": current_user.id})
 
         return team
 
@@ -153,6 +164,7 @@ class TeamService:
         team.users.remove(user_to_remove)
         await self.repository.session.flush()
         await self.repository.session.refresh(team)
+        _logger.info("Member removed from team", extra={"team_id": team_id, "user_id": user_id, "by": current_user.id})
 
         return team
 

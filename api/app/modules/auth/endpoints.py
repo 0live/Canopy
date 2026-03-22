@@ -6,18 +6,25 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.core.enums.app_parameter import AppParameter
 from app.core.messages import MessageService
 from app.core.rate_limit import limiter
-from app.modules.auth.schemas import Token
+from app.modules.auth.schemas import ForgotPasswordRequest, RegisterPayload, ResetPasswordRequest, Token
 from app.modules.auth.services.auth_service import AuthServiceDep
-from app.modules.users.schemas import UserCreate, UserDetail
+from app.modules.users.schemas import UserDetail
 
 authRouter = APIRouter(prefix="/auth", tags=["Auth"])
 
 
+@authRouter.get("/captcha/challenge")
+@limiter.limit("20/minute")
+async def captcha_challenge(request: Request, service: AuthServiceDep):
+    """Generate a new Altcha captcha challenge."""
+    return service.get_captcha_challenge()
+
+
 @authRouter.post("/register", response_model=UserDetail)
 @limiter.limit("5/minute")
-async def register(request: Request, user: UserCreate, service: AuthServiceDep):
+async def register(request: Request, payload: RegisterPayload, service: AuthServiceDep):
     """Register a new user."""
-    return await service.register(user)
+    return await service.register(payload)
 
 
 @authRouter.post("/login", response_model=Token)
@@ -57,11 +64,30 @@ async def logout(
     return {"message": MessageService.get_message("auth.logout_success")}
 
 
-@authRouter.get("/verify")
-async def verify_email(token: str, service: AuthServiceDep):
-    """Verify user account via email token."""
-    await service.verify_email(token)
-    return {"message": MessageService.get_message("auth.verification_success")}
+@authRouter.get("/verify", response_model=Token)
+async def verify_email(token: str, service: AuthServiceDep, response: Response):
+    """Verify user account via email token and issue auth tokens."""
+    return await service.verify_email(token, response)
+
+
+@authRouter.post("/forgot-password", status_code=200)
+@limiter.limit("3/hour")
+async def forgot_password(
+    request: Request, payload: ForgotPasswordRequest, service: AuthServiceDep
+):
+    """Request a password reset link. Always returns 200 to prevent email enumeration."""
+    await service.forgot_password(payload)
+    return {"message": MessageService.get_message("auth.reset_email_sent")}
+
+
+@authRouter.post("/reset-password", status_code=200)
+@limiter.limit("5/hour")
+async def reset_password(
+    request: Request, payload: ResetPasswordRequest, service: AuthServiceDep
+):
+    """Reset user password using the token received by email."""
+    await service.reset_password(payload)
+    return {"message": MessageService.get_message("auth.reset_success")}
 
 
 @authRouter.get("/google")

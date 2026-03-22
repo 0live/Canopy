@@ -10,7 +10,7 @@ from app.modules.users.enums import UserRole
 
 class UserBase(BaseModel):
     email: EmailStr
-    username: str
+    username: str = Field(min_length=5, pattern=r"^[a-zA-Z0-9_-]+$")
     roles: List[UserRole] = [UserRole.USER]
     model_config = ConfigDict(from_attributes=True, frozen=True)
 
@@ -21,10 +21,20 @@ class UserSummary(BaseModel):
     username: str
 
 
+class AdminUserSummary(BaseModel):
+    model_config = ConfigDict(from_attributes=True, frozen=True)
+    id: int
+    username: str
+    email: EmailStr
+    roles: List[UserRole]
+    is_verified: bool
+
+
 class UserDetail(UserBase):
     id: int
     teams: List[TeamSummary] = []
     is_verified: bool = False
+    postgis_role_created: bool = False
 
 
 class UserDetailWithDbAccess(UserDetail):
@@ -49,7 +59,9 @@ class UserRoleUpdate(BaseModel):
 class UserUpdate(BaseModel):
     model_config = ConfigDict(frozen=True)
     email: Optional[EmailStr] = Field(default=None)
-    username: Optional[str] = Field(default=None)
+    username: Optional[str] = Field(
+        default=None, min_length=5, pattern=r"^[a-zA-Z0-9_-]+$"
+    )
     password: Optional[str] = Field(default=None)
 
     @field_validator("password")
@@ -58,6 +70,15 @@ class UserUpdate(BaseModel):
         if v is None:
             return v
         return validate_password(v)
+
+
+class UserRoleUpdateResponse(BaseModel):
+    """Response schema for role update — includes one-time plaintext token if DB access was granted."""
+
+    model_config = ConfigDict(from_attributes=True, frozen=True)
+
+    user: UserDetail
+    db_activation_token: Optional[str] = None
 
 
 class UserInternalUpdate(BaseModel):

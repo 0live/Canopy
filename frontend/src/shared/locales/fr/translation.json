@@ -1,0 +1,168 @@
+{
+  "hello": "Bonjour le monde",
+  "wip": {
+    "title": "En cours de développement",
+    "subtitle": "Cette page est en cours de construction."
+  },
+  "nav": {
+    "atlas": "Atlas",
+    "tileFlux": "Flux de tuiles",
+    "data": "Données",
+    "admin": "Administration"
+  },
+  "admin": {
+    "title": "Administration",
+    "subtitle": "Gérez les utilisateurs, les équipes, les atlas et les paramètres système.",
+    "nav": {
+      "users": "Utilisateurs",
+      "teams": "Équipes",
+      "atlases": "Atlas",
+      "tileflux": "Flux de tuiles",
+      "data": "Données"
+    },
+    "users": {
+      "username": "Nom d'utilisateur",
+      "email": "Email",
+      "roles": "Rôles",
+      "verified": "Vérifié",
+      "editRoles": "Modifier les rôles",
+      "editRolesTitle": "Modifier les rôles — {{username}}",
+      "saveRoles": "Enregistrer",
+      "cancel": "Annuler",
+      "deleteUser": "Supprimer l'utilisateur",
+      "deleteConfirmTitle": "Supprimer l'utilisateur",
+      "deleteConfirmDescription": "Êtes-vous sûr de vouloir supprimer {{username}} ? Cette action est irréversible.",
+      "deleteSuccess": "Utilisateur supprimé avec succès.",
+      "deleteNotFound": "Utilisateur introuvable. La liste a été actualisée.",
+      "rolesUpdateSuccess": "Rôles mis à jour avec succès.",
+      "noUsers": "Aucun utilisateur trouvé.",
+      "roleLabels": {
+        "ADMIN": "Administrateur",
+        "USER": "Utilisateur",
+        "MANAGE_TEAMS": "Gestion des équipes",
+        "MANAGE_ATLASES_AND_MAPS": "Gestion des atlas et cartes",
+        "LOAD_DATA": "Chargement de données",
+        "LOAD_ICONS": "Chargement d'icônes",
+        "WITHDBACCESS": "Accès PostGIS"
+      }
+    },
+    "pagination": {
+      "showing": "Affichage de {{from}}–{{to}} sur {{total}}",
+      "previous": "Précédent",
+      "next": "Suivant"
+    }
+  },
+  "errors": {
+    "networkError": "Vérifiez votre connexion internet",
+    "forbidden": "Vous n'avez pas les droits pour effectuer cette action",
+    "tooManyRequests": "Trop de requêtes, veuillez patienter quelques instants",
+    "serverError": "Une erreur serveur est survenue, veuillez réessayer"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "register": "S'inscrire",
+    "logout": "Se déconnecter",
+    "email": "Email",
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "googleLogin": "Continuer avec Google",
+    "passwordMinLength": "Le mot de passe doit contenir au moins {{length}} caractères",
+    "loginError": "Identifiants incorrects",
+    "registerSuccess": "Inscription réussie ! Vérifiez votre email.",
+    "profile": "Profil",
+    "invalidEmail": "Format d'email invalide",
+    "requiredEmail": "L'email est requis",
+    "requiredPassword": "Le mot de passe est requis",
+    "requiredUsername": "Le nom d'utilisateur est requis",
+    "usernameMinLength": "Le nom d'utilisateur doit contenir au moins {{length}} caractères",
+    "usernameInvalidFormat": "Le nom d'utilisateur ne peut contenir que des lettres sans accents, des chiffres, des tirets et underscores",
+    "validateEmailWarning": "Votre compte a été créé avec succès. Veuillez valider votre email avant de vous connecter.",
+    "verifyingEmail": "Vérification de votre email",
+    "emailVerified": "Email Vérifié !",
+    "emailVerifiedSubtitle": "Votre compte a été vérifié avec succès.",
+    "redirectingToLogin": "Redirection vers la page de connexion...",
+    "verificationSuccess": "Votre email a été vérifié avec succès ! Vous pouvez maintenant explorer Canopy.",
+    "verificationFailed": "Échec de la Vérification",
+    "verificationErrorSubtitle": "Le lien de vérification est invalide ou a expiré.",
+    "goToLogin": "Aller à la page d'accueil",
+    "captchaRequired": "Veuillez compléter le captcha",
+    "captchaError": "Échec de la vérification du captcha. Veuillez réessayer.",
+    "genericError": "Une erreur est survenue, veuillez réessayer",
+    "forgotPassword": "Mot de passe oublié ?",
+    "forgotPasswordTitle": "Réinitialiser votre mot de passe",
+    "forgotPasswordDescription": "Entrez votre adresse email et nous vous enverrons un lien de réinitialisation.",
+    "forgotPasswordSubmit": "Envoyer le lien",
+    "forgotPasswordSuccess": "Si cet email existe, un lien de réinitialisation a été envoyé. Vérifiez votre boîte mail.",
+    "backToLogin": "Retour à l'accueil",
+    "resetPasswordTitle": "Choisir un nouveau mot de passe",
+    "resetPasswordSubmit": "Réinitialiser le mot de passe",
+    "resetPasswordSuccess": "Mot de passe mis à jour. Vous pouvez maintenant vous connecter.",
+    "resetTokenInvalid": "Ce lien de réinitialisation est invalide ou a expiré.",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas."
+  },
+  "user": {
+    "email_exists": "Cet email est déjà utilisé.",
+    "username_exists": "Ce nom d'utilisateur est déjà utilisé."
+  },
+  "profile": {
+    "title": "Mon profil",
+    "identitySection": "Identité",
+    "passwordSection": "Changer le mot de passe",
+    "passwordOptionalHint": "Laissez vide pour conserver votre mot de passe actuel",
+    "saveChanges": "Enregistrer les modifications",
+    "updateSuccess": "Profil mis à jour avec succès.",
+    "confirmPassword": "Confirmer le nouveau mot de passe",
+    "noChanges": "Aucune modification à enregistrer."
+  },
+  "settings": {
+    "theme": "Thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système",
+    "language": "Langue"
+  },
+  "dbAccess": {
+    "tab": "Accès Base de données",
+    "statusSection": "Statut",
+    "roleNameLabel": "Nom d'utilisateur PostgreSQL",
+    "activeStatus": "Actif",
+    "activateTitle": "Activer l'accès PostgreSQL",
+    "activateDescription": "Définissez un mot de passe pour créer votre utilisateur PostgreSQL.",
+    "activateButton": "Activer",
+    "updatePasswordTitle": "Modifier le mot de passe",
+    "updatePasswordButton": "Mettre à jour",
+    "passwordLabel": "Mot de passe PostgreSQL",
+    "activateSuccess": "Accès PostgreSQL activé avec succès.",
+    "updatePasswordSuccess": "Mot de passe PostgreSQL mis à jour.",
+    "errors": {
+      "invalid_token": "Token d'activation invalide ou expiré.",
+      "token_expired": "Le token d'activation a expiré.",
+      "already_activated": "L'accès est déjà activé.",
+      "not_activated": "L'accès n'a pas encore été activé.",
+      "role_creation_failed": "Échec de la création du rôle.",
+      "password_update_failed": "Échec de la mise à jour du mot de passe."
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "tab": "Notifications",
+    "profileTab": "Profil",
+    "empty": "Aucune notification",
+    "deleteSelected": "Supprimer la sélection",
+    "newNotification": "Vous avez une nouvelle notification",
+    "date": "Date",
+    "message": "Message",
+    "status": "Statut",
+    "read": "Lu",
+    "unread": "Non lu",
+    "deleteSuccess": "Notifications supprimées",
+    "confirmDeleteTitle": "Supprimer les notifications",
+    "confirmDeleteDescription": "Êtes-vous sûr de vouloir supprimer les notifications sélectionnées ? Cette action est irréversible.",
+    "messages": {
+      "ROLES_CHANGED": "Vos rôles ont été mis à jour. Nouveaux rôles : {{new_roles}}",
+      "DB_ACCESS_GIVEN": "Vous avez désormais accès à la base de données PostGIS. Rendez-vous dans l'onglet Profil pour définir un mot de passe pour votre utilisateur PostgreSQL."
+    }
+  }
+}

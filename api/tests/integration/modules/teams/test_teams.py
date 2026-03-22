@@ -34,9 +34,9 @@ async def test_get_all_teams(client: AsyncClient, auth_token_factory):
     response = await client.get("/teams", headers=headers)
     assert response.status_code == 200
     data = response.json()
-    assert isinstance(data, list)
-    assert len(data) >= 1
-    assert any(t["name"] == "Another Team" for t in data)
+    assert isinstance(data["items"], list)
+    assert len(data["items"]) >= 1
+    assert any(t["name"] == "Another Team" for t in data["items"])
 
 
 @pytest.mark.asyncio
@@ -155,13 +155,14 @@ async def test_team_membership_management(
         "username": "manager",
         "email": "manager@test.com",
         "password": "password12345",
+        "altcha_payload": "dummy",
     }
     await register_and_verify_user(manager_data)
 
     # Get manager ID (we need to find it, or just use get_by_username if we had it, but we can filter from list)
     # Simpler: just use admin to update roles. We need ID.
     users_res = await client.get("/users", headers=admin_headers)
-    users = users_res.json()
+    users = users_res.json()["items"]
     manager_id = next(u["id"] for u in users if u["username"] == "manager")
 
     # Grant MANAGE_TEAMS role
@@ -176,7 +177,7 @@ async def test_team_membership_management(
     manager_token = await auth_token_factory("manager", "password12345")
     manager_headers = {"Authorization": f"Bearer {manager_token}"}
 
-    user_token = await auth_token_factory("user", "user")
+    user_token = await auth_token_factory("baseUser", "baseUser")
     user_headers = {"Authorization": f"Bearer {user_token}"}
 
     # Get User ID
@@ -220,7 +221,7 @@ async def test_team_membership_permissions(client: AsyncClient, auth_token_facto
     admin_token = await auth_token_factory("admin", "admin")
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    user_token = await auth_token_factory("user", "user")
+    user_token = await auth_token_factory("baseUser", "baseUser")
     user_headers = {"Authorization": f"Bearer {user_token}"}
     user_id = (await client.get("/users/me", headers=user_headers)).json()["id"]
 
@@ -239,6 +240,50 @@ async def test_team_membership_permissions(client: AsyncClient, auth_token_facto
         headers=user_headers,
     )
     assert res.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_get_all_teams_paginated_response_shape(
+    client: AsyncClient, auth_token_factory
+):
+    """GET /teams returns a PaginatedResponse with correct structure."""
+    token = await auth_token_factory("admin", "admin")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    await client.post("/teams", json={"name": "Pagination Shape Team"}, headers=headers)
+
+    response = await client.get("/teams", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert "total" in data
+    assert "skip" in data
+    assert "limit" in data
+    assert isinstance(data["items"], list)
+    assert data["total"] >= len(data["items"])
+    assert data["skip"] == 0
+    assert data["limit"] == 25
+
+
+@pytest.mark.asyncio
+async def test_get_all_teams_skip_limit(client: AsyncClient, auth_token_factory):
+    """GET /teams respects skip and limit query parameters."""
+    token = await auth_token_factory("admin", "admin")
+    headers = {"Authorization": f"Bearer {token}"}
+
+    await client.post("/teams", json={"name": "Paginate Team A"}, headers=headers)
+    await client.post("/teams", json={"name": "Paginate Team B"}, headers=headers)
+
+    full_response = await client.get("/teams", headers=headers)
+    total = full_response.json()["total"]
+
+    response = await client.get("/teams?skip=0&limit=1", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["items"]) == 1
+    assert data["total"] == total
+    assert data["skip"] == 0
+    assert data["limit"] == 1
 
 
 @pytest.mark.asyncio

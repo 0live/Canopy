@@ -5,6 +5,7 @@ from sqlmodel import select
 
 from app.core.config import Settings, get_settings
 from app.core.database import SessionDep
+from app.core.logging_config import get_logger
 from app.core.enums.access_policy import AccessPolicy
 from app.core.exceptions import (
     EntityNotFoundException,
@@ -18,6 +19,9 @@ from app.modules.maps.repository import MapRepository
 from app.modules.maps.schemas import MapCreate, MapDetail, MapSummary, MapUpdate
 from app.modules.users.enums import UserRole
 from app.modules.users.schemas import UserDetail
+
+
+_logger = get_logger("maps")
 
 
 class MapService:
@@ -145,6 +149,7 @@ class MapService:
             raise EntityNotFoundException(
                 entity="Map", key="map.not_found", params={"id": map_id}
             )
+        _logger.info("Map deleted", extra={"map_id": map_id, "user_id": current_user.id})
         return True
 
     async def _check_team_map_permission(

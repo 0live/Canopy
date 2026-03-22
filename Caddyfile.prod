@@ -24,7 +24,7 @@ header X-Robots-Tag "none"
     @not_editor {
         not path /editor/*
     }
-    header @not_editor Content-Security-Policy "default-src 'self'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';"
+    header @not_editor Content-Security-Policy "default-src 'self'; script-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' wss:; frame-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self';"
 
     # Compression for performance
     encode zstd gzip
@@ -58,7 +58,7 @@ header X-Robots-Tag "none"
 
     # 4. Front-end
     handle {
-        respond "Canopy Front-end is on the way!" 200
+        reverse_proxy frontend:3000
     }
 
     # Error handling

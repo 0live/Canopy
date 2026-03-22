@@ -1,0 +1,168 @@
+{
+  "hello": "Hello World",
+  "wip": {
+    "title": "Work in Progress",
+    "subtitle": "This page is currently under construction."
+  },
+  "nav": {
+    "atlas": "Atlas",
+    "tileFlux": "Tile Flux",
+    "data": "Data",
+    "admin": "Administration"
+  },
+  "admin": {
+    "title": "Administration",
+    "subtitle": "Manage users, teams, atlases and system settings.",
+    "nav": {
+      "users": "Users",
+      "teams": "Teams",
+      "atlases": "Atlases",
+      "tileflux": "Tile Flux",
+      "data": "Data"
+    },
+    "users": {
+      "username": "Username",
+      "email": "Email",
+      "roles": "Roles",
+      "verified": "Verified",
+      "editRoles": "Edit roles",
+      "editRolesTitle": "Edit roles — {{username}}",
+      "saveRoles": "Save",
+      "cancel": "Cancel",
+      "deleteUser": "Delete user",
+      "deleteConfirmTitle": "Delete user",
+      "deleteConfirmDescription": "Are you sure you want to delete {{username}}? This action cannot be undone.",
+      "deleteSuccess": "User deleted successfully.",
+      "deleteNotFound": "User not found. The list has been refreshed.",
+      "rolesUpdateSuccess": "Roles updated successfully.",
+      "noUsers": "No users found.",
+      "roleLabels": {
+        "ADMIN": "Administrator",
+        "USER": "User",
+        "MANAGE_TEAMS": "Team management",
+        "MANAGE_ATLASES_AND_MAPS": "Atlas & maps management",
+        "LOAD_DATA": "Data loading",
+        "LOAD_ICONS": "Icon loading",
+        "WITHDBACCESS": "PostGIS access"
+      }
+    },
+    "pagination": {
+      "showing": "Showing {{from}}–{{to}} of {{total}}",
+      "previous": "Previous",
+      "next": "Next"
+    }
+  },
+  "errors": {
+    "networkError": "Please check your internet connection",
+    "forbidden": "You do not have permission to perform this action",
+    "tooManyRequests": "Too many requests, please wait a moment",
+    "serverError": "A server error occurred, please try again"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "email": "Email",
+    "username": "Username",
+    "password": "Password",
+    "googleLogin": "Continue with Google",
+    "passwordMinLength": "Password must be at least {{length}} characters",
+    "loginError": "Invalid credentials",
+    "registerSuccess": "Registration successful! Please verify your email.",
+    "profile": "Profile",
+    "invalidEmail": "Invalid email format",
+    "requiredEmail": "Email is required",
+    "requiredPassword": "Password is required",
+    "requiredUsername": "Username is required",
+    "usernameMinLength": "Username must be at least {{length}} characters",
+    "usernameInvalidFormat": "Username can only contain unaccented letters, numbers, hyphens and underscores",
+    "validateEmailWarning": "Your account has been created successfully. Please validate your email before logging in.",
+    "verifyingEmail": "Verifying your email",
+    "emailVerified": "Email Verified!",
+    "emailVerifiedSubtitle": "Your account has been successfully verified.",
+    "redirectingToLogin": "Redirecting to login page...",
+    "verificationSuccess": "Your email has been verified successfully! You can now explore Canopy.",
+    "verificationFailed": "Verification Failed",
+    "verificationErrorSubtitle": "The verification link is invalid or has expired.",
+    "goToLogin": "Go to home page",
+    "captchaRequired": "Please complete the captcha",
+    "captchaError": "Captcha verification failed. Please try again.",
+    "genericError": "An error occurred, please try again",
+    "forgotPassword": "Forgot password?",
+    "forgotPasswordTitle": "Reset your password",
+    "forgotPasswordDescription": "Enter your email address and we'll send you a reset link.",
+    "forgotPasswordSubmit": "Send reset link",
+    "forgotPasswordSuccess": "If this email exists, a reset link has been sent. Check your inbox.",
+    "backToLogin": "Back to home",
+    "resetPasswordTitle": "Choose a new password",
+    "resetPasswordSubmit": "Reset password",
+    "resetPasswordSuccess": "Password updated. You can now log in.",
+    "resetTokenInvalid": "This reset link is invalid or has expired.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "Passwords do not match."
+  },
+  "user": {
+    "email_exists": "This email is already in use.",
+    "username_exists": "This username is already taken."
+  },
+  "profile": {
+    "title": "My Profile",
+    "identitySection": "Identity",
+    "passwordSection": "Change password",
+    "passwordOptionalHint": "Leave blank to keep your current password",
+    "saveChanges": "Save changes",
+    "updateSuccess": "Profile updated successfully.",
+    "confirmPassword": "Confirm new password",
+    "noChanges": "No changes to save."
+  },
+  "settings": {
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "language": "Language"
+  },
+  "dbAccess": {
+    "tab": "Database Access",
+    "statusSection": "Status",
+    "roleNameLabel": "PostgreSQL Username",
+    "activeStatus": "Active",
+    "activateTitle": "Activate PostgreSQL Access",
+    "activateDescription": "Set a password to create your PostgreSQL user.",
+    "activateButton": "Activate",
+    "updatePasswordTitle": "Update Password",
+    "updatePasswordButton": "Update",
+    "passwordLabel": "PostgreSQL Password",
+    "activateSuccess": "PostgreSQL access activated successfully.",
+    "updatePasswordSuccess": "PostgreSQL password updated.",
+    "errors": {
+      "invalid_token": "Invalid or expired activation token.",
+      "token_expired": "Activation token has expired.",
+      "already_activated": "Access is already activated.",
+      "not_activated": "Access has not been activated yet.",
+      "role_creation_failed": "Failed to create role.",
+      "password_update_failed": "Failed to update password."
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "tab": "Notifications",
+    "profileTab": "Profile",
+    "empty": "No notifications",
+    "deleteSelected": "Delete selected",
+    "newNotification": "You have a new notification",
+    "date": "Date",
+    "message": "Message",
+    "status": "Status",
+    "read": "Read",
+    "unread": "Unread",
+    "deleteSuccess": "Notifications deleted",
+    "confirmDeleteTitle": "Delete notifications",
+    "confirmDeleteDescription": "Are you sure you want to delete the selected notifications? This action cannot be undone.",
+    "messages": {
+      "ROLES_CHANGED": "Your roles have been updated. New roles: {{new_roles}}",
+      "DB_ACCESS_GIVEN": "You now have access to the PostGIS database. Go to the Profile tab to set a password for your PostgreSQL user."
+    }
+  }
+}
