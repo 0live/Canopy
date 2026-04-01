@@ -6,12 +6,14 @@ from sqlalchemy.orm import selectinload
 from app.core.config import Settings, get_settings
 from app.core.database import SessionDep
 from app.core.enums.access_policy import AccessPolicy
+from app.core.enums.app_parameter import AppParameter
 from app.core.exceptions import (
     DomainException,
     DuplicateEntityException,
     EntityNotFoundException,
     PermissionDeniedException,
 )
+from app.core.logging_config import get_logger
 from app.core.permissions import has_any_role
 from app.modules.atlases.models import Atlas
 from app.modules.atlases.repository import AtlasRepository
@@ -26,6 +28,8 @@ from app.modules.atlases.schemas import (
 )
 from app.modules.users.enums import UserRole
 from app.modules.users.schemas import UserDetail
+
+_logger = get_logger("atlases")
 
 
 class AtlasService:
@@ -84,12 +88,28 @@ class AtlasService:
 
         return atlas
 
-    async def get_all_atlases(self, current_user: UserDetail) -> List[AtlasSummary]:
-        return await self.repository.get_all(
-            filter_owner_id=current_user.id,
-            filter_team_ids=[t.id for t in current_user.teams],
-            admin_bypass=has_any_role(current_user, [UserRole.ADMIN]),
+    async def get_all_atlases(
+        self,
+        current_user: UserDetail,
+        skip: int = 0,
+        limit: int = AppParameter.PAGINATION_DEFAULT_LIMIT,
+    ) -> tuple[List[AtlasSummary], int]:
+        admin_bypass = has_any_role(current_user, [UserRole.ADMIN])
+        filter_owner_id = current_user.id
+        filter_team_ids = [t.id for t in current_user.teams]
+        atlases = await self.repository.get_all(
+            filter_owner_id=filter_owner_id,
+            filter_team_ids=filter_team_ids,
+            admin_bypass=admin_bypass,
+            skip=skip,
+            limit=limit,
         )
+        total = await self.repository.count(
+            filter_owner_id=filter_owner_id,
+            filter_team_ids=filter_team_ids,
+            admin_bypass=admin_bypass,
+        )
+        return atlases, total
 
     async def update_atlas(
         self,
@@ -126,6 +146,9 @@ class AtlasService:
             raise EntityNotFoundException(
                 entity="Atlas", key="atlas.not_found", params={"id": atlas_id}
             )
+        _logger.info(
+            "Atlas deleted", extra={"atlas_id": atlas_id, "user_id": current_user.id}
+        )
         return True
 
     async def add_team_to_atlas(
@@ -185,6 +208,14 @@ class AtlasService:
 
         update_data = link_update.model_dump(exclude_unset=True)
         result = await self.repository.update_team_link(link, update_data)
+        _logger.info(
+            "Atlas team permissions updated",
+            extra={
+                "atlas_id": atlas_id,
+                "team_id": team_id,
+                "user_id": current_user.id,
+            },
+        )
         return AtlasTeamLinkRead(**result.model_dump())
 
     async def delete_atlas_team_link(

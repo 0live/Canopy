@@ -1,9 +1,17 @@
 -include .env
--include .env.local
 -include api/Makefile
 -include docs/Makefile
+-include frontend/Makefile
 
-DOCKER_COMPOSE = docker compose --env-file .env --env-file .env.local
+ifeq ($(ENV),prod)
+    COMPOSE_FILES = -f docker-compose.yml
+else ifeq ($(ENV),dev)
+    COMPOSE_FILES = -f docker-compose.yml -f docker-compose.override.yml
+else
+    $(error "ENV must be set to 'prod' or 'dev'")
+endif
+
+DOCKER_COMPOSE = docker compose $(COMPOSE_FILES) --env-file .env
 PROFILES = $(if $(COMPOSE_PROFILES),--profile $(COMPOSE_PROFILES),)
 
 build:
@@ -16,11 +24,14 @@ stop:
 	$(DOCKER_COMPOSE) down -v
 
 genpkey:
-	echo "PRIVATE_KEY=$$(openssl rand -hex 32)" >> .env.local
+	echo "PRIVATE_KEY=$$(openssl rand -hex 32)" >> .env
+
+genaltchakey:
+	echo "ALTCHA_HMAC_KEY=$$(openssl rand -hex 32)" >> .env
 
 launch-tests:
 	cd api/ && ENV=test uv run pytest
 
-create-app: genpkey build start setup-db
+create-app: genpkey genaltchakey build start setup-db
 
 

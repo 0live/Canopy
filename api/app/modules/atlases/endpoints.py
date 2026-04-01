@@ -1,7 +1,7 @@
-from typing import List
+from fastapi import APIRouter, Depends, Query
 
-from fastapi import APIRouter, Depends
-
+from app.core.enums.app_parameter import AppParameter
+from app.core.schemas.paginated_response import PaginatedResponse
 from app.core.security import get_current_user
 from app.modules.atlases.schemas import (
     AtlasBase,
@@ -18,11 +18,19 @@ from app.modules.users.schemas import UserDetail
 atlasesRouter = APIRouter(prefix="/atlases", tags=["Atlases"])
 
 
-@atlasesRouter.get("", response_model=List[AtlasSummary])
+@atlasesRouter.get("", response_model=PaginatedResponse[AtlasSummary])
 async def get_all_atlases(
-    service: AtlasServiceDep, current_user: UserDetail = Depends(get_current_user)
+    service: AtlasServiceDep,
+    current_user: UserDetail = Depends(get_current_user),
+    skip: int = Query(default=AppParameter.PAGINATION_DEFAULT_SKIP, ge=0),
+    limit: int = Query(
+        default=AppParameter.PAGINATION_DEFAULT_LIMIT,
+        ge=1,
+        le=AppParameter.PAGINATION_MAX_LIMIT,
+    ),
 ):
-    return await service.get_all_atlases(current_user)
+    atlases, total = await service.get_all_atlases(current_user, skip=skip, limit=limit)
+    return PaginatedResponse(items=atlases, total=total, skip=skip, limit=limit)
 
 
 @atlasesRouter.get("/{atlas_id}", response_model=AtlasDetail)

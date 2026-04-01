@@ -1,7 +1,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from app.core.enums.app_parameter import AppParameter
+from app.core.config import get_settings
 from app.core.exceptions import (
     AuthenticationException,
     DbAccessException,
@@ -15,11 +15,11 @@ class TestGetRoleName:
     """Tests for DbAccessService._get_role_name static method."""
 
     def test_get_role_name_formats_correctly(self):
-        assert DbAccessService._get_role_name(1) == f"{AppParameter.DB_ROLE_PREFIX}1"
-        assert DbAccessService._get_role_name(42) == f"{AppParameter.DB_ROLE_PREFIX}42"
+        assert DbAccessService._get_role_name(1) == f"{get_settings().db_role_prefix}1"
+        assert DbAccessService._get_role_name(42) == f"{get_settings().db_role_prefix}42"
         assert (
             DbAccessService._get_role_name(12345)
-            == f"{AppParameter.DB_ROLE_PREFIX}12345"
+            == f"{get_settings().db_role_prefix}12345"
         )
 
 
@@ -70,7 +70,7 @@ class TestGetAccessStatus:
 
         assert status.has_access is True
         assert status.is_activated is True
-        assert status.role_name == f"{AppParameter.DB_ROLE_PREFIX}42"
+        assert status.role_name == f"{get_settings().db_role_prefix}42"
 
 
 class TestActivateDatabaseAccess:
@@ -89,7 +89,7 @@ class TestActivateDatabaseAccess:
         current_user = MagicMock(spec=User)
         current_user.id = 99
         current_user.roles = [UserRole.WITHDBACCESS]
-        current_user.db_activation_token = None  # No token
+        current_user.db_activation_token = None  # No token hash
 
         with pytest.raises(AuthenticationException) as exc_info:
             await service.activate_database_access("securepassword", current_user)
@@ -112,7 +112,7 @@ class TestActivateDatabaseAccess:
         current_user = MagicMock(spec=User)
         current_user.id = 1
         current_user.roles = [UserRole.WITHDBACCESS]
-        current_user.db_activation_token = "valid_token"
+        current_user.db_activation_token = "a" * 64  # valid hash
         current_user.db_activation_token_created_at = None
 
         mock_repository.role_exists = AsyncMock(return_value=True)
@@ -127,7 +127,7 @@ class TestActivateDatabaseAccess:
         current_user = MagicMock(spec=User)
         current_user.id = 42
         current_user.roles = [UserRole.WITHDBACCESS]
-        current_user.db_activation_token = "valid_token"
+        current_user.db_activation_token = "a" * 64  # valid hash
         current_user.db_activation_token_created_at = None  # valid
 
         mock_repository.role_exists = AsyncMock(return_value=False)
@@ -145,13 +145,13 @@ class TestActivateDatabaseAccess:
                 "securepassword123", current_user
             )
 
-        assert result.role_name == f"{AppParameter.DB_ROLE_PREFIX}42"
+        assert result.role_name == f"{get_settings().db_role_prefix}42"
         assert result.message == "db_access.activation_success"
         mock_repository.create_role.assert_called_once_with(
-            f"{AppParameter.DB_ROLE_PREFIX}42", "securepassword123"
+            f"{get_settings().db_role_prefix}42", "securepassword123"
         )
         mock_repository.update.assert_called_once()
-        # Ensure we cleared token
+        # Ensure we cleared token hash (never the plaintext)
         call_args = mock_repository.update.call_args
         assert call_args[0][0] == 42
         assert call_args[0][1]["db_activation_token"] is None
@@ -176,7 +176,7 @@ class TestRevokeDatabaseAccess:
 
         assert result is True
         mock_repository.drop_role.assert_called_once_with(
-            f"{AppParameter.DB_ROLE_PREFIX}42"
+            f"{get_settings().db_role_prefix}42"
         )
 
     @pytest.mark.asyncio

@@ -9,6 +9,9 @@ from jwt.exceptions import InvalidTokenError
 from app.core.config import Settings, get_settings
 from app.core.enums.app_parameter import AppParameter
 from app.core.exceptions import AuthenticationException
+from app.core.logging_config import get_logger
+
+_logger = get_logger("security")
 from app.modules.auth.schemas import Token
 from app.modules.users.schemas import UserDetail, UserDetailWithDbAccess
 from app.modules.users.service import UserServiceDep
@@ -44,7 +47,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def get_token(user: UserDetail, settings: Settings) -> Token:
     """Generate a Token response for a user."""
-    token = create_access_token(data={**user.model_dump()}, settings=settings)
+    safe_user = UserDetail.model_validate(user)
+    token = create_access_token(data={**safe_user.model_dump()}, settings=settings)
     return Token(access_token=token, token_type=AppParameter.TOKEN_TYPE)
 
 
@@ -62,8 +66,10 @@ async def get_current_user(
         payload = decode_token(token, settings=service.settings)
         username = payload.get("username")
         if username is None:
+            _logger.warning("JWT missing username claim")
             raise AuthenticationException(params={"detail": "auth.invalid_credentials"})
     except InvalidTokenError:
+        _logger.warning("Invalid JWT token")
         raise AuthenticationException(params={"detail": "auth.invalid_credentials"})
 
     user = await service.get_by_username(username, with_relations=True)
@@ -105,6 +111,6 @@ async def get_current_user_ws(
         return user.id
     except AuthenticationException:
         raise
-    except Exception:
-        # logger.error(f"WebSocket auth failed: {e}")
+    except Exception as e:
+        _logger.warning("WebSocket authentication failed", extra={"error": str(e)})
         raise AuthenticationException(params={"detail": "auth.failed"})

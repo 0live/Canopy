@@ -153,6 +153,46 @@ class TestBaseRepository:
         mock_session.delete.assert_not_called()
 
     @pytest.mark.asyncio
+    @patch("app.core.repository.func")
+    @patch("app.core.repository.select")
+    async def test_count_all(self, mock_select, mock_func, repository, mock_session):
+        """Test count_all returns the scalar count from exec."""
+        mock_count_query = MagicMock()
+        mock_select.return_value = mock_count_query
+        mock_count_query.select_from.return_value = mock_count_query
+
+        mock_result = Mock()
+        mock_result.one.return_value = 42
+        mock_session.exec.return_value = mock_result
+
+        result = await repository.count_all()
+
+        assert result == 42
+        mock_session.exec.assert_called_once_with(mock_count_query)
+
+    @pytest.mark.asyncio
+    @patch("app.core.repository.func")
+    @patch("app.core.repository.select")
+    async def test_count_from_query(self, mock_select, mock_func, repository, mock_session):
+        """Test count_from_query wraps the given query in a subquery."""
+        mock_inner_query = MagicMock()
+        mock_inner_query.subquery.return_value = MagicMock()
+
+        mock_count_query = MagicMock()
+        mock_select.return_value = mock_count_query
+        mock_count_query.select_from.return_value = mock_count_query
+
+        mock_result = Mock()
+        mock_result.one.return_value = 7
+        mock_session.exec.return_value = mock_result
+
+        result = await repository.count_from_query(mock_inner_query)
+
+        assert result == 7
+        mock_inner_query.subquery.assert_called_once()
+        mock_session.exec.assert_called_once_with(mock_count_query)
+
+    @pytest.mark.asyncio
     @patch("app.core.repository.select")
     async def test_get_by_name(self, mock_select, repository, mock_session):
         """Test get by name."""

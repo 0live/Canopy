@@ -7,7 +7,7 @@ async def get_user_id_by_username(
 ) -> int:
     response = await client.get("/users", headers={"Authorization": f"Bearer {token}"})
     assert response.status_code == 200
-    users = response.json()
+    users = response.json()["items"]
     for user in users:
         if user["username"] == username:
             return user["id"]

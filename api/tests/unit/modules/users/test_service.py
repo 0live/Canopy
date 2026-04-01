@@ -73,7 +73,11 @@ class TestUserService:
     async def test_get_user_by_id_success_self(self, service, mock_repo):
         """Test get user by id as self."""
         user = UserDetail(
-            id=1, username="me", email="me@test.com", roles=[UserRole.USER], teams=[]
+            id=1,
+            username="user_me",
+            email="me@test.com",
+            roles=[UserRole.USER],
+            teams=[],
         )
 
         mock_repo.get_or_raise = AsyncMock(return_value=user)
@@ -85,7 +89,11 @@ class TestUserService:
     async def test_get_user_by_id_permission_denied(self, service, mock_repo):
         """Test get other user without admin role."""
         user = UserDetail(
-            id=1, username="me", email="me@test.com", roles=[UserRole.USER], teams=[]
+            id=1,
+            username="user_me",
+            email="me@test.com",
+            roles=[UserRole.USER],
+            teams=[],
         )
 
         with pytest.raises(PermissionDeniedException) as exc:
@@ -121,7 +129,11 @@ class TestUserService:
     async def test_update_user_permission_denied(self, service):
         """Test update user without permission."""
         user = UserDetail(
-            id=1, username="me", email="me@test.com", roles=[UserRole.USER], teams=[]
+            id=1,
+            username="user_me",
+            email="me@test.com",
+            roles=[UserRole.USER],
+            teams=[],
         )
         update_data = UserUpdate(username="newname")
 
@@ -271,7 +283,7 @@ class TestUserService:
 
         result = await service.verify_user("valid_token")
 
-        assert result is True
+        assert result is user
         assert user.is_verified is True
         assert user.verification_token is None
 
@@ -282,7 +294,7 @@ class TestUserService:
 
         result = await service.verify_user("invalid_token")
 
-        assert result is False
+        assert result is None
 
     # =========================================================================
     # Authenticate User Tests

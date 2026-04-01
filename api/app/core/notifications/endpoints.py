@@ -1,8 +1,9 @@
-from typing import Annotated, List
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, WebSocket
+from fastapi import APIRouter, Depends, Response, WebSocket
 
-from app.core.notifications.schemas import NotificationRead
+from app.core.notifications.schemas import BulkDeleteRequest, NotificationRead
+from app.core.schemas.paginated_response import PaginatedResponse
 from app.core.notifications.service import (
     NotificationBroadcaster,
     NotificationServiceDep,
@@ -23,7 +24,7 @@ async def websocket_endpoint(
     await broadcaster.handle_session(user_id, websocket)
 
 
-@router.get("/", response_model=List[NotificationRead])
+@router.get("", response_model=PaginatedResponse[NotificationRead])
 async def get_notifications(
     current_user: Annotated[UserDetail, Depends(get_current_user)],
     service: NotificationServiceDep,
@@ -34,9 +35,10 @@ async def get_notifications(
     """
     Get current user's notifications.
     """
-    return await service.get_user_notifications(
+    items, total = await service.get_user_notifications(
         current_user.id, skip=skip, limit=limit, unread_only=unread_only
     )
+    return PaginatedResponse(items=items, total=total, skip=skip, limit=limit)
 
 
 @router.patch("/{notification_id}/read", response_model=NotificationRead)
@@ -60,3 +62,28 @@ async def mark_all_read(
     Mark all notifications as read for the current user.
     """
     return await service.mark_all_read(current_user.id)
+
+
+@router.delete("/{notification_id}", status_code=204)
+async def delete_notification(
+    notification_id: int,
+    current_user: Annotated[UserDetail, Depends(get_current_user)],
+    service: NotificationServiceDep,
+):
+    """
+    Delete a single notification (hard delete).
+    """
+    await service.delete_notification(notification_id, current_user.id)
+    return Response(status_code=204)
+
+
+@router.post("/bulk-delete", response_model=dict)
+async def bulk_delete_notifications(
+    body: BulkDeleteRequest,
+    current_user: Annotated[UserDetail, Depends(get_current_user)],
+    service: NotificationServiceDep,
+):
+    """
+    Bulk delete notifications by IDs (hard delete, restricted to current user).
+    """
+    return await service.delete_notifications(body.notification_ids, current_user.id)

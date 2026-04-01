@@ -1,7 +1,7 @@
-from typing import List
+from fastapi import APIRouter, Depends, Query
 
-from fastapi import APIRouter, Depends
-
+from app.core.enums.app_parameter import AppParameter
+from app.core.schemas.paginated_response import PaginatedResponse
 from app.core.security import get_current_user
 from app.modules.teams.schemas import (
     TeamBase,
@@ -16,11 +16,19 @@ from app.modules.users.schemas import UserDetail
 teamsRouter = APIRouter(prefix="/teams", tags=["Teams"])
 
 
-@teamsRouter.get("", response_model=List[TeamSummary])
+@teamsRouter.get("", response_model=PaginatedResponse[TeamSummary])
 async def get_all_teams(
-    service: TeamServiceDep, current_user: UserDetail = Depends(get_current_user)
+    service: TeamServiceDep,
+    current_user: UserDetail = Depends(get_current_user),
+    skip: int = Query(default=AppParameter.PAGINATION_DEFAULT_SKIP, ge=0),
+    limit: int = Query(
+        default=AppParameter.PAGINATION_DEFAULT_LIMIT,
+        ge=1,
+        le=AppParameter.PAGINATION_MAX_LIMIT,
+    ),
 ):
-    return await service.get_all_teams(current_user)
+    teams, total = await service.get_all_teams(current_user, skip=skip, limit=limit)
+    return PaginatedResponse(items=teams, total=total, skip=skip, limit=limit)
 
 
 @teamsRouter.get("/{team_id}", response_model=TeamDetail)

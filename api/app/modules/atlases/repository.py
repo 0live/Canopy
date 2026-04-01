@@ -11,30 +11,18 @@ from app.modules.teams.models import Team
 class AtlasRepository(BaseRepository[Atlas]):
     """Repository for Atlas entities."""
 
-    async def get_all(
+    def _build_query(
         self,
-        options: Optional[List[Any]] = None,
         filter_owner_id: Optional[int] = None,
         filter_team_ids: Optional[List[int]] = None,
         admin_bypass: bool = False,
-    ) -> List[Atlas]:
-        """
-        Get all atlases with explicit filters.
-        """
+    ):
         query = select(Atlas).distinct()
-        if options:
-            for option in options:
-                query = query.options(option)
-
-        if admin_bypass:
-            pass
-        else:
-            # We need to join if we filter by team membership
+        if not admin_bypass:
             if filter_team_ids:
                 query = query.outerjoin(AtlasTeamLink)
 
-            conditions = []
-            conditions.append(Atlas.access_policy == AccessPolicy.PUBLIC)
+            conditions = [Atlas.access_policy == AccessPolicy.PUBLIC]
             if filter_owner_id:
                 conditions.append(Atlas.created_by_id == filter_owner_id)
             if filter_team_ids:
@@ -43,11 +31,35 @@ class AtlasRepository(BaseRepository[Atlas]):
             if conditions:
                 query = query.where(or_(*conditions))
             else:
-                # Safety: If not admin_bypass and no other criteria, return nothing.
                 query = query.where(Atlas.id == -1)
 
-        result = await self.session.exec(query)
+        return query
+
+    async def get_all(
+        self,
+        options: Optional[List[Any]] = None,
+        filter_owner_id: Optional[int] = None,
+        filter_team_ids: Optional[List[int]] = None,
+        admin_bypass: bool = False,
+        skip: int = 0,
+        limit: int = 25,
+    ) -> List[Atlas]:
+        query = self._build_query(filter_owner_id, filter_team_ids, admin_bypass)
+        if options:
+            for option in options:
+                query = query.options(option)
+        result = await self.session.exec(query.offset(skip).limit(limit))
         return list(result.all())
+
+    async def count(
+        self,
+        filter_owner_id: Optional[int] = None,
+        filter_team_ids: Optional[List[int]] = None,
+        admin_bypass: bool = False,
+    ) -> int:
+        return await self.count_from_query(
+            self._build_query(filter_owner_id, filter_team_ids, admin_bypass)
+        )
 
     async def get_team_link(
         self, atlas_id: int, team_id: int

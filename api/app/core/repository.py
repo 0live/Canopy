@@ -1,5 +1,6 @@
 from typing import Any, Generic, List, Optional, Type, TypeVar
 
+from sqlalchemy import func
 from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import RelationshipProperty
 from sqlmodel import SQLModel, select
@@ -94,6 +95,17 @@ class BaseRepository(Generic[ModelType]):
 
         await self.session.delete(db_obj)
         return True
+
+    async def count_all(self) -> int:
+        result = await self.session.exec(
+            select(func.count()).select_from(self.model)
+        )
+        return result.one()
+
+    async def count_from_query(self, query) -> int:
+        count_query = select(func.count()).select_from(query.subquery())
+        result = await self.session.exec(count_query)
+        return result.one()
 
     async def get_by_name(self, name: str) -> Optional[ModelType]:
         # Note: This assumes the model has a 'name' attribute.

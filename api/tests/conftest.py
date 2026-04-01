@@ -156,13 +156,14 @@ def user_data_fixture():
         "email": "test@test.com",
         "username": "test_user",
         "password": "test_password",
+        "altcha_payload": "dummy",
     }
 
 
 @pytest.fixture(name="existing_users")
 def existing_users_fixture():
     return [
-        {"email": "user@test.com", "username": "user", "password": "user"},
+        {"email": "baseUser@test.com", "username": "baseUser", "password": "baseUser"},
         {"email": "editor@test.com", "username": "editor", "password": "editor"},
         {"email": "admin@test.com", "username": "admin", "password": "admin"},
     ]
@@ -200,6 +201,8 @@ async def register_and_verify_user_fixture(client: AsyncClient, session: AsyncSe
 
     async def _register_and_verify(user_data: dict) -> dict:
         # 1. Register via /auth/register
+        if "altcha_payload" not in user_data:
+            user_data["altcha_payload"] = "dummy"
         response = await client.post("/auth/register", json=user_data)
         assert response.status_code == 200
         user_response = response.json()

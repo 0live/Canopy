@@ -1,6 +1,6 @@
 import asyncio
 from functools import lru_cache
-from typing import Annotated, Dict, List, Optional
+from typing import Annotated, Dict, List, Optional, Tuple
 
 from fastapi import Depends, WebSocket, WebSocketDisconnect
 from redis.asyncio import from_url
@@ -12,10 +12,13 @@ from app.core.exceptions import (
     EntityNotFoundException,
     NotificationException,
 )
+from app.core.logging_config import get_logger
 from app.core.messages import MessageService
 from app.core.notifications.models import Notification
 from app.core.notifications.repository import NotificationRepository
 from app.core.notifications.schemas import NotificationMessage
+
+_logger = get_logger("notifications")
 
 
 class NotificationBroadcaster:
@@ -29,14 +32,24 @@ class NotificationBroadcaster:
         self.active_connections: Dict[int, List[WebSocket]] = {}
         self.listeners: Dict[int, asyncio.Task] = {}
         self.redis = from_url(str(settings.redis_url), decode_responses=True)
+        self._allowed_origins: set = set(settings.cors_origins)
 
     async def connect(self, user_id: int, websocket: WebSocket):
+        origin = websocket.headers.get("origin", "")
+        if "*" not in self._allowed_origins and origin not in self._allowed_origins:
+            await websocket.close(code=1008)
+            raise NotificationException(key="notification.origin_not_allowed")
+        user_conns = self.active_connections.get(user_id, [])
+        if len(user_conns) >= AppParameter.WS_MAX_CONNECTIONS_PER_USER:
+            await websocket.close(code=1008)
+            raise NotificationException(key="notification.too_many_connections")
         await websocket.accept()
         if user_id not in self.active_connections:
             self.active_connections[user_id] = []
         self.active_connections[user_id].append(websocket)
         if user_id not in self.listeners:
             self.listeners[user_id] = asyncio.create_task(self._redis_listener(user_id))
+        _logger.debug("WebSocket connected", extra={"user_id": user_id})
 
     def disconnect(self, user_id: int, websocket: WebSocket):
         if user_id in self.active_connections:
@@ -47,6 +60,7 @@ class NotificationBroadcaster:
                 if user_id in self.listeners:
                     self.listeners[user_id].cancel()
                     del self.listeners[user_id]
+                _logger.debug("WebSocket disconnected", extra={"user_id": user_id})
 
     async def _redis_listener(self, user_id: int):
         """
@@ -71,6 +85,9 @@ class NotificationBroadcaster:
         except asyncio.CancelledError:
             pass
         except Exception as e:
+            _logger.error(
+                "Redis listener error", extra={"user_id": user_id, "error": str(e)}
+            )
             raise NotificationException(
                 key="notification.redis_error", params={"error": str(e)}
             ) from e
@@ -90,20 +107,24 @@ class NotificationBroadcaster:
         """
         Manages the WebSocket session lifecycle: connect, loop, disconnect.
         """
+        await self.connect(user_id, websocket)
         try:
-            await self.connect(user_id, websocket)
-            try:
-                while True:
-                    await websocket.receive_text()
-            except WebSocketDisconnect:
-                self.disconnect(user_id, websocket)
-
-        except Exception as e:
-            if user_id:
-                self.disconnect(user_id, websocket)
-            raise NotificationException(
-                key="notification.connection_error", params={"error": str(e)}
-            ) from e
+            while True:
+                try:
+                    data = await asyncio.wait_for(
+                        websocket.receive_text(),
+                        timeout=AppParameter.WS_INACTIVITY_TIMEOUT_S,
+                    )
+                    if len(data.encode()) > AppParameter.WS_MAX_MSG_BYTES:
+                        await websocket.close(code=1009)
+                        break
+                except asyncio.TimeoutError:
+                    await websocket.close(code=1001)
+                    break
+        except WebSocketDisconnect:
+            pass
+        finally:
+            self.disconnect(user_id, websocket)
 
     async def shutdown(self):
         for task in self.listeners.values():
@@ -130,7 +151,7 @@ class NotificationService:
 
     async def get_user_notifications(
         self, user_id: int, skip: int = 0, limit: int = 50, unread_only: bool = False
-    ) -> List[Notification]:
+    ) -> Tuple[List[Notification], int]:
         """Get notifications for a specific user."""
         try:
             return await self.repository.get_for_user(user_id, skip, limit, unread_only)
@@ -172,6 +193,33 @@ class NotificationService:
         msg = MessageService.get_message("notification.all_read")
         return {"message": msg}
 
+    async def delete_notification(self, notification_id: int, user_id: int) -> None:
+        """Delete a single notification by ID, verifying ownership."""
+        try:
+            found = await self.repository.delete_by_id_and_user(notification_id, user_id)
+        except Exception as e:
+            raise NotificationException(
+                key="notification.delete_failed", params={"error": str(e)}
+            ) from e
+        if not found:
+            raise EntityNotFoundException(
+                entity="Notification",
+                key="notification.not_found",
+                params={"id": notification_id},
+            )
+
+    async def delete_notifications(
+        self, notification_ids: List[int], user_id: int
+    ) -> dict:
+        """Bulk delete notifications, restricted to the requesting user."""
+        try:
+            count = await self.repository.delete_bulk(notification_ids, user_id)
+        except Exception as e:
+            raise NotificationException(
+                key="notification.delete_failed", params={"error": str(e)}
+            ) from e
+        return {"deleted": count}
+
     async def send_to_user(
         self,
         user_id: int,
@@ -184,6 +232,7 @@ class NotificationService:
             notification = Notification(
                 user_id=user_id,
                 type=message.type,
+                key=message.key,
                 payload=message.payload,
                 created_at=message.timestamp,
                 is_read=False,
@@ -191,7 +240,11 @@ class NotificationService:
             self.repository.session.add(notification)
             await self.repository.session.flush()
 
-            updated_payload = {**(message.payload or {}), "id": notification.id}
+            updated_payload = {
+                **(message.payload or {}),
+                "id": notification.id,
+                "key": message.key,
+            }
             updated_message = message.model_copy(update={"payload": updated_payload})
             await self.broadcaster.publish_to_user(user_id, updated_message)
         except Exception as e:

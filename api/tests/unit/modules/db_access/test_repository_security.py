@@ -1,6 +1,7 @@
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from app.core.config import get_settings
 from app.modules.db_access.repository import DbAccessRepository
 
 
@@ -9,60 +10,57 @@ class TestDbAccessRepositorySecurity:
     Security tests for DbAccessRepository ensuring safe SQL generation.
     """
 
-    @pytest.mark.asyncio
-    async def test_create_role_sql_generation(self):
-        """
-        Verify that create_role uses psycopg.sql to compose the query safely.
-        """
-        # Mock session
-        mock_session = MagicMock()
+    @pytest.fixture
+    def role_name(self):
+        return f"{get_settings().db_role_prefix}123"
 
-        # Async mock setup for session.execute()
+    @pytest.fixture
+    def mock_session(self):
+        session = MagicMock()
+
         async def execute_mock(statement, params=None):
-            # return a mock result for select current_database
             mock_res = MagicMock()
             mock_res.scalar.return_value = "test_db"
             return mock_res
 
-        mock_session.execute.side_effect = execute_mock
+        session.execute.side_effect = execute_mock
 
-        repo = DbAccessRepository(mock_session)
+        mock_conn = MagicMock()
+        mock_conn.exec_driver_sql = AsyncMock()
+        session.connection = AsyncMock(return_value=mock_conn)
 
-        # Execute
-        await repo.create_role("canopy_user_123", "secure'password")
-
-        # Verify calls
-        calls = mock_session.execute.call_args_list
-        assert len(calls) >= 7
-
-        def get_sql_from_call(call):
-            return str(call[0][0])
-
-        # 1. SELECT current_database()
-        assert "SELECT current_database()" in get_sql_from_call(calls[0])
-
-        # 2. CREATE ROLE
-        create_role_sql = get_sql_from_call(calls[1])
-        # With default quoting (UTF-8/Standard):
-        # Identifiers quoted with double quotes
-        # Strings quoted with single quotes, single quotes escaped as ''
-        assert 'CREATE ROLE "canopy_user_123"' in create_role_sql
-        assert "LOGIN PASSWORD 'secure''password'" in create_role_sql
-
-        # 3. GRANT CONNECT
-        grant_connect = get_sql_from_call(calls[2])
-        assert (
-            'GRANT CONNECT ON DATABASE "test_db" TO "canopy_user_123"' in grant_connect
-        )
+        return session
 
     @pytest.mark.asyncio
-    async def test_drop_role_sql_generation(self):
+    async def test_create_role_sql_generation(self, role_name, mock_session):
+        """
+        Verify that create_role uses psycopg.sql to compose the query safely.
+        """
+        repo = DbAccessRepository(mock_session)
+        await repo.create_role(role_name, "secure'password")
+
+        # session.execute: only SELECT current_database()
+        assert "SELECT current_database()" in str(mock_session.execute.call_args_list[0][0][0])
+
+        # exec_driver_sql: 7 DDL statements
+        ddl_calls = mock_session.connection.return_value.exec_driver_sql.call_args_list
+        assert len(ddl_calls) == 7
+
+        create_role_sql = ddl_calls[0][0][0]
+        assert f'CREATE ROLE "{role_name}"' in create_role_sql
+        assert "LOGIN PASSWORD 'SCRAM-SHA-256$" in create_role_sql
+        assert "secure" not in create_role_sql  # plaintext must never appear in SQL
+
+        grant_connect = ddl_calls[1][0][0]
+        assert f'GRANT CONNECT ON DATABASE "test_db" TO "{role_name}"' in grant_connect
+
+    @pytest.mark.asyncio
+    async def test_drop_role_sql_generation(self, role_name):
         """
         Verify that drop_role uses psycopg.sql to compose the query safely.
         """
         mock_session = MagicMock()
 
-        # Mock role_exists to return True
         async def execute_mock(statement, params=None):
             mock_res = MagicMock()
             stmt_str = str(statement)
@@ -73,16 +71,43 @@ class TestDbAccessRepositorySecurity:
         mock_session.execute.side_effect = execute_mock
 
         repo = DbAccessRepository(mock_session)
-
-        await repo.drop_role("canopy_user_123")
+        await repo.drop_role(role_name)
 
         calls = mock_session.execute.call_args_list
 
         reassign_sql = str(calls[1][0][0])
-        assert 'REASSIGN OWNED BY "canopy_user_123" TO CURRENT_USER' in reassign_sql
+        assert f'REASSIGN OWNED BY "{role_name}" TO CURRENT_USER' in reassign_sql
 
         drop_owned_sql = str(calls[2][0][0])
-        assert 'DROP OWNED BY "canopy_user_123"' in drop_owned_sql
+        assert f'DROP OWNED BY "{role_name}"' in drop_owned_sql
 
         drop_role_sql = str(calls[3][0][0])
-        assert 'DROP ROLE IF EXISTS "canopy_user_123"' in drop_role_sql
+        assert f'DROP ROLE IF EXISTS "{role_name}"' in drop_role_sql
+
+    @pytest.mark.asyncio
+    async def test_update_role_password_uses_scram_verifier(self, role_name, mock_session):
+        """Verify that update_role_password emits a SCRAM verifier, not plaintext."""
+        repo = DbAccessRepository(mock_session)
+        await repo.update_role_password(role_name, "myplainpassword")
+
+        ddl_calls = mock_session.connection.return_value.exec_driver_sql.call_args_list
+        assert len(ddl_calls) == 1
+        alter_sql = ddl_calls[0][0][0]
+        assert f'ALTER ROLE "{role_name}"' in alter_sql
+        assert "WITH PASSWORD 'SCRAM-SHA-256$" in alter_sql
+        assert "myplainpassword" not in alter_sql
+
+    @pytest.mark.asyncio
+    async def test_create_role_calls_scram_verifier(self, role_name, mock_session):
+        """Regression: repository must call generate_scram_sha256_verifier and not embed plaintext."""
+        repo = DbAccessRepository(mock_session)
+        with patch(
+            "app.modules.db_access.repository.generate_scram_sha256_verifier",
+            return_value="SCRAM-SHA-256$4096:abc$def:ghi",
+        ) as mock_scram:
+            await repo.create_role(role_name, "plain_password")
+
+        mock_scram.assert_called_once_with("plain_password")
+        create_sql = mock_session.connection.return_value.exec_driver_sql.call_args_list[0][0][0]
+        assert "plain_password" not in create_sql
+        assert "SCRAM-SHA-256" in create_sql

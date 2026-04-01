@@ -26,7 +26,7 @@ async def test_get_all_users_permissions(
         "/users", headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
+    assert isinstance(response.json()["items"], list)
 
 
 @pytest.mark.asyncio
@@ -97,6 +97,7 @@ async def test_delete_user(client: AsyncClient, auth_token_factory, existing_use
         "username": "todelete",
         "email": "todelete@example.com",
         "password": "password12345",
+        "altcha_payload": "dummy",
     }
     await client.post("/auth/register", json=user_to_delete)
 
@@ -105,7 +106,7 @@ async def test_delete_user(client: AsyncClient, auth_token_factory, existing_use
     list_res = await client.get(
         "/users", headers={"Authorization": f"Bearer {admin_token}"}
     )
-    users = list_res.json()
+    users = list_res.json()["items"]
     target_user = next(u for u in users if u["username"] == "todelete")
     target_id = target_user["id"]
 
@@ -205,3 +206,48 @@ async def test_update_user_duplicate_username(
     # 5. Assert 409 Conflict (Current behavior is 500 Internal Server Error)
     assert response.status_code == 409
     assert response.json()["key"] == "user.username_exists"
+
+
+@pytest.mark.asyncio
+async def test_get_all_users_paginated_response_shape(
+    client: AsyncClient, auth_token_factory, existing_users
+):
+    """GET /users returns a PaginatedResponse with correct structure."""
+    admin_token = await auth_token_factory(
+        username=existing_users[2]["username"], password=existing_users[2]["password"]
+    )
+    response = await client.get(
+        "/users", headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "items" in data
+    assert "total" in data
+    assert "skip" in data
+    assert "limit" in data
+    assert isinstance(data["items"], list)
+    assert data["total"] >= len(data["items"])
+    assert data["skip"] == 0
+    assert data["limit"] == 25
+
+
+@pytest.mark.asyncio
+async def test_get_all_users_skip_limit(
+    client: AsyncClient, auth_token_factory, existing_users
+):
+    """GET /users respects skip and limit query parameters."""
+    admin_token = await auth_token_factory(
+        username=existing_users[2]["username"], password=existing_users[2]["password"]
+    )
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    full_response = await client.get("/users", headers=headers)
+    total = full_response.json()["total"]
+
+    response = await client.get("/users?skip=0&limit=1", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["items"]) == 1
+    assert data["total"] == total
+    assert data["skip"] == 0
+    assert data["limit"] == 1

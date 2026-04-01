@@ -11,7 +11,7 @@ from app.core import models  # noqa: F401
 from app.core.enums.postgresql_schema import PostgreSQLSchema
 from app.core.notifications.models import Notification  # noqa
 from app.modules.atlases.models import Atlas, AtlasTeamLink  # noqa
-from app.modules.auth.models import RefreshToken  # noqa
+from app.modules.auth.models import PasswordResetToken, RefreshToken  # noqa
 from app.modules.maps.models import Map  # noqa
 from app.modules.teams.models import Team, UserTeamLink  # noqa
 from app.modules.users.models import User  # noqa

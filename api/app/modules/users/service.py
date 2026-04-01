@@ -1,3 +1,4 @@
+import hashlib
 import secrets
 from datetime import datetime, timezone
 from typing import Annotated, Any, Optional
@@ -16,7 +17,9 @@ from app.core.exceptions import (
     PermissionDeniedException,
 )
 from app.core.hashing import hash_password, verify_password
+from app.core.logging_config import get_logger
 from app.core.messages import MessageService
+from app.core.notifications.enums import NotificationKey
 from app.core.notifications.schemas import NotificationMessage, NotificationType
 from app.core.notifications.service import NotificationService, NotificationServiceDep
 from app.core.permissions import has_any_role
@@ -26,13 +29,15 @@ from app.modules.users.enums import UserRole
 from app.modules.users.models import User
 from app.modules.users.repository import UserRepository
 from app.modules.users.schemas import (
+    AdminUserSummary,
     UserCreate,
     UserDetail,
     UserInternalUpdate,
     UserRoleUpdate,
-    UserSummary,
     UserUpdate,
 )
+
+_logger = get_logger("users")
 
 
 class UserService:
@@ -50,12 +55,16 @@ class UserService:
         self.db_access_service = db_access_service
         self.notification_service = notification_service
 
-    async def get_all_users(self, current_user: UserDetail) -> list[UserSummary]:
+    async def get_all_users(
+        self, current_user: UserDetail, skip: int = 0, limit: int = 25
+    ) -> tuple[list[AdminUserSummary], int]:
         if not has_any_role(current_user, [UserRole.ADMIN]):
             raise PermissionDeniedException(
                 params={"detail": "user.list_permission_denied"}
             )
-        return await self.repository.get_all()
+        users = await self.repository.get_all(limit=limit, offset=skip)
+        total = await self.repository.count_all()
+        return users, total
 
     async def get_user_by_id(
         self, user_id: int, current_user: UserDetail
@@ -129,6 +138,10 @@ class UserService:
                 params={"detail": "user.create_permission_denied"}
             )
 
+        _logger.info(
+            "Admin created user",
+            extra={"admin_id": current_user.id, "email": user.email},
+        )
         return await self.create_user(user, is_verified=True, force_roles=user.roles)
 
     async def get_or_create_google_user(self, user_info: dict) -> UserDetail:
@@ -139,7 +152,7 @@ class UserService:
         if existing_user:
             return UserDetail.model_validate(existing_user)
 
-        username = user_info.get("name") or email.split("@")[0]
+        username = (user_info.get("name") or email.split("@")[0]).replace(" ", "_")
         user_create = UserCreate(
             email=email,
             username=username,
@@ -164,17 +177,27 @@ class UserService:
             user_data["verification_token"] = verification_token
         return user_data
 
-    async def verify_user(self, token: str) -> bool:
+    async def update_password_internal(
+        self, user_id: int, new_hashed_password: str
+    ) -> None:
+        """
+        Update a user's password without permission checks.
+        Internal use only (e.g. AuthService password reset flow).
+        """
+        await self.repository.update(user_id, {"hashed_password": new_hashed_password})
+        await self.repository.session.flush()
+
+    async def verify_user(self, token: str) -> Optional[User]:
         """Verify a user account using the token."""
         user = await self.repository.get_by_verification_token(token)
         if not user:
-            return False
+            return None
 
         user.is_verified = True
         user.verification_token = None
         await self.repository.session.flush()
 
-        return True
+        return user
 
     async def authenticate_user(self, username: str, password: str) -> Optional[User]:
         """Authenticate a user and return the user object."""
@@ -205,6 +228,10 @@ class UserService:
             await self.db_access_service.revoke_database_access(user_id)
 
         await self.repository.delete(user_id)
+        _logger.warning(
+            "User deleted",
+            extra={"deleted_user_id": user_id, "admin_id": current_user.id},
+        )
 
         return {"message": MessageService.get_message("user.deleted_success")}
 
@@ -243,16 +270,16 @@ class UserService:
         new_roles = set(role_update.roles)
 
         update_dict = {"roles": role_update.roles}
-        activation_token: Optional[str] = None
 
-        # Handle WITHDBACCESS grant: generate activation token
+        # Handle WITHDBACCESS grant: generate activation token hash
         if (
             UserRole.WITHDBACCESS in new_roles
             and UserRole.WITHDBACCESS not in old_roles
         ):
-            activation_token = secrets.token_urlsafe(AppParameter.TOKEN_LENGTH)
-            update_dict["db_activation_token"] = activation_token
-            # Use current time
+            token = secrets.token_urlsafe(AppParameter.TOKEN_LENGTH)
+            update_dict["db_activation_token"] = hashlib.sha256(
+                token.encode()
+            ).hexdigest()
             update_dict["db_activation_token_created_at"] = datetime.now(timezone.utc)
 
         # Handle WITHDBACCESS revocation: clean up PostgreSQL role
@@ -266,6 +293,10 @@ class UserService:
 
         update_data = UserInternalUpdate(**update_dict)
 
+        _logger.debug(
+            "Applying role update",
+            extra={"target_user_id": user_id, "fields": list(update_dict.keys())},
+        )
         await self.repository.update(
             user_id,
             update_data.model_dump(exclude_unset=True),
@@ -276,17 +307,39 @@ class UserService:
             user_id, options=[selectinload(User.teams)]
         )
 
-        # Send notification
+        _logger.warning(
+            "User roles updated",
+            extra={
+                "target_user_id": user_id,
+                "admin_id": current_user.id,
+                "old_roles": [r.value for r in old_roles],
+                "new_roles": [r.value for r in new_roles],
+            },
+        )
+
         await self.notification_service.send_to_user(
             user_id,
             NotificationMessage(
                 type=NotificationType.INFO,
+                key=NotificationKey.ROLES_CHANGED,
                 payload={
                     "old_roles": [r.value for r in old_roles],
                     "new_roles": [r.value for r in new_roles],
                 },
             ),
         )
+
+        if UserRole.WITHDBACCESS in new_roles and not result_user.postgis_role_created:
+            await self.notification_service.send_to_user(
+                user_id,
+                NotificationMessage(
+                    type=NotificationType.WARNING,
+                    key=NotificationKey.DB_ACCESS_GIVEN,
+                    payload={
+                        "new_roles": [r.value for r in new_roles],
+                    },
+                ),
+            )
 
         return result_user
 

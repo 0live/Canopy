@@ -24,10 +24,10 @@ async def test_persistent_notifications_lifecycle(
 
     # 1. Setup - Login as Admin and User
     admin_token = await auth_token_factory(username="admin", password="admin")
-    user_token = await auth_token_factory(username="user", password="user")
+    user_token = await auth_token_factory(username="baseUser", password="baseUser")
 
     # Get User ID
-    result = await session.exec(select(User).where(User.username == "user"))
+    result = await session.exec(select(User).where(User.username == "baseUser"))
     target_user = result.first()
     assert target_user is not None
 
@@ -56,16 +56,16 @@ async def test_persistent_notifications_lifecycle(
         assert latest_notif.is_read is False
         assert latest_notif.type == "INFO"
 
-        # 4. Verify via API (GET /notifications)
         response = tc.get(
             "/notifications/",
             headers={"Authorization": f"Bearer {user_token}"},
         )
         assert response.status_code == 200
         data = response.json()
-        assert len(data) >= 1
+        items = data["items"]
+        assert len(items) >= 1
         # Check that the latest notification is present
-        api_notif = next((n for n in data if n["id"] == latest_notif.id), None)
+        api_notif = next((n for n in items if n["id"] == latest_notif.id), None)
         assert api_notif is not None
         assert api_notif["is_read"] is False
 
@@ -98,4 +98,4 @@ async def test_persistent_notifications_lifecycle(
             headers={"Authorization": f"Bearer {user_token}"},
         )
         assert response.status_code == 200
-        assert len(response.json()) == 0
+        assert len(response.json()["items"]) == 0

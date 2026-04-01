@@ -4,7 +4,10 @@ import aiosmtplib
 
 from app.core.config import Settings
 from app.core.exceptions import EmailSendException
+from app.core.logging_config import get_logger
 from app.core.messages import MessageService
+
+_logger = get_logger("email")
 
 
 class EmailService:
@@ -59,8 +62,22 @@ class EmailService:
                 kwargs["password"] = self.settings.smtp_password
 
             await aiosmtplib.send(message, **kwargs)
+            _logger.info("Email sent", extra={"to": to_email, "subject": subject})
         except aiosmtplib.SMTPException as e:
+            _logger.error("Email send failed", extra={"to": to_email, "error": str(e)})
             raise EmailSendException(params={"recipient": to_email, "error": str(e)})
+
+    async def send_password_reset_email(self, email: str, token: str) -> None:
+        """Send a password reset email to the user with a clickable link."""
+        site_address = self.settings.site_address or "http://localhost:3000"
+        reset_link = f"{site_address.rstrip('/')}/reset-password?token={token}"
+
+        subject = MessageService.get_message(
+            "email.reset_subject", self.settings.locale
+        )
+        body = self._build_password_reset_body(reset_link)
+
+        await self._send_email(to_email=email, subject=subject, body=body)
 
     def _build_verification_body(self, verification_link: str) -> str:
         """Build the email body for verification emails."""
@@ -72,3 +89,12 @@ class EmailService:
         ignore = MessageService.get_message("email.verification_ignore", locale)
 
         return f"{greeting}\n\n{instruction}\n\n{verification_link}\n\n{ignore}"
+
+    def _build_password_reset_body(self, reset_link: str) -> str:
+        """Build the email body for password reset emails."""
+        locale = self.settings.locale
+        greeting = MessageService.get_message("email.reset_greeting", locale)
+        instruction = MessageService.get_message("email.reset_instruction", locale)
+        ignore = MessageService.get_message("email.reset_ignore", locale)
+
+        return f"{greeting}\n\n{instruction}\n\n{reset_link}\n\n{ignore}"

@@ -86,7 +86,7 @@ async def test_google_callback(client: AsyncClient):
         assert me_resp.status_code == 200
         me = me_resp.json()
         assert me["email"] == "googleuser@example.com"
-        assert me["username"] == "Google User"
+        assert me["username"] == "Google_User"
 
 
 @pytest.mark.asyncio

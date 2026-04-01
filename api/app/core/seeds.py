@@ -77,16 +77,16 @@ class Seeder:
             teams=[team1],
             is_verified=True,
         )
-        user = User(
-            email="user@test.com",
-            username="user",
-            hashed_password=hash_password("user"),
+        baseUser = User(
+            email="baseUser@test.com",
+            username="baseUser",
+            hashed_password=hash_password("baseUser"),
             roles=[UserRole.USER],
             teams=[team2],
             is_verified=True,
         )
 
-        session.add_all([admin, editor, user])
+        session.add_all([admin, editor, baseUser])
         if commit:
             await session.commit()
             await session.refresh(admin)

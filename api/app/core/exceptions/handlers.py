@@ -14,8 +14,10 @@ from app.core.exceptions import (
     PermissionDeniedException,
     SecurityException,
 )
-from app.core.logging_config import logger
+from app.core.logging_config import get_logger
 from app.core.messages import MessageService
+
+logger = get_logger("exceptions")
 
 
 async def duplicate_entity_exception_handler(
@@ -118,7 +120,7 @@ async def security_exception_handler(request: Request, exc: SecurityException):
 
 
 async def notification_exception_handler(request: Request, exc: NotificationException):
-    logger.error("Notification error: %s", exc.key, extra={"params": exc.params})
+    logger.error("Notification error: %s", exc.key, extra={"params": exc.params}, exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Internal server error"},

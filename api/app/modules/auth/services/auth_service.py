@@ -3,21 +3,29 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
 
+from altcha import ChallengeOptions
+from altcha import create_challenge as altcha_create_challenge
+from altcha import verify_solution as altcha_verify_solution
 from fastapi import Depends, Request, Response
 
 from app.core.config import Settings, get_settings
 from app.core.database import SessionDep
+from app.core.hashing import hash_password
+from app.core.logging_config import get_logger
 from app.core.enums.app_parameter import AppParameter
 from app.core.enums.environment import Environment
 from app.core.exceptions import AuthenticationException, PermissionDeniedException
 from app.core.security import get_token
-from app.modules.auth.models import RefreshToken
+from app.modules.auth.models import PasswordResetToken, RefreshToken
 from app.modules.auth.repository import AuthRepository
-from app.modules.auth.schemas import AuthResponse
+from app.modules.auth.schemas import AuthResponse, ForgotPasswordRequest, RegisterPayload, ResetPasswordRequest
 from app.modules.auth.services.email_service import EmailService
 from app.modules.auth.services.google_auth import GoogleAuthService
 from app.modules.users.schemas import UserCreate, UserDetail
 from app.modules.users.service import UserService, UserServiceDep
+
+
+_logger = get_logger("auth")
 
 
 class AuthService:
@@ -37,6 +45,27 @@ class AuthService:
         self.google_auth_service = google_auth_service
         self.settings = settings
 
+    def get_captcha_challenge(self) -> dict:
+        """Generate a new Altcha proof-of-work challenge."""
+        challenge = altcha_create_challenge(
+            ChallengeOptions(
+                hmac_key=self.settings.altcha_hmac_key,
+                expires=datetime.now(timezone.utc) + timedelta(minutes=10),
+            )
+        )
+        return vars(challenge)
+
+    def _validate_captcha(self, payload: str) -> None:
+        """Verify an Altcha captcha solution payload."""
+        if self.settings.env == Environment.TEST:
+            return
+
+        ok, _ = altcha_verify_solution(
+            payload, self.settings.altcha_hmac_key, check_expires=True
+        )
+        if not ok:
+            raise AuthenticationException(key="auth.captcha_invalid")
+
     def _hash_token(self, token: str) -> str:
         """Hash the refresh token for storage."""
         return hashlib.sha256(token.encode()).hexdigest()
@@ -54,19 +83,25 @@ class AuthService:
             refresh_token=refresh_token_str,
         )
 
-    async def register(self, user: UserCreate) -> UserDetail:
+    async def register(self, payload: RegisterPayload) -> UserDetail:
         """Register a new user and send verification email."""
         if not self.settings.allow_self_registration:
             raise PermissionDeniedException(key="auth.registration_disabled")
 
+        self._validate_captcha(payload.altcha_payload)
+
+        user = UserCreate(
+            email=payload.email, username=payload.username, password=payload.password
+        )
         verification_token = secrets.token_urlsafe(AppParameter.TOKEN_LENGTH)
         new_user = await self.user_service.create_user(
             user, is_verified=False, verification_token=verification_token
         )
         if self.settings.smtp_host:
             await self.email_service.send_verification_email(
-                user.email, verification_token
+                payload.email, verification_token
             )
+        _logger.info("User registered", extra={"username": payload.username, "email": payload.email})
         return new_user
 
     def set_refresh_cookie(self, response: Response, token: str) -> None:
@@ -109,6 +144,8 @@ class AuthService:
         """Authenticate user and return access + refresh tokens."""
         user = await self.user_service.authenticate_user(username, password)
 
+        await self.repository.delete_all_user_tokens(user.id)
+        _logger.info("User logged in", extra={"user_id": user.id, "username": username})
         user_detail = UserDetail.model_validate(user)
         return await self._issue_tokens(user_detail, response)
 
@@ -157,14 +194,72 @@ class AuthService:
             stored_token = await self.repository.get_refresh_token_by_hash(token_hash)
             if stored_token:
                 await self.repository.revoke_refresh_token(stored_token.id)
+                _logger.info("User logged out", extra={"user_id": stored_token.user_id})
 
         response.delete_cookie(AppParameter.REFRESH_TOKEN_COOKIE_NAME)
 
-    async def verify_email(self, token: str) -> None:
-        """Verify user email."""
-        success = await self.user_service.verify_user(token)
-        if not success:
+    async def verify_email(self, token: str, response: Response) -> AuthResponse:
+        """Verify user email and issue auth tokens."""
+        user = await self.user_service.verify_user(token)
+        if not user:
             raise AuthenticationException(params={"detail": "auth.verification_failed"})
+
+        await self.repository.delete_all_user_tokens(user.id)
+        _logger.info("Email verified", extra={"user_id": user.id})
+        user_detail = UserDetail.model_validate(user)
+        return await self._issue_tokens(user_detail, response)
+
+    async def forgot_password(self, payload: ForgotPasswordRequest) -> None:
+        """
+        Initiate password reset: generate a token, store it, and email the user.
+        Always returns silently even if the email does not exist (anti-enumeration).
+        """
+        user = await self.user_service.get_by_email(str(payload.email))
+        if not user:
+            return
+
+        await self.repository.delete_user_reset_tokens(user.id)
+
+        token_str = secrets.token_urlsafe(AppParameter.TOKEN_LENGTH)
+        token_hash = self._hash_token(token_str)
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            minutes=AppParameter.RESET_TOKEN_EXPIRE_MINUTES
+        )
+        reset_token = PasswordResetToken(
+            user_id=user.id,
+            token_hash=token_hash,
+            expires_at=expires_at,
+        )
+        await self.repository.create_reset_token(reset_token)
+
+        if self.settings.smtp_host:
+            await self.email_service.send_password_reset_email(str(payload.email), token_str)
+
+        _logger.info("Password reset requested", extra={"user_id": user.id})
+
+    async def reset_password(self, payload: ResetPasswordRequest) -> None:
+        """Validate reset token and update user password."""
+        token_hash = self._hash_token(payload.token)
+        reset_token = await self.repository.get_reset_token_by_hash(token_hash)
+
+        if not reset_token:
+            raise AuthenticationException(key="auth.reset_token_invalid")
+
+        expires_at = reset_token.expires_at
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+
+        if expires_at < datetime.now(timezone.utc):
+            raise AuthenticationException(key="auth.reset_token_invalid")
+
+        new_hashed_password = hash_password(payload.new_password)
+        await self.user_service.update_password_internal(
+            reset_token.user_id, new_hashed_password
+        )
+        await self.repository.mark_reset_token_used(reset_token.id)
+        await self.repository.delete_all_user_tokens(reset_token.user_id)
+
+        _logger.info("Password reset completed", extra={"user_id": reset_token.user_id})
 
     async def google_login(self, request: Request) -> dict:
         """Initiate Google OAuth flow."""
@@ -177,6 +272,7 @@ class AuthService:
         user_info = await self.google_auth_service.callback(request)
 
         user = await self.user_service.get_or_create_google_user(user_info)
+        _logger.info("Google OAuth login", extra={"user_id": user.id, "email": user_info.get("email")})
 
         return await self._issue_tokens(user, response)
 

@@ -68,6 +68,23 @@ class Settings(BaseSettings):
     google_client_id: str | None = None
     google_client_secret: str | None = None
 
+    # Altcha captcha
+    altcha_hmac_key: str = "dev_altcha_hmac_key_change_me"
+
+    @field_validator("altcha_hmac_key")
+    @classmethod
+    def validate_altcha_hmac_key(cls, v: str, info: ValidationInfo) -> str:
+        values = info.data
+        if (
+            values.get("env") == Environment.PROD
+            and v == "dev_altcha_hmac_key_change_me"
+        ):
+            raise SecurityException(key="config.insecure_altcha_hmac_key")
+        return v
+
+    # Database role
+    db_role_prefix: str = "canopy_user_"
+
     # Application Features
     allow_self_registration: bool = True
 
@@ -83,9 +100,7 @@ class Settings(BaseSettings):
     # Redis
     redis_url: RedisDsn = "redis://redis:6379/0"
 
-    model_config = SettingsConfigDict(
-        env_file=("../.env", "../.env.local", ".env", ".env.local"), extra="ignore"
-    )
+    model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore")
 
 
 @lru_cache

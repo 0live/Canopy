@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
-from sqlalchemy import update
+from sqlalchemy import delete, func, update
 from sqlmodel import select
 
 from app.core.database import SessionDep
@@ -16,20 +16,24 @@ class NotificationRepository(BaseRepository[Notification]):
 
     async def get_for_user(
         self, user_id: int, skip: int = 0, limit: int = 50, unread_only: bool = False
-    ) -> List[Notification]:
-        query = (
+    ) -> Tuple[List[Notification], int]:
+        base_filter = [Notification.user_id == user_id]
+        if unread_only:
+            base_filter.append(Notification.is_read.is_(False))
+
+        count_result = await self.session.exec(
+            select(func.count()).select_from(Notification).where(*base_filter)
+        )
+        total = count_result.one()
+
+        items_result = await self.session.exec(
             select(Notification)
-            .where(Notification.user_id == user_id)
+            .where(*base_filter)
             .order_by(Notification.created_at.desc())
             .offset(skip)
             .limit(limit)
         )
-
-        if unread_only:
-            query = query.where(Notification.is_read.is_(False))
-
-        result = await self.session.exec(query)
-        return list(result.all())
+        return list(items_result.all()), total
 
     async def get_by_id_and_user(
         self, notification_id: int, user_id: int
@@ -47,3 +51,18 @@ class NotificationRepository(BaseRepository[Notification]):
             .values(is_read=True)
         )
         await self.session.exec(stmt)
+
+    async def delete_by_id_and_user(self, notification_id: int, user_id: int) -> bool:
+        notification = await self.get_by_id_and_user(notification_id, user_id)
+        if not notification:
+            return False
+        await self.session.delete(notification)
+        return True
+
+    async def delete_bulk(self, notification_ids: List[int], user_id: int) -> int:
+        stmt = delete(Notification).where(
+            Notification.id.in_(notification_ids),
+            Notification.user_id == user_id,
+        )
+        result = await self.session.exec(stmt)
+        return result.rowcount

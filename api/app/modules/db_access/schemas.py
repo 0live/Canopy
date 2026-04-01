@@ -20,6 +20,13 @@ class DatabaseActivateResponse(BaseModel):
     message: str
 
 
+class DatabasePasswordUpdateRequest(BaseModel):
+    """Request to update the PostgreSQL role password."""
+
+    model_config = ConfigDict(frozen=True)
+    password: str = Field(..., min_length=AppParameter.MIN_PASSWORD_LENGTH)
+
+
 class DatabaseAccessStatus(BaseModel):
     """Current database access status for a user."""
 

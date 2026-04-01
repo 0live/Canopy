@@ -6,6 +6,7 @@ from fastapi.responses import ORJSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
@@ -14,6 +15,7 @@ from app.core.config import get_settings
 from app.core.database import sessionmanager
 from app.core.enums.environment import Environment
 from app.core.exceptions.handlers import add_all_exception_handlers
+from app.core.middleware.correlation import CorrelationMiddleware
 from app.core.messages import MessageService
 from app.core.notifications import notificationsRouter
 from app.core.notifications.service import get_notification_broadcaster
@@ -74,6 +76,9 @@ app.add_middleware(
     TrustedHostMiddleware,
     allowed_hosts=get_settings().allowed_hosts,
 )
+
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
+app.add_middleware(CorrelationMiddleware)
 
 
 # Health check endpoint for Docker healthcheck.

@@ -1,3 +1,4 @@
+import hashlib
 import re
 from typing import Annotated, Optional
 
@@ -6,10 +7,11 @@ from psycopg import sql
 from sqlalchemy import text
 from sqlmodel import select
 
+from app.core.config import get_settings
 from app.core.database import SessionDep
-from app.core.enums.app_parameter import AppParameter
 from app.core.enums.postgresql_schema import PostgreSQLSchema
 from app.core.repository import BaseRepository
+from app.core.scram import generate_scram_sha256_verifier
 from app.modules.users.models import User
 
 
@@ -19,17 +21,18 @@ class DbAccessRepository(BaseRepository[User]):
     Handles PostgreSQL role operations and User activation token queries.
     """
 
-    ROLE_NAME_PATTERN = re.compile(rf"^{re.escape(AppParameter.DB_ROLE_PREFIX)}\d+$")
-
     def __init__(self, session: SessionDep):
         super().__init__(session, User)
+        prefix = get_settings().db_role_prefix
+        self.ROLE_NAME_PATTERN = re.compile(rf"^{re.escape(prefix)}\d+$")
 
     def _validate_role_name(self, role_name: str) -> None:
         if not self.ROLE_NAME_PATTERN.match(role_name):
             raise ValueError(f"Invalid role name format: {role_name}")
 
     async def get_by_activation_token(self, token: str) -> Optional[User]:
-        query = select(User).where(User.db_activation_token == token)
+        token_hash = hashlib.sha256(token.encode()).hexdigest()
+        query = select(User).where(User.db_activation_token == token_hash)
         result = await self.session.exec(query)
         return result.first()
 
@@ -55,10 +58,10 @@ class DbAccessRepository(BaseRepository[User]):
         result = await self.session.execute(text("SELECT current_database()"))
         db_name = result.scalar()
 
-        # Compose SQL safely
+        verifier = generate_scram_sha256_verifier(password)
         create_role_query = (
             sql.SQL("CREATE ROLE {} LOGIN PASSWORD {}")
-            .format(sql.Identifier(role_name), sql.Literal(password))
+            .format(sql.Identifier(role_name), sql.Literal(verifier))
             .as_string(context)
         )
 
@@ -96,13 +99,36 @@ class DbAccessRepository(BaseRepository[User]):
             .as_string(context)
         )
 
-        # Execute composed strings as text()
-        await self.session.execute(text(create_role_query))
-        await self.session.execute(text(grant_connect))
-        await self.session.execute(text(grant_usage_users))
-        await self.session.execute(text(grant_create_users))
-        await self.session.execute(text(grant_usage_public))
-        await self.session.execute(text(grant_select_public))
+        grant_usage_pg_catalog = (
+            sql.SQL("GRANT USAGE ON SCHEMA {} TO {}")
+            .format(
+                sql.Identifier(PostgreSQLSchema.PG_CATALOG), sql.Identifier(role_name)
+            )
+            .as_string(context)
+        )
+
+        # exec_driver_sql bypasses SQLAlchemy's :name parameter parsing, which would
+        # otherwise misinterpret the colon separator in the SCRAM-SHA-256 verifier.
+        conn = await self.session.connection()
+        for query in [
+            create_role_query, grant_connect, grant_usage_users,
+            grant_create_users, grant_usage_public, grant_select_public,
+            grant_usage_pg_catalog,
+        ]:
+            await conn.exec_driver_sql(query)
+
+    async def update_role_password(self, role_name: str, new_password: str) -> None:
+        """Update the password of an existing PostgreSQL role."""
+        self._validate_role_name(role_name)
+        context = None
+        verifier = generate_scram_sha256_verifier(new_password)
+        alter_query = (
+            sql.SQL("ALTER ROLE {} WITH PASSWORD {}")
+            .format(sql.Identifier(role_name), sql.Literal(verifier))
+            .as_string(context)
+        )
+        conn = await self.session.connection()
+        await conn.exec_driver_sql(alter_query)
 
     async def drop_role(self, role_name: str) -> bool:
         self._validate_role_name(role_name)
