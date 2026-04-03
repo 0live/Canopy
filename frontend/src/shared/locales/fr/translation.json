@@ -145,6 +145,11 @@
       "password_update_failed": "Échec de la mise à jour du mot de passe."
     }
   },
+  "data": {
+    "title": "Données",
+    "subtitle": "Chargez et gérez vos jeux de données géospatiaux.",
+    "loadDataButton": "Charger des données"
+  },
   "notifications": {
     "title": "Notifications",
     "tab": "Notifications",

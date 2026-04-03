@@ -16,11 +16,12 @@ import canopyLogo from "@/shared/assets/logo2.svg";
 import { navRoutes } from "@/shared/routes/RoutesDefinition";
 import { UserRole } from "@/shared/types/UserRole";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 
 export function AppSidebar() {
   const { t } = useTranslation()
   const { data: user } = useCurrentUser()
+  const location = useLocation()
 
   const visibleRoutes = navRoutes.filter(
     (route) => !route.requiresAdmin || user?.roles.includes(UserRole.ADMIN)
@@ -49,16 +50,24 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {visibleRoutes.map((route) => (
-                <SidebarMenuItem key={route.url}>
-                  <SidebarMenuButton asChild tooltip={t(route.titleKey)}>
-                    <Link to={route.url}>
-                      <route.icon />
-                      <span>{t(route.titleKey)}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {visibleRoutes.map((route) => {
+                const isActive = location.pathname.startsWith(route.url);
+                return (
+                  <SidebarMenuItem key={route.url}>
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={t(route.titleKey)}
+                      isActive={isActive}
+                      className={isActive ? "!text-primary" : ""}
+                    >
+                      <Link to={route.url}>
+                        <route.icon />
+                        <span>{t(route.titleKey)}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

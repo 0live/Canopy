@@ -17,6 +17,8 @@ import { ResetPasswordPage } from "@/features/auth/pages/ResetPasswordPage";
 import { authLoader } from "@/features/auth/services/routes/authLoader";
 import { resetPasswordLoader } from "@/features/auth/services/routes/resetPasswordLoader";
 import { verifyLoader } from "@/features/auth/services/routes/verifyLoader";
+import { DataHomePage } from "@/features/data/pages/DataHomePage";
+import { DataLoadPage } from "@/features/data/pages/DataLoadPage";
 import { ProfilePage } from "@/features/userProfile/pages/ProfilePage";
 import { profileLoader } from "@/features/userProfile/services/routes/profileLoader";
 import { ErrorView } from "@/shared/components/layout/ErrorView";
@@ -32,11 +34,13 @@ export const router = createBrowserRouter([
     errorElement: <ErrorView />,
     children: [
       ...navRoutes
-        .filter((route) => !route.requiresAdmin)
+        .filter((route) => !route.requiresAdmin && route.url !== "/data")
         .map((route) => ({
           path: route.url.replace(/^\//, ""),
           element: <Wip />,
         })),
+      { path: "data", element: <DataHomePage /> },
+      { path: "data/load", element: <DataLoadPage /> },
       {
         path: "admin",
         loader: adminLoader,

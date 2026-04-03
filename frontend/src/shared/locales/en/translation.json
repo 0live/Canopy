@@ -145,6 +145,11 @@
       "password_update_failed": "Failed to update password."
     }
   },
+  "data": {
+    "title": "Data",
+    "subtitle": "Load and manage your geospatial datasets.",
+    "loadDataButton": "Load data"
+  },
   "notifications": {
     "title": "Notifications",
     "tab": "Notifications",
