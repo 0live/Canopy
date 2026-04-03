@@ -148,7 +148,15 @@
   "data": {
     "title": "Données",
     "subtitle": "Chargez et gérez vos jeux de données géospatiaux.",
-    "loadDataButton": "Charger des données"
+    "loadDataButton": "Charger des données",
+    "load": {
+      "title": "Charger des données",
+      "subtitle": "Importez un fichier géographique dans votre base de données.",
+      "tabs": {
+        "postgis": "Fichier géographique → PostGIS",
+        "pmtiles": "Fichier géographique → PMTiles"
+      }
+    }
   },
   "notifications": {
     "title": "Notifications",

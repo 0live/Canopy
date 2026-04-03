@@ -148,7 +148,15 @@
   "data": {
     "title": "Data",
     "subtitle": "Load and manage your geospatial datasets.",
-    "loadDataButton": "Load data"
+    "loadDataButton": "Load data",
+    "load": {
+      "title": "Load data",
+      "subtitle": "Import a geographic file into your database.",
+      "tabs": {
+        "postgis": "Geographic file → PostGIS",
+        "pmtiles": "Geographic file → PMTiles"
+      }
+    }
   },
   "notifications": {
     "title": "Notifications",
