@@ -3,6 +3,7 @@ import { Wip } from "@/shared/components/ui/Wip";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DataLoadNav } from "../components/DataLoadNav";
+import { PostgisLoadTab } from "../components/PostgisLoadTab";
 import { DataLoadTab } from "../types";
 
 export function DataLoadPage() {
@@ -16,7 +17,8 @@ export function DataLoadPage() {
         subtitle={t("data.load.subtitle")}
       />
       <DataLoadNav active={activeTab} onChange={setActiveTab} />
-      <Wip />
+      {activeTab === DataLoadTab.POSTGIS && <PostgisLoadTab />}
+      {activeTab === DataLoadTab.PMTILES && <Wip />}
     </div>
   );
 }

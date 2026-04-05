@@ -155,6 +155,23 @@
       "tabs": {
         "postgis": "Geographic file → PostGIS",
         "pmtiles": "Geographic file → PMTiles"
+      },
+      "postgis": {
+        "selectFile": "Select a geographic file",
+        "supportedFormats": "Supported formats: GeoJSON, FlatGeobuf, Shapefile, GeoArrow",
+        "parsing": "Analysing file…",
+        "parseError": "Parse error: {{error}}",
+        "parsedIn": "parsed in {{ms}} ms",
+        "meta": {
+          "geometryType": "Geometry type",
+          "featureCount": "Feature count",
+          "featureCountUnknown": "> 500 (scan limited)",
+          "epsg": "Projection (EPSG)",
+          "bbox": "Extent (BBOX)",
+          "fields": "Fields",
+          "fieldName": "Name",
+          "fieldType": "Type"
+        }
       }
     }
   },

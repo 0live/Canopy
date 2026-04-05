@@ -34,4 +34,6 @@ launch-tests:
 
 create-app: genpkey genaltchakey build start setup-db
 
+rebuild-restart: stop build start
+
 
