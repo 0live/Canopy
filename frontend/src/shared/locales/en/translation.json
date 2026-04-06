@@ -157,8 +157,9 @@
         "pmtiles": "Geographic file → PMTiles"
       },
       "postgis": {
-        "selectFile": "Select a geographic file",
-        "supportedFormats": "Supported formats: GeoJSON, Shapefile",
+        "dropzone": "Drop a file here or click to browse",
+        "dropzoneActive": "Drop the file…",
+        "supportedFormats": "GeoJSON · Shapefile (.zip) · FlatGeobuf",
         "parsing": "Analysing file…",
         "parseError": "Parse error: {{error}}",
         "parsedIn": "parsed in {{ms}} ms",
