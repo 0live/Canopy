@@ -76,3 +76,27 @@ export const EXTENSION_TO_FORMAT: Record<string, GeoFormat> = {
   geojson: GeoFormat.GEOJSON, json: GeoFormat.GEOJSON,
   zip: GeoFormat.SHAPEFILE,
 };
+
+export interface GeoFieldImportSettings {
+  include: boolean;
+  index: boolean;
+}
+
+export interface GeoImportFormData {
+  layerName: string;
+  fieldSettings: Record<string, GeoFieldImportSettings>;
+}
+
+export const GeoMetadataField = {
+  FILE_NAME: "fileName",
+  FILE_TYPE: "fileType",
+  FILE_SIZE: "fileSize",
+  GEOMETRY_TYPE: "geometryType",
+  EPSG: "epsg",
+  FIELDS: "fields",
+} as const;
+
+export type GeoMetadataField = (typeof GeoMetadataField)[keyof typeof GeoMetadataField];
+
+/** Maps each errored metadata field to its i18n error key */
+export type GeoMetadataErrors = Partial<Record<GeoMetadataField, string>>;

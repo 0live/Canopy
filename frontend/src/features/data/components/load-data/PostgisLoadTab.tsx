@@ -2,7 +2,7 @@ import { useGeoFileMetadata } from "@/features/data/hooks/useGeoFileMetadata";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { useTranslation } from "react-i18next";
 import { GeoFileInput } from "./GeoFileInput";
-import { GeoMetadataTable } from "./GeoMetadataTable";
+import { GeoImportPanel } from "./GeoImportPanel";
 
 export function PostgisLoadTab() {
   const { t } = useTranslation();
@@ -27,12 +27,7 @@ export function PostgisLoadTab() {
   }
 
   if (status === "success" && metadata) {
-    return (
-      <div className="flex flex-col gap-6">
-        <GeoMetadataTable metadata={metadata} />
-        <GeoFileInput onChange={(file) => { reset(); parse(file); }} />
-      </div>
-    );
+    return <GeoImportPanel metadata={metadata} onClose={reset} />;
   }
 
   return <GeoFileInput onChange={parse} />;

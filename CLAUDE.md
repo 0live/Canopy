@@ -15,6 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 * **Error Handling:** When adding a feature with failure risk, always handle potential errors (try/catch, fallbacks, validation).
 * **Constraint:** 
   * No function > 25 lines.
+  * No file > 300 lines. Split files if needed and group related files in a folder.
   * Never delete a file without asking.
   * NEVER hardcode text in your code
     * User-facing messages → Always use i18n locales (internationalization)

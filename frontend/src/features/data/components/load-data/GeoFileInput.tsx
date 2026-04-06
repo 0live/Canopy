@@ -1,7 +1,7 @@
+import { cn } from "@/shared/lib/utils";
+import { UploadCloud } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { UploadCloud } from "lucide-react";
-import { cn } from "@/shared/lib/utils";
 
 const ACCEPTED_EXTENSIONS = ".geojson,.json,.fgb,.zip";
 const ACCEPTED_MIME_TYPES = ["application/geo+json", "application/json", "application/zip"];

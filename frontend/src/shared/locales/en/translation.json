@@ -163,12 +163,27 @@
         "parsing": "Analysing file…",
         "parseError": "Parse error: {{error}}",
         "parsedIn": "parsed in {{ms}} ms",
+        "errors": {
+          "epsgMissing": "EPSG not detected",
+          "geometryUnknown": "Unknown geometry type",
+          "noFields": "No fields detected"
+        },
+        "close": "Close",
+        "cancel": "Cancel",
+        "submit": "Submit",
+        "layerName": "Layer name",
+        "layerNamePlaceholder": "e.g. communes_fr",
         "meta": {
-          "geometryType": "Geometry type",
+          "fileName": "File",
+          "fileType": "Type",
+          "fileSize": "Size",
+          "geometryType": "Geometry",
           "epsg": "Projection (EPSG)",
           "fields": "Fields",
           "fieldName": "Name",
-          "fieldType": "Type"
+          "fieldType": "Type",
+          "importField": "Import",
+          "indexField": "Index"
         }
       }
     }

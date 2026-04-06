@@ -163,12 +163,27 @@
         "parsing": "Analyse du fichier en cours…",
         "parseError": "Erreur lors de l'analyse : {{error}}",
         "parsedIn": "analysé en {{ms}} ms",
+        "errors": {
+          "epsgMissing": "Projection non détectée",
+          "geometryUnknown": "Type de géométrie inconnu",
+          "noFields": "Aucun champ détecté"
+        },
+        "close": "Fermer",
+        "cancel": "Annuler",
+        "submit": "Envoyer",
+        "layerName": "Nom de la couche",
+        "layerNamePlaceholder": "ex: communes_fr",
         "meta": {
-          "geometryType": "Type de géométrie",
+          "fileName": "Fichier",
+          "fileType": "Type",
+          "fileSize": "Taille",
+          "geometryType": "Géométrie",
           "epsg": "Projection (EPSG)",
           "fields": "Champs",
           "fieldName": "Nom",
-          "fieldType": "Type"
+          "fieldType": "Type",
+          "importField": "Importer",
+          "indexField": "Index"
         }
       }
     }

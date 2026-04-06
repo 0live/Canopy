@@ -1,7 +1,7 @@
 import { load } from "@loaders.gl/core";
 import type { DataType, Feature, Schema } from "@loaders.gl/schema";
 import { DBFLoader } from "@loaders.gl/shapefile";
-import { EXTENSION_TO_FORMAT, GeoFieldType, GeoFormat, GeometryType, SHP_GEOMETRY_TYPES, type GeoField } from "../../types";
+import { EXTENSION_TO_FORMAT, GeoFieldType, GeoFormat, GeoMetadataField, GeometryType, SHP_GEOMETRY_TYPES, type GeoField, type GeoFileMetadata, type GeoMetadataErrors } from "../../types";
 
 export function detectFormat(file: File): GeoFormat {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
@@ -61,5 +61,15 @@ export function parseSHPHeader(buffer: ArrayBuffer): { geometryType: GeometryTyp
 export async function parseDbfFields(buffer: ArrayBuffer): Promise<GeoField[]> {
   const result = await load(buffer, DBFLoader, { dbf: { shape: "table" } }) as { schema?: Schema };
   return result.schema ? fieldsFromSchema(result.schema) : [];
+}
+
+export function validateLayerMetadata(metadata: GeoFileMetadata): GeoMetadataErrors {
+  const layer = metadata.layers[0];
+  const errors: GeoMetadataErrors = {};
+  if (!layer) return errors;
+  if (layer.epsg === null) errors[GeoMetadataField.EPSG] = "data.load.postgis.errors.epsgMissing";
+  if (layer.geometryType === GeometryType.UNKNOWN) errors[GeoMetadataField.GEOMETRY_TYPE] = "data.load.postgis.errors.geometryUnknown";
+  if (layer.fields.length === 0) errors[GeoMetadataField.FIELDS] = "data.load.postgis.errors.noFields";
+  return errors;
 }
 
