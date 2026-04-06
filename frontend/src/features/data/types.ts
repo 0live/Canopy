@@ -87,6 +87,13 @@ export interface GeoImportFormData {
   fieldSettings: Record<string, GeoFieldImportSettings>;
 }
 
+export const ExportTarget = {
+  POSTGIS: "postgis",
+  PMTILES: "pmtiles",
+} as const;
+
+export type ExportTarget = (typeof ExportTarget)[keyof typeof ExportTarget];
+
 export const GeoMetadataField = {
   FILE_NAME: "fileName",
   FILE_TYPE: "fileType",

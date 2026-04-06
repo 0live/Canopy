@@ -1,16 +1,29 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
+import type { GeoFileMetadata, GeoFieldImportSettings } from "@/features/data/types";
 import { validateLayerMetadata } from "@/features/data/services/load-data/medataUtils";
-import type { GeoFileMetadata, GeoFieldImportSettings, GeoImportFormData } from "@/features/data/types";
+import { useGeoImportForm } from "@/features/data/hooks/useGeoImportForm";
 import { Button } from "@/shared/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/shared/components/ui/dropdown-menu";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/shared/components/ui/form";
 import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
 import { GeoMetadataTable } from "./GeoMetadataTable";
-
-function toSnakeCase(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
-}
+import type { UseFormReturn } from "react-hook-form";
+import type { ImportFormData } from "@/features/data/services/forms/importSchema";
+import type { TFunction } from "i18next";
 
 function initFieldSettings(metadata: GeoFileMetadata): Record<string, GeoFieldImportSettings> {
   const fields = metadata.layers[0]?.fields ?? [];
@@ -34,77 +47,112 @@ function PanelHeader({ fileName, onClose }: PanelHeaderProps) {
   );
 }
 
-interface PanelFooterProps {
-  layerName: string;
-  onLayerNameChange: (v: string) => void;
-  onCancel: () => void;
-  onSubmit: () => void;
-  submitDisabled: boolean;
+type LayerNameFieldProps = {
+  form: UseFormReturn<ImportFormData>;
+  isPending: boolean;
+  t: TFunction;
+};
+
+function LayerNameField({ form, isPending, t }: LayerNameFieldProps) {
+  return (
+    <FormField control={form.control} name="layerName" render={({ field }) => (
+      <FormItem>
+        <FormLabel>{t("data.load.postgis.layerName")}</FormLabel>
+        <FormControl>
+          <Input
+            {...field}
+            disabled={isPending}
+            placeholder={t("data.load.postgis.layerNamePlaceholder")}
+          />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )} />
+  );
 }
 
-function PanelFooter({ layerName, onLayerNameChange, onCancel, onSubmit, submitDisabled }: PanelFooterProps) {
-  const { t } = useTranslation();
+interface ImportActionsProps {
+  onCancel: () => void;
+  onSubmitPostgis: () => void;
+  onSubmitPmtiles: () => void;
+  disabled: boolean;
+  t: TFunction;
+}
+
+function ImportActions({ onCancel, onSubmitPostgis, onSubmitPmtiles, disabled, t }: ImportActionsProps) {
   return (
-    <div className="flex flex-col gap-3 border-t pt-4">
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="layer-name">{t("data.load.postgis.layerName")}</Label>
-        <Input
-          id="layer-name"
-          value={layerName}
-          onChange={(e) => onLayerNameChange(e.target.value)}
-          placeholder={t("data.load.postgis.layerNamePlaceholder")}
-        />
-      </div>
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" onClick={onCancel}>{t("data.load.postgis.cancel")}</Button>
-        <Button onClick={onSubmit} disabled={submitDisabled}>{t("data.load.postgis.submit")}</Button>
-      </div>
+    <div className="flex justify-end gap-2">
+      <Button variant="outline" type="button" onClick={onCancel}>
+        {t("data.load.postgis.cancel")}
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button type="button" disabled={disabled}>
+            {t("data.load.postgis.export")}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={onSubmitPostgis}>
+            {t("data.load.postgis.submitPostgis")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={onSubmitPmtiles}>
+            {t("data.load.postgis.submitPmtiles")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
 
 interface GeoImportPanelProps {
   metadata: GeoFileMetadata;
+  file: File;
   onClose: () => void;
 }
 
-export function GeoImportPanel({ metadata, onClose }: GeoImportPanelProps) {
+export function GeoImportPanel({ metadata, file, onClose }: GeoImportPanelProps) {
+  const { t } = useTranslation();
   const [fieldSettings, setFieldSettings] = useState<Record<string, GeoFieldImportSettings>>(
     () => initFieldSettings(metadata)
   );
-  const [layerName, setLayerName] = useState(() => toSnakeCase(metadata.layers[0]?.name ?? "layer"));
 
   const errors = validateLayerMetadata(metadata);
-  const hasErrors = Object.keys(errors).length > 0;
+  const hasMetadataErrors = Object.keys(errors).length > 0;
+
+  const { form, onSubmitPostgis, onSubmitPmtiles } = useGeoImportForm({ metadata, file, fieldSettings });
 
   const handleFieldChange = (fieldName: string, key: keyof GeoFieldImportSettings, value: boolean) => {
-    setFieldSettings((prev) => ({
-      ...prev,
-      [fieldName]: { ...prev[fieldName], [key]: value },
-    }));
+    setFieldSettings((prev) => ({ ...prev, [fieldName]: { ...prev[fieldName], [key]: value } }));
   };
 
-  const handleSubmit = () => {
-    const formData: GeoImportFormData = { layerName, fieldSettings };
-    console.log("[GeoImportPanel] submit", formData);
+  const handleToggleAllInclude = (include: boolean) => {
+    setFieldSettings((prev) =>
+      Object.fromEntries(Object.entries(prev).map(([name, s]) => [name, { ...s, include }]))
+    );
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <PanelHeader fileName={metadata.fileName} onClose={onClose} />
-      <GeoMetadataTable
-        metadata={metadata}
-        errors={errors}
-        fieldSettings={fieldSettings}
-        onFieldSettingChange={handleFieldChange}
-      />
-      <PanelFooter
-        layerName={layerName}
-        onLayerNameChange={setLayerName}
-        onCancel={onClose}
-        onSubmit={handleSubmit}
-        submitDisabled={hasErrors}
-      />
-    </div>
+    <Form {...form}>
+      <form className="flex flex-col gap-4">
+        <PanelHeader fileName={metadata.fileName} onClose={onClose} />
+        <GeoMetadataTable
+          metadata={metadata}
+          errors={errors}
+          fieldSettings={fieldSettings}
+          onFieldSettingChange={handleFieldChange}
+          onToggleAllInclude={handleToggleAllInclude}
+        />
+        <div className="flex flex-col gap-3 border-t pt-4">
+          <LayerNameField form={form} isPending={false} t={t} />
+          <ImportActions
+            onCancel={onClose}
+            onSubmitPostgis={onSubmitPostgis}
+            onSubmitPmtiles={onSubmitPmtiles}
+            disabled={hasMetadataErrors}
+            t={t}
+          />
+        </div>
+      </form>
+    </Form>
   );
 }

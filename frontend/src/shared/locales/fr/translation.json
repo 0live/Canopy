@@ -170,9 +170,15 @@
         },
         "close": "Fermer",
         "cancel": "Annuler",
-        "submit": "Envoyer",
+        "export": "Exporter",
+        "submitPostgis": "Exporter vers PostGIS",
+        "submitPmtiles": "Exporter en PMTiles",
         "layerName": "Nom de la couche",
         "layerNamePlaceholder": "ex: communes_fr",
+        "validation": {
+          "layerNameRequired": "Le nom de la couche est requis",
+          "layerNameFormat": "Minuscules, chiffres et underscores uniquement (ex: communes_fr)"
+        },
         "meta": {
           "fileName": "Fichier",
           "fileType": "Type",

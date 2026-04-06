@@ -6,6 +6,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
+  TableHeadCheckbox,
   TableRow,
 } from "@/shared/components/ui/table";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -75,13 +76,13 @@ function FieldRow({ fieldName, fieldType, settings, onChange }: FieldRowProps) {
     <TableRow>
       <TableCell className="font-mono text-xs">{fieldName}</TableCell>
       <TableCell className="text-muted-foreground text-xs">{fieldType}</TableCell>
-      <TableCell className="text-center">
+      <TableCell>
         <Checkbox
           checked={settings.include}
           onCheckedChange={(v) => onChange("include", v === true)}
         />
       </TableCell>
-      <TableCell className="text-center">
+      <TableCell>
         <Checkbox
           checked={settings.index}
           disabled={!settings.include}
@@ -92,19 +93,23 @@ function FieldRow({ fieldName, fieldType, settings, onChange }: FieldRowProps) {
   );
 }
 
+
 interface GeoMetadataTableProps {
   metadata: GeoFileMetadata;
   errors: GeoMetadataErrors;
   fieldSettings: Record<string, GeoFieldImportSettings>;
   onFieldSettingChange: (fieldName: string, key: keyof GeoFieldImportSettings, value: boolean) => void;
+  onToggleAllInclude: (include: boolean) => void;
 }
 
-export function GeoMetadataTable({ metadata, errors, fieldSettings, onFieldSettingChange }: GeoMetadataTableProps) {
+export function GeoMetadataTable({ metadata, errors, fieldSettings, onFieldSettingChange, onToggleAllInclude }: GeoMetadataTableProps) {
   const { t } = useTranslation();
   const layer = metadata.layers[0];
   if (!layer) return null;
 
   const fieldsError = errors[GeoMetadataField.FIELDS];
+  const allIncluded = layer.fields.every((f) => fieldSettings[f.name]?.include ?? true);
+  const someIncluded = layer.fields.some((f) => fieldSettings[f.name]?.include ?? true);
 
   return (
     <div className="flex flex-col gap-4">
@@ -120,13 +125,18 @@ export function GeoMetadataTable({ metadata, errors, fieldSettings, onFieldSetti
         </p>
 
         {layer.fields.length > 0 && (
+          <div className="[&_[data-slot=table-container]]:max-h-[40vh] [&_[data-slot=table-container]]:overflow-y-auto [&_[data-slot=table-container]]:rounded-md [&_[data-slot=table-container]]:border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{t("data.load.postgis.meta.fieldName")}</TableHead>
                 <TableHead>{t("data.load.postgis.meta.fieldType")}</TableHead>
-                <TableHead className="text-center">{t("data.load.postgis.meta.importField")}</TableHead>
-                <TableHead className="text-center">{t("data.load.postgis.meta.indexField")}</TableHead>
+                <TableHeadCheckbox
+                  checked={allIncluded ? true : someIncluded ? "indeterminate" : false}
+                  onCheckedChange={onToggleAllInclude}
+                  label={t("data.load.postgis.meta.importField")}
+                />
+                <TableHead>{t("data.load.postgis.meta.indexField")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -141,6 +151,8 @@ export function GeoMetadataTable({ metadata, errors, fieldSettings, onFieldSetti
               ))}
             </TableBody>
           </Table>
+          </div>
+
         )}
       </div>
     </div>

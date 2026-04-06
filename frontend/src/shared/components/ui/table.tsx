@@ -1,6 +1,7 @@
 import * as React from "react"
 
 import { cn } from "@/shared/lib/utils"
+import { Checkbox } from "@/shared/components/ui/checkbox"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
@@ -102,12 +103,30 @@ function TableCaption({
   )
 }
 
+interface TableHeadCheckboxProps extends React.ComponentProps<"th"> {
+  checked: boolean | "indeterminate";
+  onCheckedChange: (value: boolean) => void;
+  label: string;
+}
+
+function TableHeadCheckbox({ checked, onCheckedChange, label, className, ...props }: TableHeadCheckboxProps) {
+  return (
+    <TableHead className={className} {...props}>
+      <div className="flex items-center gap-2">
+        <Checkbox checked={checked} onCheckedChange={(v) => onCheckedChange(v === true)} />
+        <span>{label}</span>
+      </div>
+    </TableHead>
+  );
+}
+
 export {
   Table,
   TableHeader,
   TableBody,
   TableFooter,
   TableHead,
+  TableHeadCheckbox,
   TableRow,
   TableCell,
   TableCaption,

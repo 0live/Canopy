@@ -6,7 +6,7 @@ import { GeoImportPanel } from "./GeoImportPanel";
 
 export function PostgisLoadTab() {
   const { t } = useTranslation();
-  const { status, metadata, error, parse, reset } = useGeoFileMetadata();
+  const { status, metadata, file, error, parse, reset } = useGeoFileMetadata();
 
   if (status === "parsing") {
     return (
@@ -26,8 +26,8 @@ export function PostgisLoadTab() {
     );
   }
 
-  if (status === "success" && metadata) {
-    return <GeoImportPanel metadata={metadata} onClose={reset} />;
+  if (status === "success" && metadata && file) {
+    return <GeoImportPanel metadata={metadata} file={file} onClose={reset} />;
   }
 
   return <GeoFileInput onChange={parse} />;

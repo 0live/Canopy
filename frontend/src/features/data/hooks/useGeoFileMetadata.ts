@@ -5,6 +5,7 @@ import { type GeoFileMetadata, MetadataParseStatus } from "../types";
 interface UseGeoFileMetadataReturn {
   status: MetadataParseStatus;
   metadata: GeoFileMetadata | null;
+  file: File | null;
   error: string | null;
   parse: (file: File) => void;
   reset: () => void;
@@ -13,14 +14,16 @@ interface UseGeoFileMetadataReturn {
 export function useGeoFileMetadata(): UseGeoFileMetadataReturn {
   const [status, setStatus] = useState<MetadataParseStatus>(MetadataParseStatus.IDLE);
   const [metadata, setMetadata] = useState<GeoFileMetadata | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const parse = (file: File) => {
+  const parse = (f: File) => {
     setStatus(MetadataParseStatus.PARSING);
     setMetadata(null);
+    setFile(f);
     setError(null);
 
-    extractGeoMetadata(file)
+    extractGeoMetadata(f)
       .then((result) => {
         setMetadata(result);
         setStatus(MetadataParseStatus.SUCCESS);
@@ -33,10 +36,11 @@ export function useGeoFileMetadata(): UseGeoFileMetadataReturn {
   };
 
   const reset = () => {
-    setStatus("idle");
+    setStatus(MetadataParseStatus.IDLE);
     setMetadata(null);
+    setFile(null);
     setError(null);
   };
 
-  return { status, metadata, error, parse, reset };
+  return { status, metadata, file, error, parse, reset };
 }
