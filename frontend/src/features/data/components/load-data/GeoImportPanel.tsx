@@ -148,7 +148,7 @@ export function GeoImportPanel({ metadata, file, onClose }: GeoImportPanelProps)
             onCancel={onClose}
             onSubmitPostgis={onSubmitPostgis}
             onSubmitPmtiles={onSubmitPmtiles}
-            disabled={hasMetadataErrors}
+            disabled={hasMetadataErrors || !form.formState.isValid}
             t={t}
           />
         </div>

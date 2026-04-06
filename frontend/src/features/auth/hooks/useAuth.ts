@@ -1,9 +1,26 @@
 import { queryClient } from "@/app/config/queryClient";
 import { QUERY_KEYS } from "@/shared/constants/queryKeys";
 import { useAppStore } from "@/shared/store";
+import { UserRole } from "@/shared/types/UserRole";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { authApi } from "../services/api/authApi";
-import type { ForgotPasswordCredentials, ResetPasswordCredentials } from "../types";
+import type { ForgotPasswordCredentials, ResetPasswordCredentials, User } from "../types";
+
+export const canLoadData = (user: User | undefined): boolean =>
+  !!(user?.roles.includes(UserRole.ADMIN) || user?.roles.includes(UserRole.LOAD_DATA));
+
+export const useCanLoadData = (): boolean => {
+  const { data: user } = useCurrentUser();
+  return canLoadData(user);
+};
+
+export const canWithDbAccess = (user: User | undefined): boolean =>
+  !!(user?.roles.includes(UserRole.ADMIN) || user?.roles.includes(UserRole.WITHDBACCESS));
+
+export const useCanWithDbAccess = (): boolean => {
+  const { data: user } = useCurrentUser();
+  return canWithDbAccess(user);
+};
 
 export const useCurrentUser = () => {
   const accessToken = useAppStore((s) => s.accessToken);

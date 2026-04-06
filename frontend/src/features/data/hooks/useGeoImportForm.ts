@@ -28,6 +28,7 @@ export function useGeoImportForm({ metadata, file, fieldSettings }: UseGeoImport
   const form = useForm<ImportFormData>({
     resolver: yupResolver(schema),
     defaultValues: { layerName: "" },
+    mode: "onChange",
   });
 
   const buildPayload = (values: ImportFormData, exportTarget: ExportTarget): GeoImportPayload => ({

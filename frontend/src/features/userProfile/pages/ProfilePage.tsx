@@ -1,7 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCurrentUser } from "@/features/auth/hooks/useAuth";
+import { useCanWithDbAccess } from "@/features/auth/hooks/useAuth";
 import { useAppStore } from "@/shared/store";
-import { UserRole } from "@/shared/types/UserRole";
 import { useTranslation } from "react-i18next";
 import { DbAccessPanel } from "../components/dbAccess/DbAccessPanel";
 import { NotificationsPanel } from "../components/notifications/NotificationsPanel";
@@ -12,9 +11,7 @@ export function ProfilePage() {
   const { t } = useTranslation();
   const { mutate: markAllRead } = useMarkAllRead();
   const setUnreadCount = useAppStore((s) => s.setUnreadCount);
-  const { data: currentUser } = useCurrentUser();
-
-  const hasDbAccess = currentUser?.roles.includes(UserRole.WITHDBACCESS) ?? false;
+  const hasDbAccess = useCanWithDbAccess();
 
   const handleNotificationsTabSelect = () => {
     markAllRead();
