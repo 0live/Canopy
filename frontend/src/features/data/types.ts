@@ -9,7 +9,6 @@ export type DataLoadTab = (typeof DataLoadTab)[keyof typeof DataLoadTab];
 
 export const GeoFormat = {
   GEOJSON: "geojson",
-  FLATGEOBUF: "flatgeobuf",
   SHAPEFILE: "shapefile",
   UNKNOWN: "unknown",
 } as const;
@@ -34,10 +33,8 @@ export interface GeoField {
 
 export interface GeoLayerMetadata {
   name: string;
-  geometryType: string;
-  featureCount: number | null;
+  geometryType: GeometryType;
   epsg: string | null;
-  bbox: [number, number, number, number] | null;
   fields: GeoField[];
 }
 
@@ -49,22 +46,33 @@ export interface GeoFileMetadata {
   parseTimeMs: number;
 }
 
-export type MetadataParseStatus = "idle" | "parsing" | "success" | "error";
+export const MetadataParseStatus = {
+  IDLE: "idle",
+  PARSING: "parsing",
+  SUCCESS: "success",
+  ERROR: "error",
+} as const;
 
-// FlatGeobuf geometry type enum (numeric string → name)
-export const FGB_GEOMETRY_TYPES: Record<string, string> = {
-  "0": "Unknown", "1": "Point", "2": "LineString", "3": "Polygon",
-  "4": "MultiPoint", "5": "MultiLineString", "6": "MultiPolygon", "7": "GeometryCollection",
-};
+export type MetadataParseStatus = (typeof MetadataParseStatus)[keyof typeof MetadataParseStatus];
+
+export const GeometryType = {
+  POINT: "Point",
+  LINESTRING: "LineString",
+  POLYGON: "Polygon",
+  MULTIPOINT: "MultiPoint",
+  MULTILINESTRING: "MultiLineString",
+  MULTIPOLYGON: "MultiPolygon",
+  UNKNOWN: "Unknown",
+} as const;
+
+export type GeometryType = (typeof GeometryType)[keyof typeof GeometryType];
 
 // SHP geometry type codes (ESRI spec)
-export const SHP_GEOMETRY_TYPES: Record<number, string> = {
-  0: "Null", 1: "Point", 3: "LineString", 5: "Polygon", 8: "MultiPoint",
-  11: "PointZ", 13: "LineStringZ", 15: "PolygonZ", 18: "MultiPointZ",
-  21: "PointM", 23: "LineStringM", 25: "PolygonM", 28: "MultiPointM", 31: "MultiPatch",
+export const SHP_GEOMETRY_TYPES: Record<number, GeometryType> = {
+  0: "Unknown", 1: "Point", 3: "LineString", 5: "Polygon", 8: "MultiPoint"
 };
 
 export const EXTENSION_TO_FORMAT: Record<string, GeoFormat> = {
   geojson: GeoFormat.GEOJSON, json: GeoFormat.GEOJSON,
-  fgb: GeoFormat.FLATGEOBUF, zip: GeoFormat.SHAPEFILE,
+  zip: GeoFormat.SHAPEFILE,
 };

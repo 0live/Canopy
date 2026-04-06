@@ -158,16 +158,13 @@
       },
       "postgis": {
         "selectFile": "Sélectionner un fichier géographique",
-        "supportedFormats": "Formats supportés : GeoJSON, FlatGeobuf, Shapefile, GeoArrow",
+        "supportedFormats": "Formats supportés : GeoJSON, Shapefile",
         "parsing": "Analyse du fichier en cours…",
         "parseError": "Erreur lors de l'analyse : {{error}}",
         "parsedIn": "analysé en {{ms}} ms",
         "meta": {
           "geometryType": "Type de géométrie",
-          "featureCount": "Nombre d'entités",
-          "featureCountUnknown": "> 500 (scan limité)",
           "epsg": "Projection (EPSG)",
-          "bbox": "Emprise (BBOX)",
           "fields": "Champs",
           "fieldName": "Nom",
           "fieldType": "Type"

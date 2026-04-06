@@ -158,16 +158,13 @@
       },
       "postgis": {
         "selectFile": "Select a geographic file",
-        "supportedFormats": "Supported formats: GeoJSON, FlatGeobuf, Shapefile, GeoArrow",
+        "supportedFormats": "Supported formats: GeoJSON, Shapefile",
         "parsing": "Analysing file…",
         "parseError": "Parse error: {{error}}",
         "parsedIn": "parsed in {{ms}} ms",
         "meta": {
           "geometryType": "Geometry type",
-          "featureCount": "Feature count",
-          "featureCountUnknown": "> 500 (scan limited)",
           "epsg": "Projection (EPSG)",
-          "bbox": "Extent (BBOX)",
           "fields": "Fields",
           "fieldName": "Name",
           "fieldType": "Type"

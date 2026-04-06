@@ -1,5 +1,5 @@
+import { DATA_LOAD_TABS, DataLoadTab } from "@/features/data/types";
 import { useTranslation } from "react-i18next";
-import { DATA_LOAD_TABS, DataLoadTab } from "../types";
 
 interface DataLoadNavProps {
   active: DataLoadTab;

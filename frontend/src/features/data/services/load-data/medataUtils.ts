@@ -1,7 +1,7 @@
 import { load } from "@loaders.gl/core";
 import type { DataType, Feature, Schema } from "@loaders.gl/schema";
 import { DBFLoader } from "@loaders.gl/shapefile";
-import { EXTENSION_TO_FORMAT, GeoFieldType, GeoFormat, SHP_GEOMETRY_TYPES, type GeoField, type GeoLayerMetadata } from "../../types";
+import { EXTENSION_TO_FORMAT, GeoFieldType, GeoFormat, GeometryType, SHP_GEOMETRY_TYPES, type GeoField } from "../../types";
 
 export function detectFormat(file: File): GeoFormat {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
@@ -44,18 +44,13 @@ export function fieldsFromFeature(feature: Feature): GeoField[] {
 }
 
 export function toBuffer(arr: Uint8Array): ArrayBuffer {
-  return arr.buffer.slice(arr.byteOffset, arr.byteOffset + arr.byteLength);
+  return arr.buffer.slice(arr.byteOffset, arr.byteOffset + arr.byteLength) as ArrayBuffer;
 }
 
-export function parseSHPHeader(buffer: ArrayBuffer): { geometryType: string; bbox: [number, number, number, number] } {
+export function parseSHPHeader(buffer: ArrayBuffer): { geometryType: GeometryType } {
   const view = new DataView(buffer);
   const shapeType = view.getInt32(32, true);
-  // Bounding box: Xmin@36, Ymin@44, Xmax@52, Ymax@60 (little-endian doubles)
-  const bbox: [number, number, number, number] = [
-    view.getFloat64(36, true), view.getFloat64(44, true),
-    view.getFloat64(52, true), view.getFloat64(60, true),
-  ];
-  return { geometryType: SHP_GEOMETRY_TYPES[shapeType] ?? "Unknown", bbox };
+  return { geometryType: SHP_GEOMETRY_TYPES[shapeType] ?? GeometryType.UNKNOWN };
 }
 
 export async function parseDbfFields(buffer: ArrayBuffer): Promise<GeoField[]> {
@@ -63,19 +58,3 @@ export async function parseDbfFields(buffer: ArrayBuffer): Promise<GeoField[]> {
   return result.schema ? fieldsFromSchema(result.schema) : [];
 }
 
-export function updateBbox(current: GeoLayerMetadata["bbox"], geometry: Feature["geometry"]): GeoLayerMetadata["bbox"] {
-  if (!geometry || !("coordinates" in geometry)) return current;
-  const coords = flattenCoords(geometry.coordinates as unknown[]);
-  if (!coords.length) return current;
-  const xs = coords.map((c) => c[0]);
-  const ys = coords.map((c) => c[1]);
-  const next: GeoLayerMetadata["bbox"] = [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
-  if (!current) return next;
-  return [Math.min(current[0], next[0]), Math.min(current[1], next[1]), Math.max(current[2], next[2]), Math.max(current[3], next[3])];
-}
-
-export function flattenCoords(coords: unknown[]): number[][] {
-  if (!Array.isArray(coords)) return [];
-  if (typeof coords[0] === "number") return [coords as number[]];
-  return (coords as unknown[][]).flatMap(flattenCoords);
-}

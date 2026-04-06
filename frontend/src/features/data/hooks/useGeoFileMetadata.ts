@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { extractGeoMetadata } from "../services/load-data/metadataLoader";
-import { type GeoFileMetadata, type MetadataParseStatus } from "../types";
+import { type GeoFileMetadata, MetadataParseStatus } from "../types";
 
 interface UseGeoFileMetadataReturn {
   status: MetadataParseStatus;
@@ -11,24 +11,24 @@ interface UseGeoFileMetadataReturn {
 }
 
 export function useGeoFileMetadata(): UseGeoFileMetadataReturn {
-  const [status, setStatus] = useState<MetadataParseStatus>("idle");
+  const [status, setStatus] = useState<MetadataParseStatus>(MetadataParseStatus.IDLE);
   const [metadata, setMetadata] = useState<GeoFileMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const parse = (file: File) => {
-    setStatus("parsing");
+    setStatus(MetadataParseStatus.PARSING);
     setMetadata(null);
     setError(null);
 
     extractGeoMetadata(file)
       .then((result) => {
         setMetadata(result);
-        setStatus("success");
+        setStatus(MetadataParseStatus.SUCCESS);
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : String(err);
         setError(message);
-        setStatus("error");
+        setStatus(MetadataParseStatus.ERROR);
       });
   };
 

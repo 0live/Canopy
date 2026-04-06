@@ -1,6 +1,6 @@
+import { useGeoFileMetadata } from "@/features/data/hooks/useGeoFileMetadata";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { useTranslation } from "react-i18next";
-import { useGeoFileMetadata } from "../hooks/useGeoFileMetadata";
 import { GeoFileInput } from "./GeoFileInput";
 import { GeoMetadataTable } from "./GeoMetadataTable";
 

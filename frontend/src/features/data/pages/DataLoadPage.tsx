@@ -1,10 +1,10 @@
+import { DataLoadNav } from "@/features/data/components/load-data/DataLoadNav";
+import { PostgisLoadTab } from "@/features/data/components/load-data/PostgisLoadTab";
+import { DataLoadTab } from "@/features/data/types";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { Wip } from "@/shared/components/ui/Wip";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DataLoadNav } from "../components/DataLoadNav";
-import { PostgisLoadTab } from "../components/PostgisLoadTab";
-import { DataLoadTab } from "../types";
 
 export function DataLoadPage() {
   const { t } = useTranslation();

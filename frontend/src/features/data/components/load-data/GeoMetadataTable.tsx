@@ -1,3 +1,4 @@
+import type { GeoFileMetadata, GeoLayerMetadata } from "@/features/data/types";
 import {
   Table,
   TableBody,
@@ -7,17 +8,11 @@ import {
   TableRow,
 } from "@/shared/components/ui/table";
 import { useTranslation } from "react-i18next";
-import type { GeoFileMetadata, GeoLayerMetadata } from "../types";
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function formatBbox(bbox: GeoLayerMetadata["bbox"]): string {
-  if (!bbox) return "—";
-  return bbox.map((v) => v.toFixed(4)).join(", ");
 }
 
 interface GeoMetadataTableProps {
@@ -60,20 +55,8 @@ function LayerSection({ layer }: { layer: GeoLayerMetadata }) {
             <TableCell>{layer.geometryType}</TableCell>
           </TableRow>
           <TableRow>
-            <TableCell className="text-muted-foreground">{t("data.load.postgis.meta.featureCount")}</TableCell>
-            <TableCell>
-              {layer.featureCount !== null
-                ? layer.featureCount
-                : t("data.load.postgis.meta.featureCountUnknown")}
-            </TableCell>
-          </TableRow>
-          <TableRow>
             <TableCell className="text-muted-foreground">{t("data.load.postgis.meta.epsg")}</TableCell>
             <TableCell>{layer.epsg ?? "—"}</TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="text-muted-foreground">{t("data.load.postgis.meta.bbox")}</TableCell>
-            <TableCell className="font-mono text-xs">{formatBbox(layer.bbox)}</TableCell>
           </TableRow>
         </TableBody>
       </Table>

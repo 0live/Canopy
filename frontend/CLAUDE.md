@@ -24,12 +24,16 @@ Structure cible : `src/features/[feature-name]/`
   * `services/api`: Pure API services (Fetch/Axios calls)
   * `services/forms`: Forms schemas (Yup)
   * `services/routes`: Router loaders and route definitions
+  * `services/[sub-feature]`: Sub-feature services
 * `hooks/`: TanStack Query hooks or forms hooks
 * `store/`: Zustand store (UI & Filter state only)
 * `components/`: Feature-specific UI components
 * `pages/` : Page entry points
+* `types/`: Feature-specific types. Always use as const objects instead of string literal unions. 
+
 
 **Patterns & Flow :**
+* **Imports:** Always use Vite path aliases instead of relative paths.
 * **Pattern:** Container/Presenter. Hooks/Logic MUST be separated from JSX.
 * **Flow:** React Router (Orchestrator) -> TanStack Query (Server State) -> Component (Render) -> Zustand (UI-only state: filters, search, pagination).
 * **Rendering:** Early returns for loading/error/empty states. No nested ternaries.
