@@ -178,7 +178,8 @@
         "layerNamePlaceholder": "e.g. communes_fr",
         "validation": {
           "layerNameRequired": "Layer name is required",
-          "layerNameFormat": "Lowercase letters, digits and underscores only (e.g. communes_fr)"
+          "layerNameFormat": "Lowercase letters, digits and underscores only (e.g. communes_fr)",
+          "noFieldSelected": "At least one field must be selected for import"
         },
         "meta": {
           "fileName": "File",

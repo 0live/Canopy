@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
-import type { GeoFileMetadata, GeoFieldImportSettings } from "@/features/data/types";
+import { AlertCircle, X } from "lucide-react";
+import type { GeoFileMetadata, GeoFieldImportSettings, GeoMetadataErrors } from "@/features/data/types";
 import { validateLayerMetadata } from "@/features/data/services/load-data/medataUtils";
 import { useGeoImportForm } from "@/features/data/hooks/useGeoImportForm";
 import { Button } from "@/shared/components/ui/button";
@@ -71,6 +72,34 @@ function LayerNameField({ form, isPending, t }: LayerNameFieldProps) {
   );
 }
 
+interface FormBlockerErrorsProps {
+  metadataErrors: GeoMetadataErrors;
+  hasNoFieldSelected: boolean;
+  isLayerNameEmpty: boolean;
+  t: TFunction;
+}
+
+function FormBlockerErrors({ metadataErrors, hasNoFieldSelected, isLayerNameEmpty, t }: FormBlockerErrorsProps) {
+  const messages = [
+    ...Object.values(metadataErrors).map((key) => t(key!)),
+    ...(hasNoFieldSelected ? [t("data.load.postgis.validation.noFieldSelected")] : []),
+    ...(isLayerNameEmpty ? [t("data.load.postgis.validation.layerNameRequired")] : []),
+  ];
+
+  if (messages.length === 0) return null;
+
+  return (
+    <ul className="flex flex-col gap-1">
+      {messages.map((msg) => (
+        <li key={msg} className="flex items-center gap-1.5 text-xs text-destructive">
+          <AlertCircle className="h-3 w-3 shrink-0" />
+          {msg}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 interface ImportActionsProps {
   onCancel: () => void;
   onSubmitPostgis: () => void;
@@ -121,6 +150,8 @@ export function GeoImportPanel({ metadata, file, onClose }: GeoImportPanelProps)
   const hasNoFieldSelected = Object.values(fieldSettings).every((s) => !s.include);
 
   const { form, onSubmitPostgis, onSubmitPmtiles } = useGeoImportForm({ metadata, file, fieldSettings });
+  const layerName = useWatch({ control: form.control, name: "layerName" });
+  const isLayerNameEmpty = !layerName;
 
   const handleFieldChange = (fieldName: string, key: keyof GeoFieldImportSettings, value: boolean) => {
     setFieldSettings((prev) => ({ ...prev, [fieldName]: { ...prev[fieldName], [key]: value } }));
@@ -145,6 +176,7 @@ export function GeoImportPanel({ metadata, file, onClose }: GeoImportPanelProps)
         />
         <div className="flex flex-col gap-3 border-t pt-4">
           <LayerNameField form={form} isPending={false} t={t} />
+          <FormBlockerErrors metadataErrors={errors} hasNoFieldSelected={hasNoFieldSelected} isLayerNameEmpty={isLayerNameEmpty} t={t} />
           <ImportActions
             onCancel={onClose}
             onSubmitPostgis={onSubmitPostgis}

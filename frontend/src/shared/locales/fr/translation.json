@@ -178,7 +178,8 @@
         "layerNamePlaceholder": "ex: communes_fr",
         "validation": {
           "layerNameRequired": "Le nom de la couche est requis",
-          "layerNameFormat": "Minuscules, chiffres et underscores uniquement (ex: communes_fr)"
+          "layerNameFormat": "Minuscules, chiffres et underscores uniquement (ex: communes_fr)",
+          "noFieldSelected": "Au moins un champ doit être sélectionné pour l'import"
         },
         "meta": {
           "fileName": "Fichier",
