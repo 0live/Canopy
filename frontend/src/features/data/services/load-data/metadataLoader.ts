@@ -9,7 +9,8 @@ import {
   type GeoLayerMetadata,
   GeometryType
 } from "../../types";
-import { detectFormat, fieldsFromFeature, parseDbfFields, parseSHPHeader, toBuffer } from "./medataUtils";
+import { geoApi } from "../api/geoApi";
+import { detectFormat, extractEpsgFromWkt, fieldsFromFeature, parseDbfFields, parseSHPHeader, toBuffer } from "./medataUtils";
 
 const MAX_GEOJSON_FEATURES_SCAN = 10;
 
@@ -25,16 +26,16 @@ async function parseShapefileZip(file: File): Promise<GeoLayerMetadata> {
   const { geometryType } = parseSHPHeader(shpBuffer);
   const dbfBuffer = findBuffer(".dbf");
   const prjBuffer = findBuffer(".prj");
-  console.log(new TextDecoder().decode(prjBuffer!))
+  const prjWkt = prjBuffer ? new TextDecoder().decode(prjBuffer) : null;
+  const epsgFromWkt = prjWkt ? extractEpsgFromWkt(prjWkt) : null;
+  const epsg = epsgFromWkt ?? (prjWkt ? await geoApi.detectEpsg(prjWkt).catch(() => null) : null);
   return {
     name: file.name,
     geometryType,
-    epsg: prjBuffer ? new TextDecoder().decode(prjBuffer) : null,
+    epsg,
     fields: dbfBuffer ? await parseDbfFields(dbfBuffer) : [],
   };
 }
-
-
 
 async function parseGeoJson(file: File): Promise<GeoLayerMetadata> {
   const batches = await loadInBatches(file, JSONLoader, {

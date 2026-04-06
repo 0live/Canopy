@@ -20,6 +20,7 @@ dependencies = [
     "orjson",
     "altcha>=1.0.0",
     "python-json-logger>=4.0.0",
+    "pyproj>=3.7.2",
 ]
 
 [dependency-groups]

@@ -47,6 +47,11 @@ export function toBuffer(arr: Uint8Array): ArrayBuffer {
   return arr.buffer.slice(arr.byteOffset, arr.byteOffset + arr.byteLength) as ArrayBuffer;
 }
 
+export function extractEpsgFromWkt(wkt: string): string | null {
+  const match = wkt.match(/AUTHORITY\["EPSG","(\d+)"\]/i);
+  return match ? `EPSG:${match[1]}` : null;
+}
+
 export function parseSHPHeader(buffer: ArrayBuffer): { geometryType: GeometryType } {
   const view = new DataView(buffer);
   const shapeType = view.getInt32(32, true);
