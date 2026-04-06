@@ -160,7 +160,7 @@
       "postgis": {
         "dropzone": "Drop a file here or click to browse",
         "dropzoneActive": "Drop the file…",
-        "supportedFormats": "GeoJSON · Shapefile (.zip) · FlatGeobuf",
+        "supportedFormats": "GeoJSON · Shapefile (.zip)",
         "parsing": "Analysing file…",
         "parseError": "Parse error: {{error}}",
         "parsedIn": "parsed in {{ms}} ms",

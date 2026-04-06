@@ -118,6 +118,7 @@ export function GeoImportPanel({ metadata, file, onClose }: GeoImportPanelProps)
 
   const errors = validateLayerMetadata(metadata);
   const hasMetadataErrors = Object.keys(errors).length > 0;
+  const hasNoFieldSelected = Object.values(fieldSettings).every((s) => !s.include);
 
   const { form, onSubmitPostgis, onSubmitPmtiles } = useGeoImportForm({ metadata, file, fieldSettings });
 
@@ -148,7 +149,7 @@ export function GeoImportPanel({ metadata, file, onClose }: GeoImportPanelProps)
             onCancel={onClose}
             onSubmitPostgis={onSubmitPostgis}
             onSubmitPmtiles={onSubmitPmtiles}
-            disabled={hasMetadataErrors || !form.formState.isValid}
+            disabled={hasMetadataErrors || !form.formState.isValid || hasNoFieldSelected}
             t={t}
           />
         </div>

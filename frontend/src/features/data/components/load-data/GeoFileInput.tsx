@@ -3,7 +3,7 @@ import { UploadCloud } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const ACCEPTED_EXTENSIONS = ".geojson,.json,.fgb,.zip";
+const ACCEPTED_EXTENSIONS = ".geojson,.json,.zip";
 const ACCEPTED_MIME_TYPES = ["application/geo+json", "application/json", "application/zip"];
 
 interface GeoFileInputProps {
@@ -15,7 +15,7 @@ function isAcceptedFile(file: File): boolean {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
   return (
     ACCEPTED_MIME_TYPES.includes(file.type) ||
-    ["geojson", "json", "fgb", "zip"].includes(ext)
+    ["geojson", "json", "zip"].includes(ext)
   );
 }
 
