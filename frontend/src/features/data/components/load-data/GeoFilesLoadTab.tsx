@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { GeoFileInput } from "./GeoFileInput";
 import { GeoImportPanel } from "./GeoImportPanel";
 
-export function PostgisLoadTab() {
+export function GeoFilesLoadTab() {
   const { t } = useTranslation();
   const { status, metadata, file, error, parse, reset } = useGeoFileMetadata();
 

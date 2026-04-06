@@ -153,8 +153,9 @@
       "title": "Charger des données",
       "subtitle": "Importez un fichier géographique dans votre base de données.",
       "tabs": {
-        "postgis": "Fichier géographique → PostGIS",
-        "pmtiles": "Fichier géographique → PMTiles"
+        "geoFiles": "Fichiers Géographiques",
+        "tabularFiles": "Fichiers Tabulaires",
+        "cloudSource": "Connecter une source Cloud native"
       },
       "postgis": {
         "dropzone": "Glissez un fichier ici ou cliquez pour parcourir",

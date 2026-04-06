@@ -153,8 +153,9 @@
       "title": "Load data",
       "subtitle": "Import a geographic file into your database.",
       "tabs": {
-        "postgis": "Geographic file → PostGIS",
-        "pmtiles": "Geographic file → PMTiles"
+        "geoFiles": "Geographic Files",
+        "tabularFiles": "Tabular Files",
+        "cloudSource": "Connect a Cloud Native Source"
       },
       "postgis": {
         "dropzone": "Drop a file here or click to browse",

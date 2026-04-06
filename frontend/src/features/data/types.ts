@@ -1,6 +1,7 @@
 export const DataLoadTab = {
-  POSTGIS: "postgis",
-  PMTILES: "pmtiles",
+  GEO_FILES: "geoFiles",
+  TABULAR_FILES: "tabularFiles",
+  CLOUD_SOURCE: "cloudSource",
 } as const;
 
 export const DATA_LOAD_TABS = Object.values(DataLoadTab) as DataLoadTab[];
