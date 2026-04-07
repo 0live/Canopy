@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, X } from "lucide-react";
 import type { GeoFileMetadata, GeoFieldImportSettings, GeoMetadataErrors } from "@/features/data/types";
 import { validateLayerMetadata } from "@/features/data/services/load-data/medataUtils";
 import { useGeoImportForm } from "@/features/data/hooks/useGeoImportForm";
+import type { GeoFileUploadState } from "@/features/data/hooks/useGeoFileUpload";
 import { Button } from "@/shared/components/ui/button";
 import {
   DropdownMenu,
@@ -85,9 +86,7 @@ function FormBlockerErrors({ metadataErrors, hasNoFieldSelected, isLayerNameEmpt
     ...(hasNoFieldSelected ? [t("data.load.postgis.validation.noFieldSelected")] : []),
     ...(isLayerNameEmpty ? [t("data.load.postgis.validation.layerNameRequired")] : []),
   ];
-
   if (messages.length === 0) return null;
-
   return (
     <ul className="flex flex-col gap-1">
       {messages.map((msg) => (
@@ -133,6 +132,119 @@ function ImportActions({ onCancel, onSubmitPostgis, onSubmitPmtiles, disabled, t
   );
 }
 
+interface UploadProgressSectionProps {
+  progress: number;
+  t: TFunction;
+}
+
+function UploadProgressSection({ progress, t }: UploadProgressSectionProps) {
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-sm text-muted-foreground">
+        {t("data.load.postgis.upload.uploading", { percent: progress })}
+      </span>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+        <div
+          className="h-full bg-primary transition-all duration-200"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+interface UploadSuccessSectionProps {
+  filename: string;
+  onClose: () => void;
+  t: TFunction;
+}
+
+function UploadSuccessSection({ filename, onClose, t }: UploadSuccessSectionProps) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2 text-sm text-green-600">
+        <CheckCircle2 className="h-4 w-4 shrink-0" />
+        <span>{t("data.load.postgis.upload.success", { filename })}</span>
+      </div>
+      <div className="flex justify-end">
+        <Button type="button" onClick={onClose}>
+          {t("data.load.postgis.upload.done")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+interface UploadErrorSectionProps {
+  onRetry: () => void;
+  onCancel: () => void;
+  t: TFunction;
+}
+
+function UploadErrorSection({ onRetry, onCancel, t }: UploadErrorSectionProps) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2 text-sm text-destructive">
+        <AlertCircle className="h-4 w-4 shrink-0" />
+        <span>{t("data.load.postgis.upload.error")}</span>
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" type="button" onClick={onCancel}>
+          {t("data.load.postgis.cancel")}
+        </Button>
+        <Button type="button" onClick={onRetry}>
+          {t("data.load.postgis.upload.retry")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+interface FormFooterProps {
+  uploadState: GeoFileUploadState;
+  metadataErrors: GeoMetadataErrors;
+  hasNoFieldSelected: boolean;
+  isLayerNameEmpty: boolean;
+  isFormValid: boolean;
+  onCancel: () => void;
+  onSubmitPostgis: () => void;
+  onSubmitPmtiles: () => void;
+  onRetry: () => void;
+  t: TFunction;
+}
+
+function FormFooter({
+  uploadState, metadataErrors, hasNoFieldSelected, isLayerNameEmpty,
+  isFormValid, onCancel, onSubmitPostgis, onSubmitPmtiles, onRetry, t,
+}: FormFooterProps) {
+  if (uploadState.isPending) return <UploadProgressSection progress={uploadState.progress} t={t} />;
+  if (uploadState.isSuccess && uploadState.result) {
+    return <UploadSuccessSection filename={uploadState.result.filename} onClose={onCancel} t={t} />;
+  }
+  return (
+    <>
+      <FormBlockerErrors
+        metadataErrors={metadataErrors}
+        hasNoFieldSelected={hasNoFieldSelected}
+        isLayerNameEmpty={isLayerNameEmpty}
+        t={t}
+      />
+      {uploadState.isError && (
+        <UploadErrorSection onRetry={onRetry} onCancel={onCancel} t={t} />
+      )}
+      {!uploadState.isError && (
+        <ImportActions
+          onCancel={onCancel}
+          onSubmitPostgis={onSubmitPostgis}
+          onSubmitPmtiles={onSubmitPmtiles}
+          disabled={Object.keys(metadataErrors).length > 0 || !isFormValid || hasNoFieldSelected}
+          t={t}
+        />
+      )}
+    </>
+  );
+}
+
 interface GeoImportPanelProps {
   metadata: GeoFileMetadata;
   file: File;
@@ -146,12 +258,12 @@ export function GeoImportPanel({ metadata, file, onClose }: GeoImportPanelProps)
   );
 
   const errors = validateLayerMetadata(metadata);
-  const hasMetadataErrors = Object.keys(errors).length > 0;
   const hasNoFieldSelected = Object.values(fieldSettings).every((s) => !s.include);
 
-  const { form, onSubmitPostgis, onSubmitPmtiles } = useGeoImportForm({ metadata, file, fieldSettings });
+  const { form, onSubmitPostgis, onSubmitPmtiles, uploadState, resetUpload } =
+    useGeoImportForm({ metadata, file, fieldSettings });
+
   const layerName = useWatch({ control: form.control, name: "layerName" });
-  const isLayerNameEmpty = !layerName;
 
   const handleFieldChange = (fieldName: string, key: keyof GeoFieldImportSettings, value: boolean) => {
     setFieldSettings((prev) => ({ ...prev, [fieldName]: { ...prev[fieldName], [key]: value } }));
@@ -175,13 +287,17 @@ export function GeoImportPanel({ metadata, file, onClose }: GeoImportPanelProps)
           onToggleAllInclude={handleToggleAllInclude}
         />
         <div className="flex flex-col gap-3 border-t pt-4">
-          <LayerNameField form={form} isPending={false} t={t} />
-          <FormBlockerErrors metadataErrors={errors} hasNoFieldSelected={hasNoFieldSelected} isLayerNameEmpty={isLayerNameEmpty} t={t} />
-          <ImportActions
+          <LayerNameField form={form} isPending={uploadState.isPending} t={t} />
+          <FormFooter
+            uploadState={uploadState}
+            metadataErrors={errors}
+            hasNoFieldSelected={hasNoFieldSelected}
+            isLayerNameEmpty={!layerName}
+            isFormValid={form.formState.isValid}
             onCancel={onClose}
             onSubmitPostgis={onSubmitPostgis}
             onSubmitPmtiles={onSubmitPmtiles}
-            disabled={hasMetadataErrors || !form.formState.isValid || hasNoFieldSelected}
+            onRetry={resetUpload}
             t={t}
           />
         </div>

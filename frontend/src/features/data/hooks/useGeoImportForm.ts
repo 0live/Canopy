@@ -6,14 +6,7 @@ import { ExportTarget } from "@/features/data/types";
 import type { GeoFileMetadata, GeoFieldImportSettings } from "@/features/data/types";
 import { getImportSchema } from "@/features/data/services/forms/importSchema";
 import type { ImportFormData } from "@/features/data/services/forms/importSchema";
-
-interface GeoImportPayload {
-  layerName: string;
-  exportTarget: ExportTarget;
-  metadata: GeoFileMetadata;
-  fieldSettings: Record<string, GeoFieldImportSettings>;
-  file: File;
-}
+import { useGeoFileUpload } from "@/features/data/hooks/useGeoFileUpload";
 
 interface UseGeoImportFormParams {
   metadata: GeoFileMetadata;
@@ -24,6 +17,7 @@ interface UseGeoImportFormParams {
 export function useGeoImportForm({ metadata, file, fieldSettings }: UseGeoImportFormParams) {
   const { t } = useTranslation();
   const schema = useMemo(() => getImportSchema(t), [t]);
+  const { upload, reset: resetUpload, state: uploadState } = useGeoFileUpload();
 
   const form = useForm<ImportFormData>({
     resolver: yupResolver(schema),
@@ -31,21 +25,17 @@ export function useGeoImportForm({ metadata, file, fieldSettings }: UseGeoImport
     mode: "onChange",
   });
 
-  const buildPayload = (values: ImportFormData, exportTarget: ExportTarget): GeoImportPayload => ({
-    layerName: values.layerName,
-    exportTarget,
-    metadata,
-    fieldSettings,
-    file,
-  });
+  const buildSubmitHandler = (exportTarget: ExportTarget) =>
+    form.handleSubmit((values) => {
+      void exportTarget;
+      void values;
+      void metadata;
+      void fieldSettings;
+      upload(file);
+    });
 
-  const onSubmitPostgis = form.handleSubmit((values) => {
-    console.log("[GeoImportForm] submit", buildPayload(values, ExportTarget.POSTGIS));
-  });
+  const onSubmitPostgis = buildSubmitHandler(ExportTarget.POSTGIS);
+  const onSubmitPmtiles = buildSubmitHandler(ExportTarget.PMTILES);
 
-  const onSubmitPmtiles = form.handleSubmit((values) => {
-    console.log("[GeoImportForm] submit", buildPayload(values, ExportTarget.PMTILES));
-  });
-
-  return { form, onSubmitPostgis, onSubmitPmtiles };
+  return { form, onSubmitPostgis, onSubmitPmtiles, uploadState, resetUpload };
 }

@@ -181,6 +181,13 @@
           "layerNameFormat": "Lowercase letters, digits and underscores only (e.g. communes_fr)",
           "noFieldSelected": "At least one field must be selected for import"
         },
+        "upload": {
+          "uploading": "Uploading… {{percent}}%",
+          "success": "{{filename}} uploaded successfully",
+          "error": "Upload failed. Please check the file and try again.",
+          "retry": "Retry",
+          "done": "Done"
+        },
         "meta": {
           "fileName": "File",
           "fileType": "Type",

@@ -96,6 +96,12 @@
     "password_update_failed": "Failed to update PostgreSQL password.",
     "password_updated": "PostgreSQL password updated successfully."
   },
+  "import_data": {
+    "upload_failed": "File upload failed.",
+    "upload_missing_filename": "Uploaded file has no filename.",
+    "upload_invalid_format": "Invalid file format. Allowed formats: {allowed}.",
+    "import_failed": "Geo file import into the database failed."
+  },
   "notification": {
     "error": "Notification service error.",
     "connection_error": "WebSocket connection error.",

@@ -96,6 +96,12 @@
     "password_update_failed": "Échec de la mise à jour du mot de passe PostgreSQL.",
     "password_updated": "Mot de passe PostgreSQL mis à jour avec succès."
   },
+  "import_data": {
+    "upload_failed": "L'upload du fichier a échoué.",
+    "upload_missing_filename": "Le fichier uploadé n'a pas de nom.",
+    "upload_invalid_format": "Format de fichier invalide. Formats autorisés : {allowed}.",
+    "import_failed": "L'import du fichier géographique en base de données a échoué."
+  },
   "notification": {
     "error": "Erreur du service de notification.",
     "connection_error": "Erreur de connexion WebSocket.",

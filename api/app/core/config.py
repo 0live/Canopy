@@ -85,6 +85,9 @@ class Settings(BaseSettings):
     # Database role
     db_role_prefix: str = "canopy_user_"
 
+    # File uploads
+    uploads_dir: str = "/tmp/canopy_uploads"
+
     # Application Features
     allow_self_registration: bool = True
 

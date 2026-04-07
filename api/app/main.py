@@ -24,6 +24,7 @@ from app.modules.atlases.endpoints import atlasesRouter
 from app.modules.auth.endpoints import authRouter
 from app.modules.db_access.endpoints import databaseAccessRouter
 from app.modules.geo.endpoints import geoRouter
+from app.modules.import_data.endpoints import importDataRouter
 from app.modules.maps.endpoints import mapsRouter
 from app.modules.teams.endpoints import teamsRouter
 from app.modules.users.endpoints import userRouter
@@ -96,4 +97,5 @@ app.include_router(atlasesRouter)
 app.include_router(mapsRouter)
 app.include_router(databaseAccessRouter)
 app.include_router(geoRouter)
+app.include_router(importDataRouter)
 app.include_router(notificationsRouter)

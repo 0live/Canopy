@@ -181,6 +181,13 @@
           "layerNameFormat": "Minuscules, chiffres et underscores uniquement (ex: communes_fr)",
           "noFieldSelected": "Au moins un champ doit être sélectionné pour l'import"
         },
+        "upload": {
+          "uploading": "Envoi en cours… {{percent}}%",
+          "success": "{{filename}} envoyé avec succès",
+          "error": "Échec de l'envoi. Vérifiez le fichier et réessayez.",
+          "retry": "Réessayer",
+          "done": "Terminé"
+        },
         "meta": {
           "fileName": "Fichier",
           "fileType": "Type",

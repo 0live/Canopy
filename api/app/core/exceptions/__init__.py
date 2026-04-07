@@ -96,3 +96,21 @@ class NotificationException(APIException):
         self, key: str = "notification.error", params: Optional[Dict[str, Any]] = None
     ):
         super().__init__(key=key, params=params)
+
+
+class FileUploadException(DomainException):
+    """Exception raised when a file upload fails validation or storage."""
+
+    def __init__(
+        self, key: str = "import_data.upload_failed", params: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(key=key, params=params)
+
+
+class ImportGeofileException(DomainException):
+    """Exception raised when a geo file import into the database fails."""
+
+    def __init__(
+        self, key: str = "import_data.import_failed", params: Optional[Dict[str, Any]] = None
+    ):
+        super().__init__(key=key, params=params)
