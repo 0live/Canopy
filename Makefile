@@ -31,6 +31,7 @@ genaltchakey:
 
 launch-tests:
 	cd api/ && ENV=test uv run pytest
+	cd frontend/ && npm run test
 
 create-app: genpkey genaltchakey build start setup-db
 
