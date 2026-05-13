@@ -29,9 +29,9 @@ genpkey:
 genaltchakey:
 	echo "ALTCHA_HMAC_KEY=$$(openssl rand -hex 32)" >> .env
 
-launch-tests:
-	cd api/ && ENV=test uv run pytest
-	cd frontend/ && npm run test
+launch-all-tests:
+	$(MAKE) launch-api-tests
+	$(MAKE) launch-frontend-tests
 
 create-app: genpkey genaltchakey build start setup-db
 

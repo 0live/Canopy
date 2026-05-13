@@ -44,3 +44,4 @@ Structure cible : `src/features/[feature-name]/`
 * **Unit/Integration:** Vitest + RTL + user-event.
 * **Mocking:** MSW (Mock Service Worker) for API. **DO NOT** mock TanStack Query hooks.
 * **E2E:** Playwright for critical paths (Auth, Core business flows).
+* **Command**: `make launch-frontend-test` to run tests.

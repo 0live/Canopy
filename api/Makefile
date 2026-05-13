@@ -21,3 +21,6 @@ reset-db:
 	$(MAKE) start
 	$(MAKE) apply-migration
 	$(MAKE) seed
+
+launch-api-tests:
+	cd api/ && ENV=test uv run pytest

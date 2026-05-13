@@ -33,7 +33,7 @@ make reset-db                              # Destructive reset of database
 * **Unit:** `app/modules/{domain}/services`. Mock all external dependencies.
 * **Integration:** `app/modules/{domain}/endpoints`. Use TestContainers (Postgres).
 * **Command:** 
-    * `make launch-tests`: Launch all tests
+    * `make launch-api-tests`: Launch all api tests
     * `cd api/ && ENV=test uv run pytest tests/unit/test_example.py`: Run a single test file
     * `cd api/ && ENV=test uv run pytest tests/unit/test_example.py::test_function_name`: Run a specific test
 ```
