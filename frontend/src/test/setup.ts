@@ -21,5 +21,6 @@ beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   server.resetHandlers();
   resetStore();
+  vi.clearAllMocks();
 });
 afterAll(() => server.close());
