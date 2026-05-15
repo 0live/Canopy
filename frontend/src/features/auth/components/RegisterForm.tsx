@@ -83,7 +83,7 @@ function ActionButtons({ form, isPending, t }: FieldProps) {
       <div className="relative my-4">
         <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Où</span>
+          <span className="bg-background px-2 text-muted-foreground">{t("auth.or")}</span>
         </div>
       </div>
       <Button type="button" variant="outline" className="w-full" disabled>{t("auth.googleLogin")}</Button>

@@ -377,6 +377,7 @@ class TestUserService:
             roles=[UserRole.USER],
             teams=[],
             is_verified=True,
+            postgis_role_created=False,
         )
         mock_repo.get_by_email = AsyncMock(return_value=existing_user)
 

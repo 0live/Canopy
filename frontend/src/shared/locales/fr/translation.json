@@ -88,6 +88,7 @@
     "captchaRequired": "Veuillez compléter le captcha",
     "captchaError": "Échec de la vérification du captcha. Veuillez réessayer.",
     "genericError": "Une erreur est survenue, veuillez réessayer",
+    "or": "Ou",
     "forgotPassword": "Mot de passe oublié ?",
     "forgotPasswordTitle": "Réinitialiser votre mot de passe",
     "forgotPasswordDescription": "Entrez votre adresse email et nous vous enverrons un lien de réinitialisation.",

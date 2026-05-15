@@ -88,6 +88,7 @@
     "captchaRequired": "Please complete the captcha",
     "captchaError": "Captcha verification failed. Please try again.",
     "genericError": "An error occurred, please try again",
+    "or": "Or",
     "forgotPassword": "Forgot password?",
     "forgotPasswordTitle": "Reset your password",
     "forgotPasswordDescription": "Enter your email address and we'll send you a reset link.",
