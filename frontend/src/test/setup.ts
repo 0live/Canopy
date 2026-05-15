@@ -3,11 +3,6 @@ import { resetStore } from "@/test/utils/renderWithProviders";
 import "@testing-library/jest-dom";
 import { vi } from "vitest";
 
-// Stub altcha custom element — not available in jsdom
-if (!customElements.get("altcha-widget")) {
-  customElements.define("altcha-widget", class extends HTMLElement {});
-}
-
 // Suppress sonner toasts — side effects not relevant in tests
 vi.mock("sonner", () => ({
   toast: {
