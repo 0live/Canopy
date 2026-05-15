@@ -4,8 +4,10 @@ import { renderWithProviders } from "@/test/utils/renderWithProviders";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { authHandlers } from "../mocks/handlers";
 
 describe("LoginForm", () => {
+  beforeEach(() => { server.use(...authHandlers); });
   it("renders username/password fields and submit button", () => {
     renderWithProviders(<LoginForm />);
     expect(screen.getByLabelText("auth.username")).toBeInTheDocument();

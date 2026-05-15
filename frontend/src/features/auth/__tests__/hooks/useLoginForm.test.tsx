@@ -1,9 +1,9 @@
 import { useLoginForm } from "@/features/auth/hooks/useLoginForm";
-import { mockTokens } from "@/test/mocks/handlers";
 import { server } from "@/test/mocks/server";
 import { renderHookWithProviders } from "@/test/utils/renderWithProviders";
 import { act, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
+import { authHandlers, mockTokens } from "../mocks/handlers";
 
 // Wrap hook to subscribe to formState.errors during render — required for react-hook-form to track error updates
 function useLoginFormWithErrorTracking(onSuccess?: () => void) {
@@ -13,6 +13,7 @@ function useLoginFormWithErrorTracking(onSuccess?: () => void) {
 }
 
 describe("useLoginForm", () => {
+  beforeEach(() => { server.use(...authHandlers); });
   it("shows validation errors on empty submit without calling the API", async () => {
     const loginSpy = vi.fn();
     server.use(http.post("/api/auth/login", () => { loginSpy(); return HttpResponse.json(mockTokens); }));

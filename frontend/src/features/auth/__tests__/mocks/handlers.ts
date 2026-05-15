@@ -16,7 +16,7 @@ export const mockTokens: AuthTokens = {
   token_type: "bearer",
 };
 
-export const handlers = [
+export const authHandlers = [
   http.post("/api/auth/login", () =>
     HttpResponse.json(mockTokens, { status: 200 })
   ),

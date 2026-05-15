@@ -7,6 +7,7 @@ import { renderWithProviders } from "@/test/utils/renderWithProviders";
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
+import { authHandlers } from "../mocks/handlers";
 
 // Simulates the altcha widget completing verification — fires the statechange event
 // that useCaptchaField listens to, setting altcha_payload in the form.
@@ -30,6 +31,8 @@ async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("RegisterForm", () => {
+  beforeEach(() => { server.use(...authHandlers); });
+
   it("renders email/username/password fields and CAPTCHA", () => {
     renderWithProviders(<RegisterForm />);
     expect(screen.getByLabelText("auth.email")).toBeInTheDocument();

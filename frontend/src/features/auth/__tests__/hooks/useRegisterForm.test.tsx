@@ -4,6 +4,7 @@ import { renderHookWithProviders } from "@/test/utils/renderWithProviders";
 import { act, waitFor } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import { toast } from "sonner";
+import { authHandlers } from "../mocks/handlers";
 
 const validData = {
   email: "alice@example.com",
@@ -27,6 +28,8 @@ function fillValidForm(result: { current: ReturnType<typeof useRegisterForm> }) 
 }
 
 describe("useRegisterForm", () => {
+  beforeEach(() => { server.use(...authHandlers); });
+
   it("shows validation errors on empty submit without calling the API", async () => {
     const registerSpy = vi.fn();
     server.use(http.post("/api/auth/register", () => { registerSpy(); return HttpResponse.json({}, { status: 201 }); }));
