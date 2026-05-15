@@ -58,6 +58,7 @@
     "read_permission_denied": "Vous n'avez pas la permission de voir ce profil utilisateur.",
     "update_permission_denied": "Vous n'avez pas la permission de modifier cet utilisateur.",
     "delete_permission_denied": "Vous n'avez pas la permission de supprimer des utilisateurs.",
+    "cannot_delete_self": "Vous ne pouvez pas supprimer votre propre compte.",
     "role_permission_denied": "Vous n'avez pas la permission de changer les rôles.",
     "team_permission_denied": "Vous n'avez pas la permission de changer les équipes.",
     "deleted_success": "Utilisateur supprimé avec succès."

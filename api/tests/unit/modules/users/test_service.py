@@ -183,6 +183,23 @@ class TestUserService:
 
         assert exc.value.key == "user.not_found"
 
+    @pytest.mark.asyncio
+    async def test_delete_user_cannot_delete_self(self, service, mock_repo):
+        """Test that an admin cannot delete their own account."""
+        admin_user = UserDetail(
+            id=99,
+            username="admin",
+            email="admin@test.com",
+            roles=[UserRole.ADMIN],
+            teams=[],
+        )
+
+        with pytest.raises(PermissionDeniedException) as exc:
+            await service.delete_user(99, admin_user)
+
+        assert exc.value.params["detail"] == "user.cannot_delete_self"
+        mock_repo.get.assert_not_called()
+
     # =========================================================================
     # Create User Tests
     # =========================================================================

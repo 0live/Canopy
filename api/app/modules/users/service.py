@@ -217,6 +217,11 @@ class UserService:
                 params={"detail": "user.delete_permission_denied"}
             )
 
+        if user_id == current_user.id:
+            raise PermissionDeniedException(
+                params={"detail": "user.cannot_delete_self"}
+            )
+
         user = await self.repository.get(user_id)
         if not user:
             raise EntityNotFoundException(

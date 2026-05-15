@@ -58,6 +58,7 @@
     "read_permission_denied": "You don't have permission to read this user profile.",
     "update_permission_denied": "You don't have permission to update this user.",
     "delete_permission_denied": "You don't have permission to delete users.",
+    "cannot_delete_self": "You cannot delete your own account.",
     "role_permission_denied": "You don't have permission to change roles.",
     "team_permission_denied": "You don't have permission to change teams.",
     "deleted_success": "User deleted successfully."
