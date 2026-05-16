@@ -17,5 +17,5 @@ ui-add:
 	fi
 	$(DOCKER_COMPOSE) exec frontend npx shadcn@latest add $(component)
 
-launch-frontend-test:
+launch-frontend-tests:
 	cd frontend && npm run test
