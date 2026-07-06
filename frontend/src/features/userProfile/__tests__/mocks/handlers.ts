@@ -46,7 +46,7 @@ export const userProfileHandlers = [
   http.get("/api/notifications", ({ request }) => {
     const url = new URL(request.url);
     if (url.searchParams.get("unread_only") === "true") {
-      return HttpResponse.json([mockNotification], { status: 200 });
+      return HttpResponse.json({ items: [mockNotification], total: 1 }, { status: 200 });
     }
     return HttpResponse.json({ items: [mockNotification], total: 1 }, { status: 200 });
   }),
