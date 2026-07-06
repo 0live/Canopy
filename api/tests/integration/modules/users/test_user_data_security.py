@@ -24,7 +24,9 @@ async def test_get_me_no_sensitive_fields(
     token = await auth_token_factory(
         username=existing_users[0]["username"], password=existing_users[0]["password"]
     )
-    response = await client.get("/users/me", headers={"Authorization": f"Bearer {token}"})
+    response = await client.get(
+        "/users/me", headers={"Authorization": f"Bearer {token}"}
+    )
     assert response.status_code == 200
     assert_no_sensitive_fields(response.json())
 
@@ -112,7 +114,8 @@ async def test_update_user_roles_no_sensitive_fields(
 
     users_resp = await client.get("/users", headers=headers)
     target_user = next(
-        u for u in users_resp.json()["items"]
+        u
+        for u in users_resp.json()["items"]
         if u["username"] == existing_users[0]["username"]
     )
     user_id = target_user["id"]

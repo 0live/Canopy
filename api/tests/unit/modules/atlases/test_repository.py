@@ -58,7 +58,9 @@ class TestAtlasRepository:
         repository._build_query = Mock(return_value=mock_query)
         repository.count_from_query = AsyncMock(return_value=3)
 
-        result = await repository.count(filter_owner_id=1, filter_team_ids=None, admin_bypass=False)
+        result = await repository.count(
+            filter_owner_id=1, filter_team_ids=None, admin_bypass=False
+        )
 
         assert result == 3
         repository._build_query.assert_called_once_with(1, None, False)

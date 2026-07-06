@@ -25,7 +25,11 @@ def _build_handler(log_level: int, use_json: bool) -> logging.Handler:
     if use_json:
         fmt = JsonFormatter(
             fmt="%(asctime)s %(name)s %(levelname)s %(message)s %(correlation_id)s",
-            rename_fields={"asctime": "timestamp", "levelname": "level", "name": "logger"},
+            rename_fields={
+                "asctime": "timestamp",
+                "levelname": "level",
+                "name": "logger",
+            },
         )
     else:
         fmt = logging.Formatter(

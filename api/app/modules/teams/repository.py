@@ -36,7 +36,9 @@ class TeamRepository(BaseRepository[Team]):
         result = await self.session.exec(query.offset(skip).limit(limit))
         return list(result.all())
 
-    async def count(self, user: Optional[User] = None, filter_by_access: bool = True) -> int:
+    async def count(
+        self, user: Optional[User] = None, filter_by_access: bool = True
+    ) -> int:
         return await self.count_from_query(self._build_query(user, filter_by_access))
 
     async def is_member(self, team_id: int, user_id: int) -> bool:

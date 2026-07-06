@@ -6,7 +6,12 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.core.enums.app_parameter import AppParameter
 from app.core.messages import MessageService
 from app.core.rate_limit import limiter
-from app.modules.auth.schemas import ForgotPasswordRequest, RegisterPayload, ResetPasswordRequest, Token
+from app.modules.auth.schemas import (
+    ForgotPasswordRequest,
+    RegisterPayload,
+    ResetPasswordRequest,
+    Token,
+)
 from app.modules.auth.services.auth_service import AuthServiceDep
 from app.modules.users.schemas import UserDetail
 

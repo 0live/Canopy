@@ -196,7 +196,9 @@ class NotificationService:
     async def delete_notification(self, notification_id: int, user_id: int) -> None:
         """Delete a single notification by ID, verifying ownership."""
         try:
-            found = await self.repository.delete_by_id_and_user(notification_id, user_id)
+            found = await self.repository.delete_by_id_and_user(
+                notification_id, user_id
+            )
         except Exception as e:
             raise NotificationException(
                 key="notification.delete_failed", params={"error": str(e)}

@@ -217,10 +217,14 @@ async def test_get_all_atlases_skip_limit(client: AsyncClient, auth_token_factor
     headers = {"Authorization": f"Bearer {token}"}
 
     await client.post(
-        "/atlases", json={"name": "Paginate Atlas A", "description": "desc"}, headers=headers
+        "/atlases",
+        json={"name": "Paginate Atlas A", "description": "desc"},
+        headers=headers,
     )
     await client.post(
-        "/atlases", json={"name": "Paginate Atlas B", "description": "desc"}, headers=headers
+        "/atlases",
+        json={"name": "Paginate Atlas B", "description": "desc"},
+        headers=headers,
     )
 
     full_response = await client.get("/atlases", headers=headers)

@@ -36,9 +36,7 @@ class AuthRepository(BaseRepository):
         stmt = delete(RefreshToken).where(RefreshToken.user_id == user_id)
         await self.session.execute(stmt)
 
-    async def create_reset_token(
-        self, token: PasswordResetToken
-    ) -> PasswordResetToken:
+    async def create_reset_token(self, token: PasswordResetToken) -> PasswordResetToken:
         self.session.add(token)
         await self.session.flush()
         return token
@@ -61,7 +59,5 @@ class AuthRepository(BaseRepository):
             token.used = True
 
     async def delete_user_reset_tokens(self, user_id: int) -> None:
-        stmt = delete(PasswordResetToken).where(
-            PasswordResetToken.user_id == user_id
-        )
+        stmt = delete(PasswordResetToken).where(PasswordResetToken.user_id == user_id)
         await self.session.execute(stmt)

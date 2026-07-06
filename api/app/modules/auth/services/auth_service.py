@@ -18,7 +18,12 @@ from app.core.exceptions import AuthenticationException, PermissionDeniedExcepti
 from app.core.security import get_token
 from app.modules.auth.models import PasswordResetToken, RefreshToken
 from app.modules.auth.repository import AuthRepository
-from app.modules.auth.schemas import AuthResponse, ForgotPasswordRequest, RegisterPayload, ResetPasswordRequest
+from app.modules.auth.schemas import (
+    AuthResponse,
+    ForgotPasswordRequest,
+    RegisterPayload,
+    ResetPasswordRequest,
+)
 from app.modules.auth.services.email_service import EmailService
 from app.modules.auth.services.google_auth import GoogleAuthService
 from app.modules.users.schemas import UserCreate, UserDetail
@@ -101,7 +106,10 @@ class AuthService:
             await self.email_service.send_verification_email(
                 payload.email, verification_token
             )
-        _logger.info("User registered", extra={"username": payload.username, "email": payload.email})
+        _logger.info(
+            "User registered",
+            extra={"username": payload.username, "email": payload.email},
+        )
         return new_user
 
     def set_refresh_cookie(self, response: Response, token: str) -> None:
@@ -233,7 +241,9 @@ class AuthService:
         await self.repository.create_reset_token(reset_token)
 
         if self.settings.smtp_host:
-            await self.email_service.send_password_reset_email(str(payload.email), token_str)
+            await self.email_service.send_password_reset_email(
+                str(payload.email), token_str
+            )
 
         _logger.info("Password reset requested", extra={"user_id": user.id})
 
@@ -272,7 +282,10 @@ class AuthService:
         user_info = await self.google_auth_service.callback(request)
 
         user = await self.user_service.get_or_create_google_user(user_info)
-        _logger.info("Google OAuth login", extra={"user_id": user.id, "email": user_info.get("email")})
+        _logger.info(
+            "Google OAuth login",
+            extra={"user_id": user.id, "email": user_info.get("email")},
+        )
 
         return await self._issue_tokens(user, response)
 

@@ -40,7 +40,9 @@ class TestDbAccessRepositorySecurity:
         await repo.create_role(role_name, "secure'password")
 
         # session.execute: only SELECT current_database()
-        assert "SELECT current_database()" in str(mock_session.execute.call_args_list[0][0][0])
+        assert "SELECT current_database()" in str(
+            mock_session.execute.call_args_list[0][0][0]
+        )
 
         # exec_driver_sql: 7 DDL statements
         ddl_calls = mock_session.connection.return_value.exec_driver_sql.call_args_list
@@ -85,7 +87,9 @@ class TestDbAccessRepositorySecurity:
         assert f'DROP ROLE IF EXISTS "{role_name}"' in drop_role_sql
 
     @pytest.mark.asyncio
-    async def test_update_role_password_uses_scram_verifier(self, role_name, mock_session):
+    async def test_update_role_password_uses_scram_verifier(
+        self, role_name, mock_session
+    ):
         """Verify that update_role_password emits a SCRAM verifier, not plaintext."""
         repo = DbAccessRepository(mock_session)
         await repo.update_role_password(role_name, "myplainpassword")
@@ -108,6 +112,8 @@ class TestDbAccessRepositorySecurity:
             await repo.create_role(role_name, "plain_password")
 
         mock_scram.assert_called_once_with("plain_password")
-        create_sql = mock_session.connection.return_value.exec_driver_sql.call_args_list[0][0][0]
+        create_sql = (
+            mock_session.connection.return_value.exec_driver_sql.call_args_list[0][0][0]
+        )
         assert "plain_password" not in create_sql
         assert "SCRAM-SHA-256" in create_sql

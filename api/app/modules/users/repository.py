@@ -27,7 +27,11 @@ class UserRepository(BaseRepository[User]):
         return result.first()
 
     async def get_by_verification_token(self, token: str) -> Optional[User]:
-        query = select(User).where(User.verification_token == token).options(selectinload(User.teams))
+        query = (
+            select(User)
+            .where(User.verification_token == token)
+            .options(selectinload(User.teams))
+        )
         result = await self.session.exec(query)
         return result.first()
 

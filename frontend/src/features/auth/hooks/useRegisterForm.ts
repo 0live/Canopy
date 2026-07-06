@@ -20,7 +20,7 @@ export function useRegisterForm(onSuccess?: () => void) {
     defaultValues: { email: "", username: "", password: "", altcha_payload: "" },
   });
 
-  const handleError = (err: any) => {
+  const handleError = (err: unknown) => {
     if (isAxiosError(err) && err.response?.data?.key) {
       const { key, params } = err.response.data;
       if (key === "user.email_exists") return form.setError("email", { type: "server", message: t(key, params) as string });

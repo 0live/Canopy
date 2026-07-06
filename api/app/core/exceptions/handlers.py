@@ -120,7 +120,9 @@ async def security_exception_handler(request: Request, exc: SecurityException):
 
 
 async def notification_exception_handler(request: Request, exc: NotificationException):
-    logger.error("Notification error: %s", exc.key, extra={"params": exc.params}, exc_info=True)
+    logger.error(
+        "Notification error: %s", exc.key, extra={"params": exc.params}, exc_info=True
+    )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"detail": "Internal server error"},

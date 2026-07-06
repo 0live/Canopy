@@ -111,8 +111,12 @@ class DbAccessRepository(BaseRepository[User]):
         # otherwise misinterpret the colon separator in the SCRAM-SHA-256 verifier.
         conn = await self.session.connection()
         for query in [
-            create_role_query, grant_connect, grant_usage_users,
-            grant_create_users, grant_usage_public, grant_select_public,
+            create_role_query,
+            grant_connect,
+            grant_usage_users,
+            grant_create_users,
+            grant_usage_public,
+            grant_select_public,
             grant_usage_pg_catalog,
         ]:
             await conn.exec_driver_sql(query)

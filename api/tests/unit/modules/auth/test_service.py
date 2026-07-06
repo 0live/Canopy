@@ -82,8 +82,10 @@ class TestAuthService:
     ):
         """Test successful user registration."""
         payload = RegisterPayload(
-            username="user_me", email="new@test.com", password="password12345",
-            altcha_payload="valid_payload"
+            username="user_me",
+            email="new@test.com",
+            password="password12345",
+            altcha_payload="valid_payload",
         )
         expected_user = UserDetail(
             id=1,
@@ -217,7 +219,9 @@ class TestAuthService:
     # =========================================================================
 
     @pytest.mark.asyncio
-    async def test_verify_email_success(self, service, mock_user_service, mock_response, sample_user, mock_repo):
+    async def test_verify_email_success(
+        self, service, mock_user_service, mock_response, sample_user, mock_repo
+    ):
         """Test successful email verification."""
         mock_user_service.verify_user = AsyncMock(return_value=sample_user)
         mock_repo.delete_all_user_tokens = AsyncMock()
@@ -229,7 +233,9 @@ class TestAuthService:
         mock_user_service.verify_user.assert_called_once_with("valid_token")
 
     @pytest.mark.asyncio
-    async def test_verify_email_invalid(self, service, mock_user_service, mock_response):
+    async def test_verify_email_invalid(
+        self, service, mock_user_service, mock_response
+    ):
         """Test invalid verification token raises exception."""
         mock_user_service.verify_user = AsyncMock(return_value=None)
 

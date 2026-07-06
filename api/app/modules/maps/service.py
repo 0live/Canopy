@@ -149,7 +149,9 @@ class MapService:
             raise EntityNotFoundException(
                 entity="Map", key="map.not_found", params={"id": map_id}
             )
-        _logger.info("Map deleted", extra={"map_id": map_id, "user_id": current_user.id})
+        _logger.info(
+            "Map deleted", extra={"map_id": map_id, "user_id": current_user.id}
+        )
         return True
 
     async def _check_team_map_permission(

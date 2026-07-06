@@ -20,4 +20,16 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // shadcn/ui-generated components and React context providers legitimately
+    // co-export a component with a variants function or a hook; splitting them
+    // into extra files only to satisfy Fast Refresh isn't worth the indirection.
+    files: [
+      'src/shared/components/ui/**/*.{ts,tsx}',
+      'src/app/providers/**/*.{ts,tsx}',
+    ],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

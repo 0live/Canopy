@@ -16,7 +16,9 @@ class TestGetRoleName:
 
     def test_get_role_name_formats_correctly(self):
         assert DbAccessService._get_role_name(1) == f"{get_settings().db_role_prefix}1"
-        assert DbAccessService._get_role_name(42) == f"{get_settings().db_role_prefix}42"
+        assert (
+            DbAccessService._get_role_name(42) == f"{get_settings().db_role_prefix}42"
+        )
         assert (
             DbAccessService._get_role_name(12345)
             == f"{get_settings().db_role_prefix}12345"

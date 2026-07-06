@@ -97,9 +97,7 @@ class BaseRepository(Generic[ModelType]):
         return True
 
     async def count_all(self) -> int:
-        result = await self.session.exec(
-            select(func.count()).select_from(self.model)
-        )
+        result = await self.session.exec(select(func.count()).select_from(self.model))
         return result.one()
 
     async def count_from_query(self, query) -> int:

@@ -173,7 +173,9 @@ class TestBaseRepository:
     @pytest.mark.asyncio
     @patch("app.core.repository.func")
     @patch("app.core.repository.select")
-    async def test_count_from_query(self, mock_select, mock_func, repository, mock_session):
+    async def test_count_from_query(
+        self, mock_select, mock_func, repository, mock_session
+    ):
         """Test count_from_query wraps the given query in a subquery."""
         mock_inner_query = MagicMock()
         mock_inner_query.subquery.return_value = MagicMock()

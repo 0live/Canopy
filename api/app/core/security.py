@@ -10,11 +10,11 @@ from app.core.config import Settings, get_settings
 from app.core.enums.app_parameter import AppParameter
 from app.core.exceptions import AuthenticationException
 from app.core.logging_config import get_logger
-
-_logger = get_logger("security")
 from app.modules.auth.schemas import Token
 from app.modules.users.schemas import UserDetail, UserDetailWithDbAccess
 from app.modules.users.service import UserServiceDep
+
+_logger = get_logger("security")
 
 
 def create_access_token(

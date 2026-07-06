@@ -4,7 +4,6 @@ import hmac
 import re
 from unittest.mock import patch
 
-import pytest
 
 from app.core.scram import generate_scram_sha256_verifier
 

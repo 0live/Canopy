@@ -59,7 +59,9 @@ class TeamService:
         teams = await self.repository.get_all(
             user=current_user, filter_by_access=filter_by_access, skip=skip, limit=limit
         )
-        total = await self.repository.count(user=current_user, filter_by_access=filter_by_access)
+        total = await self.repository.count(
+            user=current_user, filter_by_access=filter_by_access
+        )
         return teams, total
 
     async def get_team_by_id(self, id: int, current_user: UserDetail) -> TeamDetail:
@@ -139,7 +141,10 @@ class TeamService:
             team.users.append(user)
             await self.repository.session.flush()
             await self.repository.session.refresh(team)
-            _logger.info("Member added to team", extra={"team_id": team_id, "user_id": user_id, "by": current_user.id})
+            _logger.info(
+                "Member added to team",
+                extra={"team_id": team_id, "user_id": user_id, "by": current_user.id},
+            )
 
         return team
 
@@ -164,7 +169,10 @@ class TeamService:
         team.users.remove(user_to_remove)
         await self.repository.session.flush()
         await self.repository.session.refresh(team)
-        _logger.info("Member removed from team", extra={"team_id": team_id, "user_id": user_id, "by": current_user.id})
+        _logger.info(
+            "Member removed from team",
+            extra={"team_id": team_id, "user_id": user_id, "by": current_user.id},
+        )
 
         return team
 
