@@ -12,8 +12,22 @@ const valid = {
 };
 
 describe("profileSchema", () => {
-  it("accepts an empty form — all fields are optional", async () => {
-    await expect(schema.validate({})).resolves.toBeDefined();
+  it("rejects an empty form — username and email are required", async () => {
+    await expect(schema.validate({}, { abortEarly: true })).rejects.toBeDefined();
+  });
+
+  it("rejects a missing username", async () => {
+    const err = await schema
+      .validate({ email: "test@example.com" }, { abortEarly: true })
+      .catch((e) => e);
+    expect(err.message).toBe("auth.requiredUsername");
+  });
+
+  it("rejects a missing email", async () => {
+    const err = await schema
+      .validate({ username: "testuser" }, { abortEarly: true })
+      .catch((e) => e);
+    expect(err.message).toBe("auth.requiredEmail");
   });
 
   it("rejects username shorter than 5 characters", async () => {
