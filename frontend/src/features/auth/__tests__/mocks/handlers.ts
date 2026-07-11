@@ -28,4 +28,12 @@ export const authHandlers = [
   http.get("/api/users/me", () =>
     HttpResponse.json(mockUser, { status: 200 })
   ),
+
+  http.post("/api/auth/forgot-password", () => new HttpResponse(null, { status: 204 })),
+
+  http.post("/api/auth/reset-password", () => new HttpResponse(null, { status: 204 })),
+
+  http.get("/api/auth/verify", () => HttpResponse.json(mockTokens, { status: 200 })),
+
+  http.post("/api/auth/refresh", () => HttpResponse.json(mockTokens, { status: 200 })),
 ];
