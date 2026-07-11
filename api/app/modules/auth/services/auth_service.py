@@ -14,7 +14,11 @@ from app.core.hashing import hash_password
 from app.core.logging_config import get_logger
 from app.core.enums.app_parameter import AppParameter
 from app.core.enums.environment import Environment
-from app.core.exceptions import AuthenticationException, PermissionDeniedException
+from app.core.exceptions import (
+    AuthenticationException,
+    EmailSendException,
+    PermissionDeniedException,
+)
 from app.core.security import get_token
 from app.modules.auth.models import PasswordResetToken, RefreshToken
 from app.modules.auth.repository import AuthRepository
@@ -241,9 +245,15 @@ class AuthService:
         await self.repository.create_reset_token(reset_token)
 
         if self.settings.smtp_host:
-            await self.email_service.send_password_reset_email(
-                str(payload.email), token_str
-            )
+            try:
+                await self.email_service.send_password_reset_email(
+                    str(payload.email), token_str
+                )
+            except EmailSendException as e:
+                _logger.error(
+                    "Password reset email failed to send",
+                    extra={"user_id": user.id, "error": str(e)},
+                )
 
         _logger.info("Password reset requested", extra={"user_id": user.id})
 

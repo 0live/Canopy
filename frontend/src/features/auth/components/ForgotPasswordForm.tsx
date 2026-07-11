@@ -15,7 +15,7 @@ export function ForgotPasswordForm() {
     <Form {...form}>
       <form onSubmit={onSubmit} className="space-y-4">
         <EmailField form={form} isPending={isPending} t={t} />
-        <SubmitButton isPending={isPending} t={t} />
+        <ActionButtons form={form} isPending={isPending} t={t} />
       </form>
     </Form>
   );
@@ -43,10 +43,14 @@ function EmailField({ form, isPending, t }: FieldProps) {
   );
 }
 
-function SubmitButton({ isPending, t }: { isPending: boolean; t: TFunction }) {
+function ActionButtons({ form, isPending, t }: FieldProps) {
+  const serverError = form.formState.errors.root?.serverError;
   return (
-    <Button type="submit" className="w-full" disabled={isPending}>
-      {isPending ? "..." : t("auth.forgotPasswordSubmit")}
-    </Button>
+    <>
+      {serverError && <div className="text-sm font-medium text-destructive">{serverError.message}</div>}
+      <Button type="submit" className="w-full" disabled={isPending}>
+        {isPending ? "..." : t("auth.forgotPasswordSubmit")}
+      </Button>
+    </>
   );
 }

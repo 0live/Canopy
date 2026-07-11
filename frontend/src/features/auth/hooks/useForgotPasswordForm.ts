@@ -16,8 +16,15 @@ export function useForgotPasswordForm() {
     defaultValues: { email: "" },
   });
 
+  const handleError = () => {
+    form.setError("root.serverError", {
+      type: "server",
+      message: t("auth.genericError"),
+    });
+  };
+
   const onSubmit = form.handleSubmit((values) => {
-    forgotPassword({ email: values.email });
+    forgotPassword({ email: values.email }, { onError: handleError });
   });
 
   return { form, onSubmit, isPending, isSuccess, t };
