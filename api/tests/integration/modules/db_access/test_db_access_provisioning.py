@@ -78,9 +78,9 @@ async def _create_and_activate_user(
 
 async def _role_can_login(session, role_name: str) -> bool | None:
     """Returns None if the role doesn't exist, else its rolcanlogin flag."""
-    result = await session.execute(
+    result = await session.exec(
         text("SELECT rolcanlogin FROM pg_roles WHERE rolname = :role_name"),
-        {"role_name": role_name},
+        params={"role_name": role_name},
     )
     return result.scalar()
 
@@ -109,9 +109,9 @@ async def test_activated_role_is_confined_to_expected_schemas(
     )
 
     async def has_usage(schema: str) -> bool:
-        result = await session.execute(
+        result = await session.exec(
             text("SELECT has_schema_privilege(:role, :schema, 'USAGE')"),
-            {"role": role_name, "schema": schema},
+            params={"role": role_name, "schema": schema},
         )
         return result.scalar()
 

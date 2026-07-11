@@ -39,9 +39,9 @@ class DbAccessRepository(BaseRepository[User]):
     async def role_exists(self, role_name: str) -> bool:
         self._validate_role_name(role_name)
 
-        result = await self.session.execute(
+        result = await self.session.exec(
             text("SELECT 1 FROM pg_roles WHERE rolname = :role_name"),
-            {"role_name": role_name},
+            params={"role_name": role_name},
         )
         return result.scalar() is not None
 
@@ -55,7 +55,7 @@ class DbAccessRepository(BaseRepository[User]):
         # This uses UTF-8 and standard quoting, which is safe and sufficient here.
         context = None
 
-        result = await self.session.execute(text("SELECT current_database()"))
+        result = await self.session.exec(text("SELECT current_database()"))
         db_name = result.scalar()
 
         verifier = generate_scram_sha256_verifier(password)
@@ -160,9 +160,9 @@ class DbAccessRepository(BaseRepository[User]):
             .as_string(context)
         )
 
-        await self.session.execute(text(reassign_query))
-        await self.session.execute(text(drop_owned_query))
-        await self.session.execute(text(drop_role_query))
+        await self.session.exec(text(reassign_query))
+        await self.session.exec(text(drop_owned_query))
+        await self.session.exec(text(drop_role_query))
 
         return True
 

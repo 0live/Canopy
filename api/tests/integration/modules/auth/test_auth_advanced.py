@@ -97,7 +97,7 @@ async def test_email_verification_flow(client: AsyncClient, session: AsyncSessio
 
     # Check DB - is_verified=False
     stmt = select(User).where(User.id == user_id)
-    result = await session.execute(stmt)
+    result = await session.exec(stmt)
     user_db = result.scalars().first()
     assert user_db.is_verified is False
     assert user_db.verification_token is not None

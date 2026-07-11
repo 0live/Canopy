@@ -137,8 +137,8 @@ async def test_revoke_withdbaccess_clears_token(
 
     # Verify token hash exists in database
     stmt = select(User).where(User.id == user_id)
-    result = await session.execute(stmt)
-    user = result.scalar_one()
+    result = await session.exec(stmt)
+    user = result.one()
     assert user.db_activation_token is not None
 
     # Revoke WITHDBACCESS

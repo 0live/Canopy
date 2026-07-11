@@ -1,4 +1,5 @@
 import pytest
+from app.core.rate_limit import limiter
 from app.main import app
 from app.modules.auth.services.auth_service import get_auth_service
 from fastapi.testclient import TestClient
@@ -24,9 +25,17 @@ def fixture_limiter_test_client(client_ip):
     app.dependency_overrides = {}
 
 
+@pytest.fixture(name="enable_rate_limiting")
+def fixture_enable_rate_limiting():
+    """Locally re-enables slowapi, overriding the integration suite's autouse
+    `disable_rate_limiting` fixture so this test exercises the real limiter."""
+    limiter.enabled = True
+    yield
+    limiter.enabled = False
+
+
 @pytest.mark.asyncio
-@pytest.mark.skipif(True, reason="Rate limiting disabled in test environment")
-async def test_login_rate_limit(limiter_test_client):
+async def test_login_rate_limit(limiter_test_client, enable_rate_limiting):
     url = "/auth/login"
 
     data = {"username": "foo", "password": "bar"}

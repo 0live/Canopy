@@ -23,7 +23,7 @@ class TestDbAccessRepositorySecurity:
             mock_res.scalar.return_value = "test_db"
             return mock_res
 
-        session.execute.side_effect = execute_mock
+        session.exec.side_effect = execute_mock
 
         mock_conn = MagicMock()
         mock_conn.exec_driver_sql = AsyncMock()
@@ -39,9 +39,9 @@ class TestDbAccessRepositorySecurity:
         repo = DbAccessRepository(mock_session)
         await repo.create_role(role_name, "secure'password")
 
-        # session.execute: only SELECT current_database()
+        # session.exec: only SELECT current_database()
         assert "SELECT current_database()" in str(
-            mock_session.execute.call_args_list[0][0][0]
+            mock_session.exec.call_args_list[0][0][0]
         )
 
         # exec_driver_sql: 7 DDL statements
@@ -70,12 +70,12 @@ class TestDbAccessRepositorySecurity:
                 mock_res.scalar.return_value = 1
             return mock_res
 
-        mock_session.execute.side_effect = execute_mock
+        mock_session.exec.side_effect = execute_mock
 
         repo = DbAccessRepository(mock_session)
         await repo.drop_role(role_name)
 
-        calls = mock_session.execute.call_args_list
+        calls = mock_session.exec.call_args_list
 
         reassign_sql = str(calls[1][0][0])
         assert f'REASSIGN OWNED BY "{role_name}" TO CURRENT_USER' in reassign_sql

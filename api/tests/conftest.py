@@ -209,8 +209,8 @@ async def register_and_verify_user_fixture(client: AsyncClient, session: AsyncSe
 
         # 2. Directly verify the user in the database
         stmt = select(User).where(User.email == user_data["email"])
-        result = await session.execute(stmt)
-        user = result.scalar_one()
+        result = await session.exec(stmt)
+        user = result.one()
         user.is_verified = True
         user.verification_token = None
         session.add(user)
