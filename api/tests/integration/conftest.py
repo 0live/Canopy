@@ -14,11 +14,16 @@ def disable_rate_limiting():
 
 
 @pytest.fixture(autouse=True)
-def mock_postgres_role_repository():
+def mock_postgres_role_repository(request):
     """
     Mock PostgresRoleRepository to avoid issues with TestContainers.
     The test PostgreSQL container doesn't have the users_data and postgis schemas.
+    Tests marked @pytest.mark.real_db_roles exercise the real DDL against Postgres instead.
     """
+    if request.node.get_closest_marker("real_db_roles"):
+        yield
+        return
+
     with (
         patch(
             "app.modules.db_access.repository.DbAccessRepository.role_exists",
