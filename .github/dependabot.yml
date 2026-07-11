@@ -1,0 +1,106 @@
+version: 2
+updates:
+  # --- Backend (Python / uv) ---
+  - package-ecosystem: "uv"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+    groups:
+      minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # --- Frontend app (npm) ---
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+    groups:
+      minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # --- Docs site (npm, Docusaurus) ---
+  - package-ecosystem: "npm"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+    groups:
+      minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # --- GitHub Actions workflows ---
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # --- Docker base images: docker-compose.yml at repo root ---
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+
+  # --- Docker base images: per-service Dockerfiles ---
+  - package-ecosystem: "docker"
+    directory: "/api"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "docker"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
+
+  - package-ecosystem: "docker"
+    directory: "/docs"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "chore"
+    labels:
+      - "dependencies"
