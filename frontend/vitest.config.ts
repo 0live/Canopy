@@ -7,6 +7,18 @@ export default defineConfig({
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     globals: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/shared/components/ui/**", // generated shadcn components
+        "**/types.ts",
+        "**/*.d.ts",
+        "**/__tests__/mocks/**",
+        "src/test/**",
+      ],
+    },
   },
   resolve: {
     alias: [
