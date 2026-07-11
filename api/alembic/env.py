@@ -25,8 +25,9 @@ postgres_password = os.getenv("POSTGRES_PASSWORD", "postgres")
 postgres_db = os.getenv("POSTGRES_DB", "postgres")
 default_host = "postgis" if os.path.exists("/.dockerenv") else "localhost"
 host = os.getenv("POSTGRES_HOST", default_host)
+port = os.getenv("POSTGRES_PORT", "5432")
 
-db_url = f"postgresql+psycopg://{postgres_user}:{postgres_password}@{host}:5432/{postgres_db}"
+db_url = f"postgresql+psycopg://{postgres_user}:{postgres_password}@{host}:{port}/{postgres_db}"
 config.set_main_option("sqlalchemy.url", db_url)
 config.set_main_option("version_table_schema", PostgreSQLSchema.APP_DATA)
 

@@ -328,3 +328,8 @@ def downgrade() -> None:
     op.drop_index(op.f("ix_app_data_user_email"), table_name="user", schema="app_data")
     op.drop_table("user", schema="app_data")
     # ### end Alembic commands ###
+    # Named Postgres ENUM types are standalone catalog objects: DROP TABLE does not
+    # remove them, so they must be dropped explicitly for downgrade to be reversible.
+    sa.Enum(name="userrole", schema="app_data").drop(op.get_bind(), checkfirst=True)
+    sa.Enum(name="accesspolicy", schema="app_data").drop(op.get_bind(), checkfirst=True)
+    sa.Enum(name="notificationtype").drop(op.get_bind(), checkfirst=True)
