@@ -1,184 +1,195 @@
 ---
-sidebar_position: 1.5
+sidebar_position: 2
 ---
 
-# Deployment Guide
+# Installation & Setup
 
-This guide explains how to deploy Canopy in production. It is designed for system administrators or operations teams.
+This is a self-contained guide to run Canopy, both for **local development** and
+**production**. Everything runs in Docker, orchestrated by a `Makefile`, so you
+do not need Python or Node installed on the host.
 
-## 1. Requirements
+## 1. Prerequisites
 
-Detailed installation instructions are out of scope for this guide, but you must have the following installed on your server:
+Host requirements (versions come from the Docker/compose configs, not guessed):
 
-- **Docker Desktop** (Mac/Windows)
-- **Docker Engine** + **Docker Compose Plugin** (Linux)
-- **Make** (standard utility on Linux/Unix)
+- **Docker Engine** + **Docker Compose plugin** (`docker compose`, v2 syntax).
+- **GNU Make** (all workflows go through the Makefile).
+- **git**, **openssl** (used by `make genpkey` / `make genaltchakey`).
 
-### Operating System Support
+You do **not** need local Python/Node for the Docker workflow. If you ever run a
+service outside Docker, the images pin: Python **3.12** (API, via `uv`),
+Node **22** (frontend), Node **20** (docs).
 
-- **Linux**: Supported natively (Recommended for production).
-- **Windows**: Use **WSL 2** (Windows Subsystem for Linux).
-  > [!IMPORTANT]
-  > Ensure "Use the WSL 2 based engine" is enabled in Docker Desktop settings.
-  > All commands must be run from within the WSL Linux terminal, not PowerShell/CMD.
+Operating system:
 
-## 2. Configuration
+- **Linux** — native, recommended.
+- **macOS / Windows** — use Docker Desktop; on Windows run all commands from a
+  **WSL 2** shell, not PowerShell.
 
-Canopy is configured entirely through environment variables. You must create a configuration file named `.env.local` to override the defaults.
+> `make reset-db` uses `sudo rm -rf docker/postgis/data/*`. On Linux the PostGIS
+> data directory is owned by the container's postgres user, so destructive DB
+> resets need `sudo`.
 
-### Setup Step
+## 2. Configuration (`.env`)
 
-1. Creating the configuration file:
-
-   ```bash
-   touch .env
-   ```
-
-2. Open this file and add the following configuration blocks, replacing the values with your own.
-
-### Configuration Values
-
-Copy and paste these blocks into your `.env` file and adjust the values.
-
----
-
-### Required Variables
-
-These must be set for production deployment.
-
-#### Database
-
-- `POSTGRES_USER` : Your database username (e.g., `admin`)
-- `POSTGRES_PASSWORD` : A strong password for the database
-- `POSTGRES_DB` : The name of the database (e.g., `canopy_prod`)
+Copy the example and edit it:
 
 ```bash
-POSTGRES_USER=my_db_user
-POSTGRES_PASSWORD=my_secure_password
-POSTGRES_DB=canopy_prod
+cp .env.example .env
 ```
 
-#### Domain & Environment
+Configuration reference (defaults from `api/app/core/config.py`):
 
-- `SITE_ADDRESS` : The public domain where Canopy will be accessible (e.g., `maps.mycompany.com`). Do not include `http://` or `https://`.
-- `ENV` : Set to `prod` for production usage.
+### Required
 
-```bash
-ENV=prod
-SITE_ADDRESS=maps.mycompany.com
-```
+| Variable            | Purpose                                                             |
+| ------------------- | ------------------------------------------------------------------ |
+| `ENV`               | `dev` or `prod`. Drives the Makefile and security posture.         |
+| `SITE_ADDRESS`      | Public host for Caddy. In dev use `localhost`; in prod your domain (no scheme). |
+| `POSTGRES_USER`     | Database superuser/owner login.                                    |
+| `POSTGRES_PASSWORD` | Database password.                                                 |
+| `POSTGRES_DB`       | Database name.                                                     |
+| `DATABASE_URL`      | SQLAlchemy URL. In compose it is overridden to point at PgBouncer. |
 
-#### Registration
+> In `docker-compose.yml` the API's `DATABASE_URL` and `POSTGRES_HOST` are
+> forced to **pgbouncer** with `?prepare_threshold=0`. You normally do not edit
+> the URL yourself for the containerized setup.
 
-- `ALLOW_SELF_REGISTRATION`: Set to `True` (default) to allow users to sign up themselves. Set to `False` for admin-only user creation.
+### Registration & tokens
 
-```bash
-ALLOW_SELF_REGISTRATION=True
-```
+| Variable                      | Default | Purpose                                        |
+| ----------------------------- | ------- | ---------------------------------------------- |
+| `ALLOW_SELF_REGISTRATION`     | `True`  | Allow public sign-up (else admin-only).        |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `15`    | Access-token lifetime.                         |
+| `REFRESH_TOKEN_EXPIRE_DAYS`   | `30`    | Refresh-token lifetime.                        |
 
-#### Email / SMTP
+### Email / SMTP
 
-Configure your SMTP provider for email verification.
+Email verification and password reset require SMTP. In **dev**, the compose
+override ships **Mailpit** (`SMTP_HOST=mailpit`, `SMTP_PORT=1025`, web UI on
+`:8025`) so no real provider is needed.
 
-> [!NOTE]
-> SMTP configuration is **required** if `ALLOW_SELF_REGISTRATION` is `True` (default), as users must verify their email address.
-> If `ALLOW_SELF_REGISTRATION` is `False`, admins create pre-verified users, so SMTP is optional (but recommended for notifications).
+| Variable          | Dev default        | Purpose                              |
+| ----------------- | ------------------ | ------------------------------------ |
+| `SMTP_HOST`       | `mailpit`          | SMTP server host.                    |
+| `SMTP_PORT`       | `1025`             | SMTP port.                           |
+| `SMTP_FROM_EMAIL` | `noreply@canopy.dev` | From address.                      |
+| `SMTP_USER` / `SMTP_PASSWORD` | *(empty)* | Auth (needed for real providers).    |
+| `SMTP_STARTTLS` / `SMTP_USE_TLS` | `False` | TLS mode for real providers.        |
 
-- `SMTP_HOST`: SMTP server hostname (e.g., `smtp.sendgrid.net`)
-- `SMTP_PORT`: SMTP port (typically `587` for STARTTLS or `465` for TLS)
-- `SMTP_USER`: SMTP authentication username
-- `SMTP_PASSWORD`: SMTP authentication password
-- `SMTP_FROM_EMAIL`: Sender email address (e.g., `noreply@yourdomain.com`)
-- `SMTP_USE_TLS`: Set to `True` for implicit TLS (port 465)
-- `SMTP_STARTTLS`: Set to `True` for STARTTLS (port 587)
+### Optional
 
-```bash
-SMTP_HOST=smtp.sendgrid.net
-SMTP_PORT=587
-SMTP_USER=apikey
-SMTP_PASSWORD=your_sendgrid_api_key
-SMTP_FROM_EMAIL=noreply@yourdomain.com
-SMTP_STARTTLS=True
-```
+| Variable                                    | Default | Purpose                                       |
+| ------------------------------------------- | ------- | --------------------------------------------- |
+| `LOCALE`                                    | `en`    | Default language (`en` / `fr`) for docs/UI.   |
+| `COMPOSE_PROFILES`                          | `none`  | Set to `expose-db` to publish PostGIS.        |
+| `POSTGRES_EXTERNAL_PORT`                    | `5432`  | Host port when `expose-db` is on.             |
+| `DB_ROLE_PREFIX`                            | `canopy_user_` | Prefix for per-user PostgreSQL roles.  |
+| `ACTIVATE_GOOGLE_AUTH` + `GOOGLE_CLIENT_*`  | off     | Google OAuth (requires self-registration on). |
 
----
+### Auto-generated secrets — do not set by hand
 
-### Optional Variables
+- `PRIVATE_KEY` — JWT/session signing key. Generated by `make genpkey`.
+- `ALTCHA_HMAC_KEY` — captcha HMAC key. Generated by `make genaltchakey`.
 
-These have sensible defaults but can be customized.
+In production the app **refuses to boot** if these are left at their insecure
+defaults (see `config.py` validators).
 
-#### Database Port
+## 3. First-time setup
 
-- `POSTGRES_EXTERNAL_PORT`: Port exposed on host (default: `5432`)
-- `COMPOSE_PROFILES`: Set to `expose-db` to enable external database access
-
-```bash
-COMPOSE_PROFILES=expose-db
-POSTGRES_EXTERNAL_PORT=15432
-```
-
-> [!NOTE]
-> The database port is only exposed when `COMPOSE_PROFILES=expose-db` is set. This is disabled by default for security.
-
-#### Authentication Tokens
-
-- `ACCESS_TOKEN_EXPIRE_MINUTES` : Access token validity in minutes (default: `15`)
-- `REFRESH_TOKEN_EXPIRE_DAYS` : Refresh token validity in days (default: `30`)
-
-```bash
-# Only set if you need to customize token lifetimes
-ACCESS_TOKEN_EXPIRE_MINUTES=15
-REFRESH_TOKEN_EXPIRE_DAYS=30
-```
-
-> [!TIP]
-> Shorter access token lifetimes improve security but require more frequent refresh requests.
-
-#### Secret Key (Auto-generated)
-
-> [!CAUTION]
-> **Do not modify this variable.** It is automatically generated by `make create-app`.
-
-- `PRIVATE_KEY` : Secret key for signing JWT tokens. Changing this will invalidate all existing tokens.
-
-#### Locale
-
-- `LOCALE`: Default language (`en` or `fr`, default: `en`)
-
-```bash
-LOCALE=fr
-```
-
-#### Google SSO
-
-To enable Google Sign-In:
-
-> [!IMPORTANT]
-> Google Sign-In currently allows account creation. Therefore, it requires `ALLOW_SELF_REGISTRATION` to be set to `True`.
-
-- `ACTIVATE_GOOGLE_AUTH`: Set to `True` to enable
-- `GOOGLE_CLIENT_ID`: Your Google OAuth Client ID
-- `GOOGLE_CLIENT_SECRET`: Your Google OAuth Client Secret
-
-```bash
-ACTIVATE_GOOGLE_AUTH=True
-GOOGLE_CLIENT_ID=your_client_id
-GOOGLE_CLIENT_SECRET=your_client_secret
-```
-
-## 3. Deployment
-
-Once the `.env.local` file is created and filled with the correct values, run the following command to deploy the application:
+The one-shot target does everything (generate secrets → build → start →
+initialise DB):
 
 ```bash
 make create-app
 ```
 
-This command will automatically:
+Under the hood (`Makefile`), this runs:
 
-1. Generate an internal `SECRET_KEY` for sessions
-2. Build the application
-3. Start all services
-4. Configure the database
+1. `genpkey` — append a random `PRIVATE_KEY` to `.env`.
+2. `genaltchakey` — append a random `ALTCHA_HMAC_KEY` to `.env`.
+3. `build` — build all images.
+4. `start` — `docker compose up -d` (compose files chosen by `ENV`).
+5. `setup-db` — `apply-init-db` (schemas + REVOKE) → `apply-migration`
+   (Alembic `upgrade head`) → `seed` (dev mock data).
 
-Canopy should now be accessible at `https://<YOUR_SITE_ADDRESS>`.
+> `create-app` seeds development data. For a clean production database, prefer
+> running `build`, `start`, then `make apply-init-db` and `make apply-migration`
+> **without** `seed`.
+
+### Development vs production
+
+The Makefile selects compose files from `ENV`:
+
+```bash
+ENV=dev  make build   # docker-compose.yml + docker-compose.override.yml
+ENV=dev  make start
+ENV=dev  make stop     # NOTE: `stop` = `down -v` → removes volumes
+
+ENV=prod make build   # docker-compose.yml only
+ENV=prod make start
+```
+
+## 4. Running
+
+```bash
+ENV=dev make start     # start everything, detached
+docker compose -f docker-compose.yml -f docker-compose.override.yml logs -f api
+ENV=dev make stop      # stop and remove volumes
+```
+
+Useful DB targets (see [Database overview](./database/overview)):
+
+```bash
+make create-migration m="add something"   # autogenerate an Alembic revision
+make apply-migration                       # upgrade head
+make seed                                   # re-seed dev data
+make reset-db                               # DESTRUCTIVE full reset
+```
+
+## 5. Verify it works
+
+With `SITE_ADDRESS=localhost` and `ENV=dev`:
+
+| Check              | URL / command                                    | Expected                         |
+| ------------------ | ------------------------------------------------ | -------------------------------- |
+| API health         | `curl -k https://localhost/api/health`           | `{"status":"healthy"}`           |
+| API health (direct)| `curl http://localhost:8000/health`              | `{"status":"healthy"}` (dev port)|
+| OpenAPI / Swagger  | `https://localhost/api/docs`                     | Interactive API docs             |
+| Frontend           | `https://localhost/`                             | Canopy SPA                       |
+| Docs               | `https://localhost/docs/`                         | This site                        |
+| Style editor       | `https://localhost/editor/`                       | Maputnik                         |
+| Martin catalog     | `http://localhost:3002/catalog`                   | JSON tile catalog (dev port)     |
+| Dev mailbox        | `http://localhost:8025`                           | Mailpit UI                       |
+
+Seeded dev logins (from `api/app/core/seeds.py`) — **change/remove for prod**:
+
+| Username   | Password   | Roles                          |
+| ---------- | ---------- | ------------------------------ |
+| `admin`    | `admin`    | USER, ADMIN                    |
+| `editor`   | `editor`   | USER, MANAGE_ATLASES_AND_MAPS  |
+| `baseUser` | `baseUser` | USER                           |
+
+## 6. Troubleshooting
+
+- **`make` errors with "ENV must be set to 'prod' or 'dev'"** — export `ENV`
+  (`ENV=dev make start`) or set it in `.env`.
+- **API unhealthy / exits at boot in prod** — `PRIVATE_KEY` or
+  `ALTCHA_HMAC_KEY` still at their default; run `make genpkey` /
+  `make genaltchakey` (or use `make create-app`).
+- **API can't reach the database** — the API depends on `postgis`, `pgbouncer`
+  and `redis` being *healthy*. On first boot PostGIS initialises before
+  accepting connections; compose `depends_on: condition: service_healthy`
+  handles ordering, but a cold start can take a minute.
+- **`prepared statement already exists` / psycopg errors** — PgBouncer is in
+  transaction mode; ensure the API URL keeps `?prepare_threshold=0` (it is set
+  in compose).
+- **Port already in use (dev)** — the override publishes `80/443` (Caddy),
+  `8000` (API), `3000` (frontend), `3001` (docs), `3002` (Martin), `1025/8025`
+  (Mailpit). Free them or adjust the override.
+- **HTTPS certificate warning on `localhost`** — Caddy issues a local
+  self-signed cert; use `curl -k` or trust Caddy's local CA.
+- **No verification email arrives (dev)** — check the Mailpit UI at
+  `http://localhost:8025`; the app talks to `mailpit:1025`, not a real server.
+- **`make reset-db` permission denied** — it needs `sudo` to remove the
+  container-owned `docker/postgis/data`.

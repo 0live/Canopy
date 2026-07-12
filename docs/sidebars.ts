@@ -9,6 +9,7 @@ const sidebars: SidebarsConfig = {
       collapsed: false,
       items: [
         'user/getting-started',
+        'user/deployment',
         'user/faq',
       ],
     },
@@ -22,6 +23,9 @@ const sidebars: SidebarsConfig = {
         'technical/overview',
         'technical/installation',
         'technical/architecture',
+        'technical/project-structure',
+        'technical/conventions',
+        'technical/glossary',
       ],
     },
     {
@@ -32,6 +36,9 @@ const sidebars: SidebarsConfig = {
         'technical/api/overview',
         'technical/api/authentication',
         'technical/api/endpoints',
+        'technical/api/notifications',
+        'technical/api/database-access',
+        'technical/api/data-import',
       ],
     },
     {
@@ -40,6 +47,8 @@ const sidebars: SidebarsConfig = {
       collapsed: true,
       items: [
         'technical/frontend/overview',
+        'technical/frontend/architecture',
+        'technical/frontend/testing',
       ],
     },
     {

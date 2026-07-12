@@ -4,16 +4,38 @@ sidebar_position: 2
 
 # Authentication
 
-The API uses a dual-token JWT authentication system with **Access Tokens** for short-lived API authorization and **Refresh Tokens** for long-lived session management.
+Canopy uses a dual-token JWT scheme: a short-lived **access token** for API
+calls and a long-lived **refresh token** for session continuity. Source:
+`app/modules/auth/`.
 
-## Token Strategy
+## Token strategy
 
-| Token Type    | Lifetime   | Storage                    | Purpose                   |
-| ------------- | ---------- | -------------------------- | ------------------------- |
-| Access Token  | 15 minutes | Client memory/localStorage | API request authorization |
-| Refresh Token | 30 days    | HTTP-only cookie           | Obtain new access tokens  |
+| Token         | Default lifetime | Storage                       | Purpose                    |
+| ------------- | ---------------- | ----------------------------- | -------------------------- |
+| Access token  | 15 min           | Client memory (Zustand store) | API request authorization  |
+| Refresh token | 30 days          | HTTP-only cookie `canopy_rt`  | Obtain new access tokens   |
+
+The refresh token is also persisted server-side (`refreshtoken` table) so it can
+be revoked. Lifetimes are configurable via `ACCESS_TOKEN_EXPIRE_MINUTES` and
+`REFRESH_TOKEN_EXPIRE_DAYS`.
 
 ## Endpoints
+
+| Method | Path                    | Rate limit | Notes                                            |
+| ------ | ----------------------- | ---------- | ------------------------------------------------ |
+| GET    | `/auth/captcha/challenge` | 20/min   | Altcha proof-of-work challenge for registration. |
+| POST   | `/auth/register`        | 5/min      | Create account. Body includes `altcha_payload`.  |
+| POST   | `/auth/login`           | 5/min      | OAuth2 password form (`username`, `password`).   |
+| POST   | `/auth/refresh`         | —          | Reads `canopy_rt` cookie, rotates it.            |
+| POST   | `/auth/logout`          | —          | Revokes the refresh token, clears the cookie.    |
+| GET    | `/auth/verify?token=`   | —          | Verify email, issues tokens.                     |
+| POST   | `/auth/forgot-password` | 3/hour     | Always 200 (prevents email enumeration).         |
+| POST   | `/auth/reset-password`  | 5/hour     | Body: `token`, `new_password`.                   |
+| GET    | `/auth/google`          | —          | Start Google OAuth (if enabled).                 |
+| GET    | `/auth/google/callback` | —          | OAuth callback, issues tokens.                   |
+
+> **Correction vs older docs:** the Google entry point is `GET /auth/google`
+> (not `/auth/google/login`).
 
 ### Login
 
@@ -24,17 +46,14 @@ Content-Type: application/x-www-form-urlencoded
 username=user@example.com&password=yourpassword
 ```
 
-**Response:**
+Response (`Token`):
 
 ```json
-{
-  "access_token": "eyJ...",
-  "token_type": "bearer",
-  "refresh_token": "..."
-}
+{ "access_token": "eyJ...", "token_type": "bearer" }
 ```
 
-The refresh token is also set as an HTTP-only cookie (`refresh_token`).
+The refresh token is delivered as the HTTP-only cookie `canopy_rt` (not in the
+body of `Token`).
 
 ### Register
 
@@ -45,69 +64,42 @@ Content-Type: application/json
 {
   "email": "user@example.com",
   "username": "myuser",
-  "password": "securepassword"
+  "password": "a-strong-password",
+  "altcha_payload": "<solved captcha>"
 }
 ```
 
-A verification email is sent to the provided address.
+Constraints: `username` ≥ 5 chars matching `^[a-zA-Z0-9_-]+$`; password policy
+enforced by `validate_password` (min length 12, see `AppParameter`). A
+verification email is sent; the account is inactive until verified. Self-service
+registration requires `ALLOW_SELF_REGISTRATION=True`, otherwise only admins
+create users.
 
-### Refresh Access Token
+### Refresh & rotation
 
-When the access token expires, use the refresh endpoint to obtain a new one.
+`POST /auth/refresh` reads the `canopy_rt` cookie, issues a new access token and
+**rotates** the refresh token (the previous one is invalidated). The frontend
+axios interceptor performs this transparently on a 401 and retries the original
+request.
 
-```http
-POST /api/auth/refresh
-```
+### Google OAuth (optional)
 
-The refresh token is read from the `refresh_token` cookie. On success, a new access token and a rotated refresh token are returned.
+Enabled with `ACTIVATE_GOOGLE_AUTH=True` + `GOOGLE_CLIENT_ID` /
+`GOOGLE_CLIENT_SECRET`. Because it can create accounts, it requires
+`ALLOW_SELF_REGISTRATION=True`.
 
-**Response:**
-
-```json
-{
-  "access_token": "eyJ...",
-  "token_type": "bearer",
-  "refresh_token": "..."
-}
-```
-
-> **Token Rotation**: Each refresh request invalidates the previous refresh token and issues a new one. This limits the impact of token theft.
-
-### Logout
-
-```http
-POST /api/auth/logout
-```
-
-Revokes the refresh token and clears the cookie.
-
-### Google OAuth (Optional)
-
-If enabled, users can authenticate via Google:
-
-- `GET /api/auth/google/login` — Redirects to Google OAuth consent screen.
-- `GET /api/auth/google/callback` — Handles the callback and issues tokens.
-
-## Using the Access Token
-
-Include the access token in the `Authorization` header for protected routes:
+## Using the access token
 
 ```http
 Authorization: Bearer eyJ...
 ```
 
-## Configuration
+WebSocket auth (notifications) uses the same token via `get_current_user_ws`.
 
-Token lifetimes are configurable via environment variables:
+## Security notes
 
-| Variable                      | Default | Description                      |
-| ----------------------------- | ------- | -------------------------------- |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | 15      | Access token validity in minutes |
-| `REFRESH_TOKEN_EXPIRE_DAYS`   | 30      | Refresh token validity in days   |
-
-## Security Considerations
-
-- **HTTP-only cookies** prevent JavaScript access to refresh tokens, mitigating XSS attacks.
-- **Token rotation** on refresh limits the window for replay attacks.
-- **Short-lived access tokens** reduce the risk if a token is compromised.
-- In production, cookies are set with `Secure` and `SameSite=strict` flags.
+- Refresh token in an **HTTP-only** cookie (`canopy_rt`) — not readable by JS.
+- **Rotation** on every refresh limits replay of a stolen token.
+- In prod, session/cookies use `SameSite=strict` and `Secure` (dev relaxes to
+  `lax` / non-secure over `localhost`).
+- Passwords hashed with **bcrypt** (`app/core/hashing.py`).
