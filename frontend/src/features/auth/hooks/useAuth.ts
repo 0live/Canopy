@@ -15,7 +15,7 @@ export const useCanLoadData = (): boolean => {
 };
 
 export const canWithDbAccess = (user: User | undefined): boolean =>
-  !!(user?.roles.includes(UserRole.ADMIN) || user?.roles.includes(UserRole.WITHDBACCESS));
+  !!user?.roles.includes(UserRole.WITHDBACCESS);
 
 export const useCanWithDbAccess = (): boolean => {
   const { data: user } = useCurrentUser();
