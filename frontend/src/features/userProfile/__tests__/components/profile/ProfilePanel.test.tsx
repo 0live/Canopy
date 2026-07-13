@@ -39,9 +39,9 @@ describe("ProfilePanel", () => {
     );
 
     await user.clear(screen.getByDisplayValue(mockUser.username));
-    await user.click(screen.getByRole("button", { name: "profile.saveChanges" }));
+    await user.click(screen.getAllByRole("button", { name: "profile.saveChanges" })[0]);
 
-    expect(await screen.findByText("auth.usernameMinLength")).toBeInTheDocument();
+    expect(await screen.findByText("auth.requiredUsername")).toBeInTheDocument();
   });
 
   it("submits only the changed field and shows a success toast", async () => {
@@ -58,7 +58,7 @@ describe("ProfilePanel", () => {
     const usernameInput = await screen.findByDisplayValue(mockUser.username);
     await user.clear(usernameInput);
     await user.type(usernameInput, "newname");
-    await user.click(screen.getByRole("button", { name: "profile.saveChanges" }));
+    await user.click(screen.getAllByRole("button", { name: "profile.saveChanges" })[0]);
 
     await waitFor(() => expect(capturedBody).toEqual({ username: "newname" }));
     expect(toast.success).toHaveBeenCalled();
@@ -76,7 +76,7 @@ describe("ProfilePanel", () => {
     const usernameInput = await screen.findByDisplayValue(mockUser.username);
     await user.clear(usernameInput);
     await user.type(usernameInput, "taken");
-    await user.click(screen.getByRole("button", { name: "profile.saveChanges" }));
+    await user.click(screen.getAllByRole("button", { name: "profile.saveChanges" })[0]);
 
     expect(await screen.findByText("user.username_exists")).toBeInTheDocument();
   });

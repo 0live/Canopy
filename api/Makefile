@@ -11,7 +11,7 @@ seed:
 	$(DOCKER_COMPOSE) exec api python -m app.core.seeds
 
 bootstrap-admin:
-	$(DOCKER_COMPOSE) exec api uv run python -m app.modules.setup_root_user.bootstrap
+	$(DOCKER_COMPOSE) exec api python -m app.modules.setup_root_user.bootstrap
 
 apply-init-db:
 	$(DOCKER_COMPOSE) exec -T postgis psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} < docker/postgis/init_db.sql

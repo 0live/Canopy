@@ -51,9 +51,9 @@ Once an instance is running, it's available at your own address, e.g.
 
 ## For administrators
 
-If you deployed Canopy, your first login uses the built-in `admin` account.
-**Change its password immediately** and remove the demo accounts — see step 7 of
-the [Deployment guide](./deployment#7-secure-your-first-login-important). From
+If you deployed Canopy, create your administrator account via the one-time
+setup link printed in your terminal after `make create-app` — see step 7 of
+the [Deployment guide](./deployment#7-create-your-administrator-account). From
 the **Admin** section you can then manage users, roles, teams and atlases.
 
 ## Next steps

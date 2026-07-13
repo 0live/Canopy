@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 from app.core import models  # noqa: F401
 from app.core.enums.app_parameter import AppParameter
+from app.core.notifications.models import Notification  # noqa: F401
 from app.modules.setup_root_user.models import RootUserSetupToken
 from app.modules.setup_root_user.repository import RootUserSetupRepository
 from app.modules.users.enums import UserRole

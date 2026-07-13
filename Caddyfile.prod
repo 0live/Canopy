@@ -43,9 +43,12 @@ header X-Robots-Tag "none"
         header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' blob:; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src * data: blob:; connect-src *; frame-ancestors 'self';"
         reverse_proxy maputnik:8000
     }
-    # Route Maputnik assets (absolute paths in the HTML)
+    # Route Maputnik assets (absolute paths in the HTML).
+    # Scoped to requests referred by /editor so it doesn't hijack the
+    # front-end's own /assets/* bundle (same path, different app).
     @maputnik_assets {
         path /assets/* /manifest*.json /favicon*.ico
+        header_regexp Referer ^https?://[^/]+/editor(/|$)
     }
     handle @maputnik_assets {
         reverse_proxy maputnik:8000
