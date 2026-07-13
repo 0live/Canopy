@@ -57,4 +57,4 @@ USER appuser
 # EXECUTION PROD: Utilisation de Gunicorn avec workers Uvicorn
 # On utilise la config JSON pour éviter les problèmes de parsing de ligne de commande
 # Ajustez "-w 4" selon vos cœurs comme discuté
-CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:8000", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--access-logfile", "-", "--error-logfile", "-"]
+CMD ["gunicorn", "app.main:app", "--bind", "0.0.0.0:8000", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "--access-logfile", "-", "--error-logfile", "-"]

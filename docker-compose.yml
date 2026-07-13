@@ -52,8 +52,6 @@ services:
       dockerfile: Dockerfile.prod
     expose:
       - "8000"
-    volumes:
-      - ./api:/code
     environment:
       - PYTHONUNBUFFERED=1
       - POSTGRES_HOST=pgbouncer

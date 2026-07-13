@@ -5,34 +5,61 @@ import { useCurrentUser } from "@/features/auth/hooks/useAuth";
 import type { User } from "@/features/auth/types";
 import type { TFunction } from "i18next";
 import type { UseFormReturn } from "react-hook-form";
-import { useProfileForm } from "../../hooks/profile/useProfileForm";
-import type { ProfileFormData } from "../../services/forms/profileSchema";
+import { useIdentityForm } from "../../hooks/profile/useIdentityForm";
+import { usePasswordForm } from "../../hooks/profile/usePasswordForm";
+import type { IdentityFormData } from "../../services/forms/identitySchema";
+import type { PasswordFormData } from "../../services/forms/passwordSchema";
 
 export function ProfilePanel() {
   const { data: currentUser } = useCurrentUser();
 
   if (!currentUser) return null;
 
-  return <ProfileForm currentUser={currentUser} />;
+  return (
+    <div className="space-y-8">
+      <IdentityForm currentUser={currentUser} />
+      <PasswordForm currentUser={currentUser} />
+    </div>
+  );
 }
 
-function ProfileForm({ currentUser }: { currentUser: User }) {
-  const { form, onSubmit, isPending, t } = useProfileForm(currentUser);
+function IdentityForm({ currentUser }: { currentUser: User }) {
+  const { form, onSubmit, isPending, t } = useIdentityForm(currentUser);
+  const serverError = form.formState.errors.root?.serverError;
 
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} className="space-y-6 pt-4 max-w-md">
+      <form onSubmit={onSubmit} className="space-y-6 max-w-md">
         <IdentitySection form={form} isPending={isPending} t={t} />
-        <PasswordSection form={form} isPending={isPending} t={t} />
-        <SubmitSection form={form} isPending={isPending} t={t} />
+        {serverError && <p className="text-sm font-medium text-destructive">{serverError.message}</p>}
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "..." : t("profile.saveChanges")}
+        </Button>
       </form>
     </Form>
   );
 }
 
-type SectionProps = { form: UseFormReturn<ProfileFormData>; isPending: boolean; t: TFunction };
+function PasswordForm({ currentUser }: { currentUser: User }) {
+  const { form, onSubmit, isPending, t } = usePasswordForm(currentUser);
+  const serverError = form.formState.errors.root?.serverError;
 
-function IdentitySection({ form, isPending, t }: SectionProps) {
+  return (
+    <Form {...form}>
+      <form onSubmit={onSubmit} className="space-y-6 max-w-md">
+        <PasswordSection form={form} isPending={isPending} t={t} />
+        {serverError && <p className="text-sm font-medium text-destructive">{serverError.message}</p>}
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "..." : t("profile.saveChanges")}
+        </Button>
+      </form>
+    </Form>
+  );
+}
+
+type IdentitySectionProps = { form: UseFormReturn<IdentityFormData>; isPending: boolean; t: TFunction };
+
+function IdentitySection({ form, isPending, t }: IdentitySectionProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
@@ -68,7 +95,9 @@ function IdentitySection({ form, isPending, t }: SectionProps) {
   );
 }
 
-function PasswordSection({ form, isPending, t }: SectionProps) {
+type PasswordSectionProps = { form: UseFormReturn<PasswordFormData>; isPending: boolean; t: TFunction };
+
+function PasswordSection({ form, isPending, t }: PasswordSectionProps) {
   return (
     <div className="space-y-4">
       <div>
@@ -104,20 +133,6 @@ function PasswordSection({ form, isPending, t }: SectionProps) {
           </FormItem>
         )}
       />
-    </div>
-  );
-}
-
-function SubmitSection({ form, isPending, t }: SectionProps) {
-  const serverError = form.formState.errors.root?.serverError;
-  return (
-    <div className="space-y-2">
-      {serverError && (
-        <p className="text-sm font-medium text-destructive">{serverError.message}</p>
-      )}
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "..." : t("profile.saveChanges")}
-      </Button>
     </div>
   );
 }

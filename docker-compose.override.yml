@@ -9,6 +9,8 @@ services:
       dockerfile: Dockerfile.dev
     ports:
       - "8000:8000"
+    volumes:
+      - ./api:/code
 
   martin:
     ports:

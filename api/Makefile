@@ -2,13 +2,13 @@ init-alembic:
 	cd api && uv run alembic init alembic
 
 create-migration:
-	$(DOCKER_COMPOSE) exec api uv run alembic revision --autogenerate -m "$(m)"
+	$(DOCKER_COMPOSE) exec api alembic revision --autogenerate -m "$(m)"
 
 apply-migration:
-	$(DOCKER_COMPOSE) exec api uv run alembic upgrade head
+	$(DOCKER_COMPOSE) exec api alembic upgrade head
 
 seed:
-	$(DOCKER_COMPOSE) exec api uv run python -m app.core.seeds
+	$(DOCKER_COMPOSE) exec api python -m app.core.seeds
 
 bootstrap-admin:
 	$(DOCKER_COMPOSE) exec api uv run python -m app.modules.setup_root_user.bootstrap
