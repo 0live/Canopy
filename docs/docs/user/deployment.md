@@ -112,31 +112,34 @@ https://maps.example.com
 
 You should see Canopy, with a valid HTTPS padlock. 🎉
 
-## 7. Secure your first login (important!)
+## 7. Create your administrator account
 
-To let you in the very first time, Canopy creates a built-in administrator
-account:
+Canopy never ships with a default admin account or password. Instead, the last
+lines printed by `make create-app` in your terminal look like this:
 
-| Username | Password |
-| -------- | -------- |
-| `admin`  | `admin`  |
+```
+✅ No administrator account found. Visit this URL to create one (valid 30 minutes):
+https://maps.example.com/setup?token=Xy...
+```
 
-:::danger Change this immediately
-These are **well-known default credentials**. As soon as you can log in:
+Open that link in your browser within 30 minutes and fill in the email,
+username, and password for your administrator account. Once submitted, you're
+logged in as an administrator — there is nothing to change afterwards, since no
+default credentials ever existed.
 
-1. Log in as `admin` / `admin`.
-2. Go to your **profile** and change the password to a strong one.
-3. In the **admin → users** section, delete the extra demo accounts
-   (`editor`, `baseUser`) that were created for testing.
-
-Do this before sharing the address with anyone.
+:::tip Missed the link, or it expired?
+Just run `make create-app` again (or `ENV=prod make bootstrap-admin` directly).
+It's safe to re-run: as long as no administrator account exists yet, it prints
+a fresh link. Once an administrator has been created, running it again does
+nothing.
 :::
 
 ## 8. Check everything is healthy
 
 - Visiting `https://<your-domain>/` shows the app with a padlock → the web front
   and HTTPS work.
-- You can log in and change the admin password → the database works.
+- You can log in with the administrator account you just created → the
+  database works.
 - If you configured email: use "Forgot password" and confirm you receive the
   message.
 

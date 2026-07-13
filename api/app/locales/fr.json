@@ -103,6 +103,10 @@
     "upload_invalid_format": "Format de fichier invalide. Formats autorisés : {allowed}.",
     "import_failed": "L'import du fichier géographique en base de données a échoué."
   },
+  "setup_root_user": {
+    "already_completed": "La configuration initiale a déjà été effectuée ; un compte administrateur existe déjà.",
+    "token_invalid": "Ce lien de configuration est invalide ou a expiré."
+  },
   "notification": {
     "error": "Erreur du service de notification.",
     "connection_error": "Erreur de connexion WebSocket.",

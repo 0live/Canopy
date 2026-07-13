@@ -103,6 +103,10 @@
     "upload_invalid_format": "Invalid file format. Allowed formats: {allowed}.",
     "import_failed": "Geo file import into the database failed."
   },
+  "setup_root_user": {
+    "already_completed": "Setup has already been completed; an administrator account already exists.",
+    "token_invalid": "This setup link is invalid or has expired."
+  },
   "notification": {
     "error": "Notification service error.",
     "connection_error": "WebSocket connection error.",

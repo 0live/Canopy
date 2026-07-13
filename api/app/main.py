@@ -26,6 +26,7 @@ from app.modules.db_access.endpoints import databaseAccessRouter
 from app.modules.geo.endpoints import geoRouter
 from app.modules.import_data.endpoints import importDataRouter
 from app.modules.maps.endpoints import mapsRouter
+from app.modules.setup_root_user.endpoints import setupRootUserRouter
 from app.modules.teams.endpoints import teamsRouter
 from app.modules.users.endpoints import userRouter
 
@@ -91,6 +92,7 @@ async def health_check():
 
 
 app.include_router(authRouter)
+app.include_router(setupRootUserRouter)
 app.include_router(userRouter)
 app.include_router(teamsRouter)
 app.include_router(atlasesRouter)

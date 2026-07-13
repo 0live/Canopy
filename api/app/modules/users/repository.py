@@ -5,6 +5,7 @@ from sqlmodel import select
 
 from app.core.exceptions import DuplicateEntityException
 from app.core.repository import BaseRepository
+from app.modules.users.enums import UserRole
 from app.modules.users.models import User
 
 
@@ -34,6 +35,11 @@ class UserRepository(BaseRepository[User]):
         )
         result = await self.session.exec(query)
         return result.first()
+
+    async def exists_with_role(self, role: UserRole) -> bool:
+        stmt = select(User.roles).where(User.roles.is_not(None))
+        result = await self.session.exec(stmt)
+        return any(role in roles for roles in result.all())
 
     async def validate_unique_credentials(
         self,

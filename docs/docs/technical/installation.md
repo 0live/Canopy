@@ -111,11 +111,14 @@ Under the hood (`Makefile`), this runs:
 3. `build` — build all images.
 4. `start` — `docker compose up -d` (compose files chosen by `ENV`).
 5. `setup-db` — `apply-init-db` (schemas + REVOKE) → `apply-migration`
-   (Alembic `upgrade head`) → `seed` (dev mock data).
-
-> `create-app` seeds development data. For a clean production database, prefer
-> running `build`, `start`, then `make apply-init-db` and `make apply-migration`
-> **without** `seed`.
+   (Alembic `upgrade head`) → then, depending on `ENV`:
+   - `ENV=dev`: `seed` (dev mock data, see below).
+   - `ENV=prod`: `bootstrap-admin` — if no administrator exists yet, prints a
+     one-time `/setup?token=...` URL to the terminal so the operator can create
+     the first admin account through the UI (see the
+     [deployment guide](../user/deployment)). Safe to re-run: it regenerates
+     the link as long as no admin has been created yet, and is a no-op once one
+     exists. `app/core/seeds.py` refuses to run at all when `ENV=prod`.
 
 ### Development vs production
 
@@ -143,7 +146,8 @@ Useful DB targets (see [Database overview](./database/overview)):
 ```bash
 make create-migration m="add something"   # autogenerate an Alembic revision
 make apply-migration                       # upgrade head
-make seed                                   # re-seed dev data
+make seed                                   # re-seed dev data (dev/test only)
+make bootstrap-admin                        # print a first-admin setup link (prod)
 make reset-db                               # DESTRUCTIVE full reset
 ```
 
@@ -162,7 +166,8 @@ With `SITE_ADDRESS=localhost` and `ENV=dev`:
 | Martin catalog     | `http://localhost:3002/catalog`                   | JSON tile catalog (dev port)     |
 | Dev mailbox        | `http://localhost:8025`                           | Mailpit UI                       |
 
-Seeded dev logins (from `api/app/core/seeds.py`) — **change/remove for prod**:
+Seeded dev logins (from `api/app/core/seeds.py`, `ENV=dev`/`test` only — this
+script refuses to run when `ENV=prod`):
 
 | Username   | Password   | Roles                          |
 | ---------- | ---------- | ------------------------------ |

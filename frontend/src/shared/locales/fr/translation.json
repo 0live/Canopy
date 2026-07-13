@@ -223,5 +223,13 @@
       "ROLES_CHANGED": "Vos rôles ont été mis à jour. Nouveaux rôles : {{new_roles}}",
       "DB_ACCESS_GIVEN": "Vous avez désormais accès à la base de données PostGIS. Rendez-vous dans l'onglet Profil pour définir un mot de passe pour votre utilisateur PostgreSQL."
     }
+  },
+  "setupRootUser": {
+    "title": "Créer le compte administrateur",
+    "description": "Ce lien à usage unique vous permet de créer le premier compte administrateur de cette installation Canopy.",
+    "submit": "Créer le compte administrateur",
+    "success": "Compte administrateur créé. Vous pouvez maintenant vous connecter.",
+    "tokenInvalid": "Ce lien de configuration est invalide ou a expiré.",
+    "alreadyCompleted": "La configuration initiale a déjà été effectuée ; un compte administrateur existe déjà."
   }
 }

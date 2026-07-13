@@ -202,8 +202,17 @@ if __name__ == "__main__":
         try:
             from app.core.config import get_settings
             from app.core.database import get_engine, sessionmanager
+            from app.core.enums.environment import Environment
 
-            sessionmanager.init(str(get_settings().database_url))
+            settings = get_settings()
+            if settings.env == Environment.PROD:
+                print(
+                    "❌ Refusing to seed mock data in production. "
+                    "Use `make bootstrap-admin` to create the initial administrator instead."
+                )
+                exit(1)
+
+            sessionmanager.init(str(settings.database_url))
             seeder = Seeder(get_engine())
             await seeder.run(commit=True)
             await sessionmanager.close()

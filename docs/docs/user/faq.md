@@ -57,11 +57,12 @@ the [Deployment guide](./deployment#9-everyday-operations).
 Use the **"Forgot password"** link on the login page. You'll receive a reset
 link by email (email must be configured on the instance).
 
-### I'm the administrator — how do I secure the default account?
+### I'm setting up a new instance — how do I create the administrator account?
 
-Log in as `admin` / `admin`, change the password from your profile immediately,
-and delete the demo accounts. See
-[step 7 of the Deployment guide](./deployment#7-secure-your-first-login-important).
+There is no default account: the deployment command prints a one-time setup
+link in the terminal the first time it runs. Visit it to create your
+administrator account. See
+[step 7 of the Deployment guide](./deployment#7-create-your-administrator-account).
 
 ### How do I delete my account?
 

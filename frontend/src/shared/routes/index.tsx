@@ -20,6 +20,8 @@ import { verifyLoader } from "@/features/auth/services/routes/verifyLoader";
 import { DataHomePage } from "@/features/data/pages/DataHomePage";
 import { DataLoadPage } from "@/features/data/pages/DataLoadPage";
 import { dataLoadLoader } from "@/features/data/services/routes/dataLoadLoader";
+import { SetupRootUserPage } from "@/features/setupRootUser/pages/SetupRootUserPage";
+import { setupRootUserLoader } from "@/features/setupRootUser/services/routes/setupRootUserLoader";
 import { ProfilePage } from "@/features/userProfile/pages/ProfilePage";
 import { profileLoader } from "@/features/userProfile/services/routes/profileLoader";
 import { ErrorView } from "@/shared/components/layout/ErrorView";
@@ -94,6 +96,11 @@ export const router = createBrowserRouter([
         path: "reset-password",
         loader: resetPasswordLoader,
         element: <ResetPasswordPage />,
+      },
+      {
+        path: "setup",
+        loader: setupRootUserLoader,
+        element: <SetupRootUserPage />,
       },
     ],
   },

@@ -40,7 +40,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue = [];
 };
 
-const SKIP_REFRESH_URLS = ["/auth/refresh", "/auth/login"];
+const SKIP_REFRESH_URLS = ["/auth/refresh", "/auth/login", "/setup/complete"];
 
 apiClient.interceptors.response.use(
   (response) => response,

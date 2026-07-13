@@ -107,6 +107,9 @@ class UserService:
     async def get_by_email(self, email: str) -> Optional[User]:
         return await self.repository.get_by_email(email)
 
+    async def admin_exists(self) -> bool:
+        return await self.repository.exists_with_role(UserRole.ADMIN)
+
     async def create_user(
         self,
         user: UserCreate,

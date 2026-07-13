@@ -13,6 +13,7 @@ from app.core.notifications.models import Notification  # noqa
 from app.modules.atlases.models import Atlas, AtlasTeamLink  # noqa
 from app.modules.auth.models import PasswordResetToken, RefreshToken  # noqa
 from app.modules.maps.models import Map  # noqa
+from app.modules.setup_root_user.models import RootUserSetupToken  # noqa
 from app.modules.teams.models import Team, UserTeamLink  # noqa
 from app.modules.users.models import User  # noqa
 
