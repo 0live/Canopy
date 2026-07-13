@@ -268,6 +268,15 @@ class UserService:
                 params={"detail": "user.role_permission_denied"}
             )
 
+        if (
+            user_id == current_user.id
+            and UserRole.ADMIN in current_user.roles
+            and UserRole.ADMIN not in role_update.roles
+        ):
+            raise PermissionDeniedException(
+                params={"detail": "user.cannot_remove_own_admin_role"}
+            )
+
         user = await self.repository.get(user_id)
         if not user:
             raise EntityNotFoundException(

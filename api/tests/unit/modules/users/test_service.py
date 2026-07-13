@@ -440,3 +440,52 @@ class TestUserService:
         assert isinstance(update_data, dict)
         assert update_data["roles"] == [UserRole.USER, UserRole.WITHDBACCESS]
         assert update_data["db_activation_token"] is not None
+
+    @pytest.mark.asyncio
+    async def test_update_user_roles_cannot_remove_own_admin_role(
+        self, service, mock_repo
+    ):
+        """Test that an admin cannot remove their own ADMIN role."""
+        from app.modules.users.schemas import UserRoleUpdate
+
+        admin_user = UserDetail(
+            id=99,
+            username="admin",
+            email="admin@test.com",
+            roles=[UserRole.ADMIN],
+            teams=[],
+        )
+        role_update = UserRoleUpdate(roles=[UserRole.USER])
+
+        with pytest.raises(PermissionDeniedException) as exc:
+            await service.update_user_roles(99, role_update, admin_user)
+
+        assert exc.value.params["detail"] == "user.cannot_remove_own_admin_role"
+        mock_repo.get.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_update_user_roles_self_edit_keeping_admin_succeeds(
+        self, service, mock_repo
+    ):
+        """Test that an admin can still edit their own roles as long as ADMIN is kept."""
+        from app.modules.users.schemas import UserRoleUpdate
+
+        admin_user = UserDetail(
+            id=99,
+            username="admin",
+            email="admin@test.com",
+            roles=[UserRole.ADMIN],
+            teams=[],
+        )
+        target_user = Mock(id=99, username="admin", roles=[UserRole.ADMIN])
+        mock_repo.get = AsyncMock(return_value=target_user)
+        mock_repo.update = AsyncMock()
+        mock_repo.session.commit = AsyncMock()
+
+        role_update = UserRoleUpdate(roles=[UserRole.ADMIN, UserRole.LOAD_DATA])
+
+        await service.update_user_roles(99, role_update, admin_user)
+
+        args, kwargs = mock_repo.update.call_args
+        update_data = args[1]
+        assert update_data["roles"] == [UserRole.ADMIN, UserRole.LOAD_DATA]

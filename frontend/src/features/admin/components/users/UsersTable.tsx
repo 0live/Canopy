@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { UserRole } from "@/shared/types/UserRole";
 import { CheckCircle2, MoreHorizontal, XCircle } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { AdminUserSummary } from "../../types";
@@ -81,7 +82,11 @@ export function UsersTable({
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {user.roles.map((role) => (
-                      <Badge key={role} variant="secondary" className="text-xs">
+                      <Badge
+                        key={role}
+                        variant={role === UserRole.ADMIN ? "default" : "secondary"}
+                        className="text-xs"
+                      >
                         {t(`admin.users.roleLabels.${role}`)}
                       </Badge>
                     ))}

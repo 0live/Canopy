@@ -6,14 +6,19 @@ import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { toast } from "sonner";
-import { adminHandlers, mockRegularUser } from "../../mocks/handlers";
+import { adminHandlers, mockAdminUser, mockRegularUser } from "../../mocks/handlers";
 
 describe("UserRoleDialog", () => {
   beforeEach(() => { server.use(...adminHandlers); });
 
   it("pre-checks roles based on user.roles", () => {
     renderWithProviders(
-      <UserRoleDialog user={mockRegularUser} open={true} onClose={vi.fn()} />
+      <UserRoleDialog
+        user={mockRegularUser}
+        currentUserId={mockAdminUser.id}
+        open={true}
+        onClose={vi.fn()}
+      />
     );
 
     expect(
@@ -35,7 +40,12 @@ describe("UserRoleDialog", () => {
     const onClose = vi.fn();
     const user = userEvent.setup();
     renderWithProviders(
-      <UserRoleDialog user={mockRegularUser} open={true} onClose={onClose} />
+      <UserRoleDialog
+        user={mockRegularUser}
+        currentUserId={mockAdminUser.id}
+        open={true}
+        onClose={onClose}
+      />
     );
 
     await user.click(screen.getByRole("button", { name: "admin.users.cancel" }));
@@ -48,7 +58,12 @@ describe("UserRoleDialog", () => {
     const onClose = vi.fn();
     const user = userEvent.setup();
     renderWithProviders(
-      <UserRoleDialog user={mockRegularUser} open={true} onClose={onClose} />
+      <UserRoleDialog
+        user={mockRegularUser}
+        currentUserId={mockAdminUser.id}
+        open={true}
+        onClose={onClose}
+      />
     );
 
     await user.click(screen.getByRole("button", { name: "admin.users.saveRoles" }));
@@ -62,7 +77,12 @@ describe("UserRoleDialog", () => {
     );
     const user = userEvent.setup();
     renderWithProviders(
-      <UserRoleDialog user={mockRegularUser} open={true} onClose={vi.fn()} />
+      <UserRoleDialog
+        user={mockRegularUser}
+        currentUserId={mockAdminUser.id}
+        open={true}
+        onClose={vi.fn()}
+      />
     );
 
     await user.click(screen.getByRole("button", { name: "admin.users.saveRoles" }));
@@ -80,12 +100,54 @@ describe("UserRoleDialog", () => {
     const onClose = vi.fn();
     const user = userEvent.setup();
     renderWithProviders(
-      <UserRoleDialog user={mockRegularUser} open={true} onClose={onClose} />
+      <UserRoleDialog
+        user={mockRegularUser}
+        currentUserId={mockAdminUser.id}
+        open={true}
+        onClose={onClose}
+      />
     );
 
     await user.click(screen.getByRole("button", { name: "admin.users.saveRoles" }));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("disables the ADMIN checkbox when the admin edits their own account", () => {
+    renderWithProviders(
+      <UserRoleDialog
+        user={mockAdminUser}
+        currentUserId={mockAdminUser.id}
+        open={true}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByRole("checkbox", { name: `admin.users.roleLabels.${UserRole.ADMIN}` })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("checkbox", { name: `admin.users.roleLabels.${UserRole.USER}` })
+    ).not.toBeDisabled();
+    expect(screen.getByText("admin.users.cannotEditOwnAdminRole")).toBeInTheDocument();
+  });
+
+  it("keeps the ADMIN checkbox enabled when editing another user's roles", () => {
+    renderWithProviders(
+      <UserRoleDialog
+        user={mockAdminUser}
+        currentUserId={mockRegularUser.id}
+        open={true}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByRole("checkbox", { name: `admin.users.roleLabels.${UserRole.ADMIN}` })
+    ).not.toBeDisabled();
+    expect(
+      screen.queryByText("admin.users.cannotEditOwnAdminRole")
+    ).not.toBeInTheDocument();
   });
 });

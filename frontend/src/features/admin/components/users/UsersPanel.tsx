@@ -36,6 +36,7 @@ export function UsersPanel() {
       {editingUser && (
         <UserRoleDialog
           user={editingUser}
+          currentUserId={currentUser?.id ?? -1}
           open={!!editingUser}
           onClose={() => setEditingUser(null)}
         />

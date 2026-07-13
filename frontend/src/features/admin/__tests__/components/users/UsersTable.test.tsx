@@ -68,4 +68,18 @@ describe("UsersTable", () => {
 
     expect(onDelete).toHaveBeenCalledWith(mockRegularUser);
   });
+
+  it("renders the ADMIN role badge in the primary color", () => {
+    renderWithProviders(<UsersTable {...defaultProps} />);
+
+    const adminRow = screen.getByText(mockAdminUser.username).closest("tr")!;
+    const regularRow = screen.getByText(mockRegularUser.username).closest("tr")!;
+
+    const adminBadge = within(adminRow).getByText("admin.users.roleLabels.ADMIN");
+    const userBadge = within(regularRow).getByText("admin.users.roleLabels.USER");
+
+    expect(adminBadge).toHaveClass("bg-primary");
+    expect(userBadge).not.toHaveClass("bg-primary");
+    expect(userBadge).toHaveClass("bg-secondary");
+  });
 });

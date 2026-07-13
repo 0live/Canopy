@@ -60,6 +60,7 @@
     "delete_permission_denied": "You don't have permission to delete users.",
     "cannot_delete_self": "You cannot delete your own account.",
     "role_permission_denied": "You don't have permission to change roles.",
+    "cannot_remove_own_admin_role": "You cannot remove your own admin role.",
     "team_permission_denied": "You don't have permission to change teams.",
     "deleted_success": "User deleted successfully."
   },

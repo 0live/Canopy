@@ -35,6 +35,7 @@
       "deleteSuccess": "User deleted successfully.",
       "deleteNotFound": "User not found. The list has been refreshed.",
       "rolesUpdateSuccess": "Roles updated successfully.",
+      "cannotEditOwnAdminRole": "You cannot remove your own admin role.",
       "noUsers": "No users found.",
       "roleLabels": {
         "ADMIN": "Administrator",

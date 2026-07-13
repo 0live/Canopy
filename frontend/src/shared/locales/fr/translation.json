@@ -35,6 +35,7 @@
       "deleteSuccess": "Utilisateur supprimé avec succès.",
       "deleteNotFound": "Utilisateur introuvable. La liste a été actualisée.",
       "rolesUpdateSuccess": "Rôles mis à jour avec succès.",
+      "cannotEditOwnAdminRole": "Vous ne pouvez pas retirer votre propre rôle administrateur.",
       "noUsers": "Aucun utilisateur trouvé.",
       "roleLabels": {
         "ADMIN": "Administrateur",
