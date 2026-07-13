@@ -24,10 +24,16 @@ stop:
 	$(DOCKER_COMPOSE) down -v
 
 genpkey:
-	echo "PRIVATE_KEY=$$(openssl rand -hex 32)" >> .env
+	@[ -s .env ] && [ -n "$$(tail -c1 .env)" ] && echo "" >> .env; \
+	if ! grep -q '^PRIVATE_KEY=' .env 2>/dev/null; then \
+		echo "PRIVATE_KEY=$$(openssl rand -hex 32)" >> .env; \
+	fi
 
 genaltchakey:
-	echo "ALTCHA_HMAC_KEY=$$(openssl rand -hex 32)" >> .env
+	@[ -s .env ] && [ -n "$$(tail -c1 .env)" ] && echo "" >> .env; \
+	if ! grep -q '^ALTCHA_HMAC_KEY=' .env 2>/dev/null; then \
+		echo "ALTCHA_HMAC_KEY=$$(openssl rand -hex 32)" >> .env; \
+	fi
 
 launch-all-tests:
 	$(MAKE) launch-api-tests
