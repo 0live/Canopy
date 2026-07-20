@@ -2,11 +2,7 @@
 sidebar_position: 2
 ---
 
-# Deploying Canopy (easy guide)
-
-This guide is written for someone who is **not a developer**. If you can copy and
-paste commands into a terminal, you can put Canopy online. It should take about
-20–30 minutes.
+# Deploying Canopy
 
 You do **not** need to understand the code. Canopy ships as a set of ready-made
 containers; you just provide a server, a domain name, and a few settings.
@@ -24,9 +20,10 @@ settings file → run one command.
 3. **Ports 80 and 443 open** on the server (these are the standard web ports;
    Canopy uses them to serve the site and to get a free HTTPS certificate
    automatically).
-4. An **email service (SMTP)** if you want sign-up and password-reset emails to
-   work. Any provider works (e.g. your mailbox provider, SendGrid, Mailgun…).
-   You can skip this at first and add it later.
+4. An **email service (SMTP)** if you want "forgot password" emails to work
+   (public sign-up is closed by default — see section 5). Any provider works
+   (e.g. your mailbox provider, SendGrid, Mailgun…). You can skip this at first
+   and add it later.
 
 ## 2. Point your domain at the server
 
@@ -62,8 +59,8 @@ git clone <the-canopy-repository-url> canopy
 cd canopy
 ```
 
-*(Replace `<the-canopy-repository-url>` with the address where Canopy's code
-lives.)*
+_(Replace `<the-canopy-repository-url>` with the address where Canopy's code
+lives.)_
 
 ## 5. Fill in the settings file
 
@@ -76,23 +73,25 @@ nano .env      # or any text editor
 
 Change these lines (leave the rest as they are for now):
 
-| Setting             | What to put                                                        |
-| ------------------- | ------------------------------------------------------------------ |
-| `ENV`               | `prod`                                                             |
-| `SITE_ADDRESS`      | your domain, **without** `http://` — e.g. `maps.example.com`       |
-| `POSTGRES_USER`     | a database username you invent, e.g. `canopy`                     |
-| `POSTGRES_PASSWORD` | a **strong** password you invent                                  |
-| `POSTGRES_DB`       | a database name you invent, e.g. `canopy`                         |
+| Setting             | What to put                                                  |
+| ------------------- | ------------------------------------------------------------ |
+| `ENV`               | `prod`                                                       |
+| `SITE_ADDRESS`      | your domain, **without** `http://` — e.g. `maps.example.com` |
+| `POSTGRES_USER`     | a database username you invent, e.g. `canopy`                |
+| `POSTGRES_PASSWORD` | a **strong** password you invent                             |
+| `POSTGRES_DB`       | a database name you invent, e.g. `canopy`                    |
 
 If you have an email service, also fill in the `SMTP_*` lines (host, port,
 username, password, from-address). If you don't yet, you can leave them and add
-them later — just know that sign-up confirmation emails won't be delivered until
-you do.
+them later — just know that password-reset emails won't be delivered until you
+do.
 
-:::note You do NOT set the secret keys yourself
-The file mentions `PRIVATE_KEY` and `ALTCHA_HMAC_KEY`. **Leave them alone** — the
-next step generates strong random ones for you. Canopy will actually refuse to
-start in production if these are left at their example values.
+:::tip Public sign-up is closed by default
+By default, nobody can create their own account — you (the administrator)
+create every account from the app once it's running. To let anyone sign up on
+their own instead, set `ALLOW_SELF_REGISTRATION=True`. If you do, make sure a
+real email service is configured above, since Canopy will refuse to start in
+production with self-registration on and no real SMTP server set.
 :::
 
 ## 6. Launch it
@@ -149,14 +148,26 @@ From the `canopy` folder on the server:
 
 ```bash
 ENV=prod make start      # start Canopy
-ENV=prod make stop       # stop Canopy (⚠ this also wipes data volumes)
+ENV=prod make stop       # stop Canopy (your map data is kept)
 ```
 
-:::caution About `make stop`
-`make stop` removes the containers **and their data volumes**. For a running
-production site, avoid it unless you intend to reset. To just pause without
-deleting data, ask whoever maintains your server, or use the technical
-[Docker development](../technical/docker/development) notes.
+:::caution Backing up before anything destructive
+Before running a destructive command, back up your database first:
+
+```bash
+ENV=prod make backup-db
+```
+
+This writes a timestamped dump to the `backups/` folder. To restore it later:
+
+```bash
+ENV=prod make restore-db file=backups/canopy_<timestamp>.dump
+```
+
+`make stop` only stops Canopy — your map data is untouched. To wipe
+**everything**, including the database, use `make stop-and-delete-data`
+instead. There is no undo; only run it once you have a backup or truly mean to
+start over.
 :::
 
 To update to a newer version of Canopy later:
@@ -175,10 +186,7 @@ make rebuild-restart
 - **"It says the site is not secure" on first minutes** — certificate issuance
   can take a moment after the domain starts resolving. Wait a few minutes and
   refresh.
-- **No confirmation email** — your `SMTP_*` settings are missing or wrong. See
+- **No password-reset email** — your `SMTP_*` settings are missing or wrong. See
   section 5.
-- **It won't start and mentions a "secret key"** — you set `PRIVATE_KEY` or
-  `ALTCHA_HMAC_KEY` by hand. Remove your values and re-run `make create-app` so
-  it generates them.
 - **I need more detail** — the full technical reference is in
   [Installation & Setup](../technical/installation).

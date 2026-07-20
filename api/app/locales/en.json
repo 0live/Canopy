@@ -66,9 +66,11 @@
   },
   "config": {
     "site_address_missing": "SITE_ADDRESS must be set in production mode or when not in 'dev' environment.",
-    "cors_origins_invalid_format": "CORS_ORIGINS must be a valid JSON list of strings.",
     "insecure_secret_key": "You must set a secure PRIVATE_KEY in production. Do not use the default.",
-    "insecure_altcha_hmac_key": "You must set a secure ALTCHA_HMAC_KEY in production. Do not use the default."
+    "insecure_altcha_hmac_key": "You must set a secure ALTCHA_HMAC_KEY in production. Do not use the default.",
+    "insecure_postgres_user": "You must set a POSTGRES_USER in production. Do not use the default.",
+    "insecure_postgres_password": "You must set a secure POSTGRES_PASSWORD in production. Do not use the default.",
+    "insecure_smtp_host": "You must configure a real SMTP server in production when self-registration is enabled. Do not leave the default mailpit host."
   },
   "email": {
     "send_failed": "Failed to send email. Please try again later.",

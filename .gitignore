@@ -2,6 +2,7 @@
 .env.local
 .env.prod
 docker/postgis/data
+/backups/
 local.mk
 .vscode/
 .agent/

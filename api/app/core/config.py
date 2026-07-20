@@ -1,30 +1,29 @@
 from functools import lru_cache
-from typing import Any, List
+from typing import List
 
 from pydantic import RedisDsn, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.core.enums.environment import Environment
+from app.core.enums.insecure_default import InsecureDefault
 from app.core.exceptions import SecurityException
+
+
+def _reject_default_in_prod(
+    v: str, info: ValidationInfo, placeholder: InsecureDefault, error_key: str
+) -> str:
+    if info.data.get("env") == Environment.PROD and v == placeholder.value:
+        raise SecurityException(key=error_key)
+    return v
 
 
 class Settings(BaseSettings):
     env: Environment = Environment.DEV
-    private_key: str = "your_default_secret_key_change_me"
-    algorithm: str = "HS256"
+    private_key: str = InsecureDefault.DEFAULT_PRIVATE_KEY.value
     access_token_expire_minutes: int = 15
     refresh_token_expire_days: int = 30
     locale: str = "en"
     site_address: str = ""
-    cors_origins: List[str] = ["*"]
-
-    @field_validator("cors_origins", mode="before")
-    def assemble_cors_origins(cls, v: Any) -> Any:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise SecurityException(key="config.cors_origins_invalid_format")
 
     @property
     def allowed_hosts(self) -> List[str]:
@@ -41,24 +40,52 @@ class Settings(BaseSettings):
 
         raise SecurityException(key="config.site_address_missing")
 
+    @property
+    def allowed_origins(self) -> List[str]:
+        """Derive CORS allowed origins from SITE_ADDRESS."""
+        if self.env in [Environment.DEV, Environment.TEST]:
+            return ["*"]
+
+        if self.site_address:
+            host = (
+                self.site_address.strip().replace("https://", "").replace("http://", "")
+            )
+            host = host.split("/")[0]
+            return [f"https://{host}"]
+
+        raise SecurityException(key="config.site_address_missing")
+
     @field_validator("private_key")
     def validate_secret_key(cls, v: str, info: ValidationInfo) -> str:
-        values = info.data
-        if (
-            values.get("env") == Environment.PROD
-            and v == "your_default_secret_key_change_me"
-        ):
-            raise SecurityException(key="config.insecure_secret_key")
-        return v
+        return _reject_default_in_prod(
+            v, info, InsecureDefault.DEFAULT_PRIVATE_KEY, "config.insecure_secret_key"
+        )
 
     # Database components
-    postgres_user: str = "default"
-    postgres_password: str = "default"
+    postgres_user: str = InsecureDefault.UNSET_CREDENTIAL.value
+    postgres_password: str = InsecureDefault.UNSET_CREDENTIAL.value
     postgres_db: str = "default"
     postgres_host: str = "localhost"
     postgres_port: str = "5432"
     database_url: str = "postgresql+psycopg://default:default@localhost:5432/default"
     postgres_echo: bool = False
+
+    @field_validator("postgres_user")
+    @classmethod
+    def validate_postgres_user(cls, v: str, info: ValidationInfo) -> str:
+        return _reject_default_in_prod(
+            v, info, InsecureDefault.UNSET_CREDENTIAL, "config.insecure_postgres_user"
+        )
+
+    @field_validator("postgres_password")
+    @classmethod
+    def validate_postgres_password(cls, v: str, info: ValidationInfo) -> str:
+        return _reject_default_in_prod(
+            v,
+            info,
+            InsecureDefault.UNSET_CREDENTIAL,
+            "config.insecure_postgres_password",
+        )
 
     # Martin tile server (internal network)
     martin_internal_url: str = "http://martin:3000"
@@ -69,18 +96,17 @@ class Settings(BaseSettings):
     google_client_secret: str | None = None
 
     # Altcha captcha
-    altcha_hmac_key: str = "dev_altcha_hmac_key_change_me"
+    altcha_hmac_key: str = InsecureDefault.DEFAULT_ALTCHA_HMAC_KEY.value
 
     @field_validator("altcha_hmac_key")
     @classmethod
     def validate_altcha_hmac_key(cls, v: str, info: ValidationInfo) -> str:
-        values = info.data
-        if (
-            values.get("env") == Environment.PROD
-            and v == "dev_altcha_hmac_key_change_me"
-        ):
-            raise SecurityException(key="config.insecure_altcha_hmac_key")
-        return v
+        return _reject_default_in_prod(
+            v,
+            info,
+            InsecureDefault.DEFAULT_ALTCHA_HMAC_KEY,
+            "config.insecure_altcha_hmac_key",
+        )
 
     # Database role
     db_role_prefix: str = "canopy_user_"
@@ -89,7 +115,9 @@ class Settings(BaseSettings):
     uploads_dir: str = "/tmp/canopy_uploads"
 
     # Application Features
-    allow_self_registration: bool = True
+    # Secure by default: prod stays closed to public sign-up unless explicitly
+    # opted into. The dev compose override flips this to True.
+    allow_self_registration: bool = False
 
     # Email / SMTP settings
     smtp_host: str = "localhost"
@@ -99,6 +127,13 @@ class Settings(BaseSettings):
     smtp_from_email: str = "noreply@canopy.dev"
     smtp_use_tls: bool = False
     smtp_starttls: bool = False
+
+    @field_validator("smtp_host")
+    @classmethod
+    def validate_smtp_host(cls, v: str, info: ValidationInfo) -> str:
+        return _reject_default_in_prod(
+            v, info, InsecureDefault.DEFAULT_SMTP_HOST, "config.insecure_smtp_host"
+        )
 
     # Redis
     redis_url: RedisDsn = "redis://redis:6379/0"

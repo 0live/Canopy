@@ -1,4 +1,5 @@
 class AppParameter:
+    JWT_ALGORITHM = "HS256"
     MIN_PASSWORD_LENGTH = 12
     TOKEN_LENGTH = 32
     TOKEN_TYPE = "Bearer"

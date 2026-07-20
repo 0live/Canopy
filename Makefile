@@ -21,7 +21,11 @@ start:
 	$(DOCKER_COMPOSE) $(PROFILES) up -d
 
 stop:
+	$(DOCKER_COMPOSE) down
+
+stop-and-delete-data:
 	$(DOCKER_COMPOSE) down -v
+	sudo rm -rf docker/postgis/data/*
 
 genpkey:
 	@[ -s .env ] && [ -n "$$(tail -c1 .env)" ] && echo "" >> .env; \

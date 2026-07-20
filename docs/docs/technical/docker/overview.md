@@ -25,10 +25,11 @@ ENV=dev  → -f docker-compose.yml -f docker-compose.override.yml
 ## Common commands
 
 ```bash
-ENV=dev make build      # build images
-ENV=dev make start      # docker compose up -d (with COMPOSE_PROFILES if set)
-ENV=dev make stop       # docker compose down -v  (⚠ removes volumes)
-make rebuild-restart    # stop → build → start
+ENV=dev make build              # build images
+ENV=dev make start              # docker compose up -d (with COMPOSE_PROFILES if set)
+ENV=dev make stop               # docker compose down — no volumes touched
+ENV=dev make stop-and-delete-data  # ⚠ down -v + wipe docker/postgis/data
+make rebuild-restart            # stop → build → start
 ```
 
 Database helpers (run against the `api` container):
@@ -38,7 +39,9 @@ make apply-init-db      # apply docker/postgis/init_db.sql (schemas + REVOKE)
 make apply-migration    # alembic upgrade head
 make seed               # dev seed data
 make setup-db           # init-db + migrate + seed
-make reset-db           # ⚠ destructive: down -v, wipe data, restart, migrate, seed
+make backup-db          # pg_dump the app database to backups/
+make restore-db file=backups/canopy_<ts>.dump  # pg_restore --clean a backup
+make reset-db           # ⚠ destructive: stop-and-delete-data, restart, migrate, seed
 ```
 
 ## Environment

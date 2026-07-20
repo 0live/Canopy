@@ -10,13 +10,15 @@ focuses on the day-to-day dev loop.
 ## Start / stop
 
 ```bash
-ENV=dev make start      # up -d with override (ports + Mailpit + hot-reload)
-ENV=dev make stop       # ⚠ down -v — removes volumes (DB included)
+ENV=dev make start                # up -d with override (ports + Mailpit + hot-reload)
+ENV=dev make stop                 # docker compose down — keeps all data
+ENV=dev make stop-and-delete-data # ⚠ down -v + wipe docker/postgis/data (DB included)
 ```
 
-> `make stop` is `docker compose down -v`. If you want to keep your database
-> between restarts, stop containers without the Makefile target, e.g.
-> `docker compose -f docker-compose.yml -f docker-compose.override.yml stop`.
+> `make stop` is a plain `docker compose down`: the PostGIS bind mount and the
+> `caddy_data`/`caddy_config` volumes all survive it. Only
+> `make stop-and-delete-data` (and `make reset-db`, which calls it) are
+> destructive. Back up first with `make backup-db` if the data matters.
 
 ## Hot reload
 
@@ -48,6 +50,8 @@ proxy.
 make create-migration m="describe change"   # autogenerate revision
 make apply-migration                         # upgrade head
 make seed                                     # reload dev seed data
+make backup-db                                # pg_dump the app database to backups/
+make restore-db file=backups/canopy_<ts>.dump # restore a backup
 make reset-db                                 # ⚠ full destructive reset (needs sudo)
 ```
 

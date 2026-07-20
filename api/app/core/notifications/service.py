@@ -32,7 +32,7 @@ class NotificationBroadcaster:
         self.active_connections: Dict[int, List[WebSocket]] = {}
         self.listeners: Dict[int, asyncio.Task] = {}
         self.redis = from_url(str(settings.redis_url), decode_responses=True)
-        self._allowed_origins: set = set(settings.cors_origins)
+        self._allowed_origins: set = set(settings.allowed_origins)
 
     async def connect(self, user_id: int, websocket: WebSocket):
         origin = websocket.headers.get("origin", "")

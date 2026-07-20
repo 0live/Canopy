@@ -22,9 +22,7 @@ else
 setup-db: apply-init-db apply-migration bootstrap-admin
 endif
 
-reset-db:
-	$(DOCKER_COMPOSE) down -v
-	sudo rm -rf docker/postgis/data/*
+reset-db: stop-and-delete-data
 	$(MAKE) start
 	$(MAKE) apply-migration
 ifeq ($(ENV),dev)
@@ -32,6 +30,13 @@ ifeq ($(ENV),dev)
 else
 	$(MAKE) bootstrap-admin
 endif
+
+backup-db:
+	@mkdir -p backups
+	$(DOCKER_COMPOSE) exec -T postgis pg_dump -U ${POSTGRES_USER} -d ${POSTGRES_DB} -Fc > backups/canopy_$$(date +%Y%m%d_%H%M%S).dump
+
+restore-db:
+	$(DOCKER_COMPOSE) exec -T postgis pg_restore -U ${POSTGRES_USER} -d ${POSTGRES_DB} --clean --if-exists < $(file)
 
 launch-api-tests:
 	cd api/ && ENV=test uv run pytest

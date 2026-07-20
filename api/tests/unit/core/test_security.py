@@ -28,7 +28,7 @@ class TestSecurity:
     def test_token_creation_and_decoding(self):
         """Test JWT token creation and decoding."""
         settings = Settings(
-            access_token_expire_minutes=15, algorithm="HS256", private_key="secret"
+            access_token_expire_minutes=15, private_key="secret"
         )
         data = {"sub": "test_user", "username": "test_user"}
 
@@ -42,7 +42,7 @@ class TestSecurity:
     def test_get_token(self):
         """Test get_token wrapper."""
         settings = Settings(
-            access_token_expire_minutes=15, algorithm="HS256", private_key="secret"
+            access_token_expire_minutes=15, private_key="secret"
         )
         user = UserDetail(
             id=1, username="test_user", email="test@example.com", roles=[]
@@ -56,7 +56,7 @@ class TestSecurity:
     async def test_get_current_user_success(self):
         """Test get_current_user success path."""
         settings = Settings(
-            access_token_expire_minutes=15, algorithm="HS256", private_key="secret"
+            access_token_expire_minutes=15, private_key="secret"
         )
         token = create_access_token({"username": "test_user"}, settings)
 
@@ -84,7 +84,7 @@ class TestSecurity:
     async def test_get_current_user_invalid_token(self):
         """Test get_current_user with invalid token."""
         settings = Settings(
-            access_token_expire_minutes=15, algorithm="HS256", private_key="secret"
+            access_token_expire_minutes=15, private_key="secret"
         )
         service_mock = Mock()
         service_mock.settings = settings
@@ -98,7 +98,7 @@ class TestSecurity:
     async def test_get_current_user_no_username(self):
         """Test get_current_user with token missing username."""
         settings = Settings(
-            access_token_expire_minutes=15, algorithm="HS256", private_key="secret"
+            access_token_expire_minutes=15, private_key="secret"
         )
         token = create_access_token({"sub": "no_username"}, settings)
 
@@ -114,7 +114,7 @@ class TestSecurity:
     async def test_get_current_user_not_found(self):
         """Test get_current_user where user does not exist."""
         settings = Settings(
-            access_token_expire_minutes=15, algorithm="HS256", private_key="secret"
+            access_token_expire_minutes=15, private_key="secret"
         )
         token = create_access_token({"username": "ghost"}, settings)
 

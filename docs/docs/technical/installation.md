@@ -26,9 +26,9 @@ Operating system:
 - **macOS / Windows** — use Docker Desktop; on Windows run all commands from a
   **WSL 2** shell, not PowerShell.
 
-> `make reset-db` uses `sudo rm -rf docker/postgis/data/*`. On Linux the PostGIS
-> data directory is owned by the container's postgres user, so destructive DB
-> resets need `sudo`.
+> `make reset-db` and `make stop-and-delete-data` use `sudo rm -rf
+> docker/postgis/data/*`. On Linux the PostGIS data directory is owned by the
+> container's postgres user, so destructive DB resets need `sudo`.
 
 ## 2. Configuration (`.env`)
 
@@ -45,23 +45,31 @@ Configuration reference (defaults from `api/app/core/config.py`):
 | Variable            | Purpose                                                             |
 | ------------------- | ------------------------------------------------------------------ |
 | `ENV`               | `dev` or `prod`. Drives the Makefile and security posture.         |
-| `SITE_ADDRESS`      | Public host for Caddy. In dev use `localhost`; in prod your domain (no scheme). |
-| `POSTGRES_USER`     | Database superuser/owner login.                                    |
-| `POSTGRES_PASSWORD` | Database password.                                                 |
+| `SITE_ADDRESS`      | Public host for Caddy. In dev use `localhost`; in prod your domain (no scheme). Also derives `allowed_hosts` and CORS `allowed_origins` (see `config.py`). |
+| `POSTGRES_USER`     | Database superuser/owner login. In production, the app **refuses to boot** if this is left at the placeholder value `"To set"` (see `config.py` validator). |
+| `POSTGRES_PASSWORD` | Database password. Same fail-closed check in production as `POSTGRES_USER`. |
 | `POSTGRES_DB`       | Database name.                                                     |
-| `DATABASE_URL`      | SQLAlchemy URL. In compose it is overridden to point at PgBouncer. |
 
-> In `docker-compose.yml` the API's `DATABASE_URL` and `POSTGRES_HOST` are
-> forced to **pgbouncer** with `?prepare_threshold=0`. You normally do not edit
-> the URL yourself for the containerized setup.
+> `POSTGRES_HOST` and `DATABASE_URL` are **not** user-facing settings: in
+> `docker-compose.yml` the API's and Martin's `DATABASE_URL` are always
+> rebuilt from `POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` and forced to
+> point at **pgbouncer** with `?prepare_threshold=0`, overriding whatever is
+> in `.env`. They are intentionally absent from `.env.example`.
 
 ### Registration & tokens
 
 | Variable                      | Default | Purpose                                        |
 | ----------------------------- | ------- | ---------------------------------------------- |
-| `ALLOW_SELF_REGISTRATION`     | `True`  | Allow public sign-up (else admin-only).        |
+| `ALLOW_SELF_REGISTRATION`     | `False` in prod, `True` in dev (set by `docker-compose.override.yml`) | Allow public sign-up (else admin-only, accounts created via the UI). |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `15`    | Access-token lifetime.                         |
 | `REFRESH_TOKEN_EXPIRE_DAYS`   | `30`    | Refresh-token lifetime.                        |
+
+> If `ALLOW_SELF_REGISTRATION=True` in production, `SMTP_HOST` must also be a
+> real server: the app refuses to boot if self-registration is on and
+> `SMTP_HOST` is still `mailpit` (signup verification emails would otherwise
+> silently fail). If self-registration is off, the same condition only logs a
+> warning — SMTP is still useful for password-reset emails, but not mandatory,
+> since an administrator can always reset a user's password directly.
 
 ### Email / SMTP
 
@@ -127,7 +135,7 @@ The Makefile selects compose files from `ENV`:
 ```bash
 ENV=dev  make build   # docker-compose.yml + docker-compose.override.yml
 ENV=dev  make start
-ENV=dev  make stop     # NOTE: `stop` = `down -v` → removes volumes
+ENV=dev  make stop     # `docker compose down` — no volumes touched
 
 ENV=prod make build   # docker-compose.yml only
 ENV=prod make start
@@ -138,7 +146,7 @@ ENV=prod make start
 ```bash
 ENV=dev make start     # start everything, detached
 docker compose -f docker-compose.yml -f docker-compose.override.yml logs -f api
-ENV=dev make stop      # stop and remove volumes
+ENV=dev make stop      # stop containers, keep all data
 ```
 
 Useful DB targets (see [Database overview](./database/overview)):
@@ -148,8 +156,18 @@ make create-migration m="add something"   # autogenerate an Alembic revision
 make apply-migration                       # upgrade head
 make seed                                   # re-seed dev data (dev/test only)
 make bootstrap-admin                        # print a first-admin setup link (prod)
-make reset-db                               # DESTRUCTIVE full reset
+make backup-db                              # pg_dump the app database to backups/
+make restore-db file=backups/canopy_<ts>.dump  # restore a backup (pg_restore --clean)
+make stop-and-delete-data                   # DESTRUCTIVE: down -v + wipe docker/postgis/data
+make reset-db                               # DESTRUCTIVE: stop-and-delete-data, then rebuild + migrate + seed/bootstrap
 ```
+
+> `stop` (plain `docker compose down`) never touches data: the PostGIS bind
+> mount (`docker/postgis/data`) survives it, and the only named volumes in the
+> stack (`caddy_data`, `caddy_config`, Caddy's TLS state) are no longer dropped
+> either. Only `stop-and-delete-data` and `reset-db` are destructive — both
+> remove `caddy_data`/`caddy_config` via `down -v` **and** `rm -rf` the PostGIS
+> data directory. Back up first with `make backup-db` if the data matters.
 
 ## 5. Verify it works
 
@@ -182,6 +200,12 @@ script refuses to run when `ENV=prod`):
 - **API unhealthy / exits at boot in prod** — `PRIVATE_KEY` or
   `ALTCHA_HMAC_KEY` still at their default; run `make genpkey` /
   `make genaltchakey` (or use `make create-app`).
+- **API exits at boot in prod mentioning `POSTGRES_USER` or `POSTGRES_PASSWORD`**
+  — one of them is still at the placeholder value `"To set"`; edit `.env` and
+  set real values.
+- **API exits at boot in prod mentioning `SMTP_HOST`** — `SMTP_HOST` is still
+  `mailpit`; set a real SMTP server (required for password-reset emails,
+  regardless of `ALLOW_SELF_REGISTRATION`).
 - **API can't reach the database** — the API depends on `postgis`, `pgbouncer`
   and `redis` being *healthy*. On first boot PostGIS initialises before
   accepting connections; compose `depends_on: condition: service_healthy`
@@ -196,5 +220,8 @@ script refuses to run when `ENV=prod`):
   self-signed cert; use `curl -k` or trust Caddy's local CA.
 - **No verification email arrives (dev)** — check the Mailpit UI at
   `http://localhost:8025`; the app talks to `mailpit:1025`, not a real server.
-- **`make reset-db` permission denied** — it needs `sudo` to remove the
-  container-owned `docker/postgis/data`.
+- **`make reset-db` / `make stop-and-delete-data` permission denied** — they
+  need `sudo` to remove the container-owned `docker/postgis/data`.
+- **`make restore-db` errors with "No such file"** — `file=` must point to a
+  `.dump` produced by `make backup-db` (custom `pg_dump -Fc` format), not a
+  plain `.sql` file.

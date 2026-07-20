@@ -29,13 +29,15 @@ def create_access_token(
     )
     to_encode.update({"exp": expire})
     return jwt.encode(
-        to_encode, str(settings.private_key), algorithm=settings.algorithm
+        to_encode, str(settings.private_key), algorithm=AppParameter.JWT_ALGORITHM
     )
 
 
 def decode_token(token: str, settings: Settings) -> dict:
     """Decode a JWT token."""
-    return jwt.decode(token, str(settings.private_key), algorithms=[settings.algorithm])
+    return jwt.decode(
+        token, str(settings.private_key), algorithms=[AppParameter.JWT_ALGORITHM]
+    )
 
 
 # =============================================================================
