@@ -47,5 +47,9 @@ export interface ResetPasswordCredentials {
   new_password: string;
 }
 
+export interface AuthConfig {
+  allow_self_registration: boolean;
+}
+
 export type CaptchaFieldProps = { form: UseFormReturn<RegisterFormData> };
 

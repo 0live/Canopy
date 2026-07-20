@@ -3,6 +3,7 @@ export const QUERY_KEYS = {
     AUTO_LOGIN: () => ["auth", "autoLogin"] as const,
     CURRENT_USER: () => ["auth", "currentUser"] as const,
     VERIFY: (token: string) => ["auth", "verify", token] as const,
+    CONFIG: () => ["auth", "config"] as const,
   },
   ADMIN: {
     USERS_ALL: () => ["admin", "users"] as const,

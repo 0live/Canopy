@@ -20,6 +20,13 @@ class RegisterPayload(UserCreate):
     altcha_payload: str
 
 
+class PublicAuthConfig(BaseModel):
+    """Auth-related feature flags the frontend needs before the user logs in."""
+
+    model_config = ConfigDict(frozen=True)
+    allow_self_registration: bool
+
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 

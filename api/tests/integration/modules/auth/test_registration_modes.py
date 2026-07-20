@@ -31,6 +31,28 @@ async def test_registration_allowed(client: AsyncClient, user_data, settings):
 
 
 @pytest.mark.asyncio
+async def test_auth_config_reflects_self_registration_disabled(
+    client: AsyncClient, settings
+):
+    """Test the public auth config endpoint reports self-registration as disabled."""
+    with patch.object(settings, "allow_self_registration", False):
+        response = await client.get("/auth/config")
+        assert response.status_code == 200
+        assert response.json() == {"allow_self_registration": False}
+
+
+@pytest.mark.asyncio
+async def test_auth_config_reflects_self_registration_enabled(
+    client: AsyncClient, settings
+):
+    """Test the public auth config endpoint reports self-registration as enabled."""
+    with patch.object(settings, "allow_self_registration", True):
+        response = await client.get("/auth/config")
+        assert response.status_code == 200
+        assert response.json() == {"allow_self_registration": True}
+
+
+@pytest.mark.asyncio
 async def test_admin_create_user(
     client: AsyncClient, auth_token_factory, existing_users, user_data
 ):

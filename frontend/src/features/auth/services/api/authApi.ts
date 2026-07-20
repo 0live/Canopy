@@ -1,9 +1,14 @@
 import { apiClient } from "@/app/config/apiClient";
-import type { AuthTokens, ForgotPasswordCredentials, LoginCredentials, RegisterCredentials, ResetPasswordCredentials, User, EmailVerificationResponse } from "../../types";
+import type { AuthConfig, AuthTokens, ForgotPasswordCredentials, LoginCredentials, RegisterCredentials, ResetPasswordCredentials, User, EmailVerificationResponse } from "../../types";
 
 export const CAPTCHA_CHALLENGE_URL = `${apiClient.defaults.baseURL}/auth/captcha/challenge`;
 
 export const authApi = {
+  fetchConfig: async (): Promise<AuthConfig> => {
+    const { data } = await apiClient.get<AuthConfig>("/auth/config");
+    return data;
+  },
+
   login: async (credentials: LoginCredentials): Promise<AuthTokens> => {
     const params = new URLSearchParams();
     params.append("username", credentials.username);

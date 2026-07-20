@@ -73,6 +73,18 @@ class TestAuthService:
         )
 
     # =========================================================================
+    # Public Config Tests
+    # =========================================================================
+
+    def test_get_public_config_reflects_settings(self, service, mock_settings):
+        """Test the public config exposes the current self-registration flag."""
+        mock_settings.allow_self_registration = False
+
+        config = service.get_public_config()
+
+        assert config.allow_self_registration is False
+
+    # =========================================================================
     # Register Tests
     # =========================================================================
 

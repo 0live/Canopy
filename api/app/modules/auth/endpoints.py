@@ -8,6 +8,7 @@ from app.core.messages import MessageService
 from app.core.rate_limit import limiter
 from app.modules.auth.schemas import (
     ForgotPasswordRequest,
+    PublicAuthConfig,
     RegisterPayload,
     ResetPasswordRequest,
     Token,
@@ -16,6 +17,12 @@ from app.modules.auth.services.auth_service import AuthServiceDep
 from app.modules.users.schemas import UserDetail
 
 authRouter = APIRouter(prefix="/auth", tags=["Auth"])
+
+
+@authRouter.get("/config", response_model=PublicAuthConfig)
+async def get_auth_config(service: AuthServiceDep):
+    """Expose auth feature flags (e.g. self-registration) to the frontend."""
+    return service.get_public_config()
 
 
 @authRouter.get("/captcha/challenge")

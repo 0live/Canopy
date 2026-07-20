@@ -25,6 +25,7 @@ from app.modules.auth.repository import AuthRepository
 from app.modules.auth.schemas import (
     AuthResponse,
     ForgotPasswordRequest,
+    PublicAuthConfig,
     RegisterPayload,
     ResetPasswordRequest,
 )
@@ -53,6 +54,12 @@ class AuthService:
         self.email_service = email_service
         self.google_auth_service = google_auth_service
         self.settings = settings
+
+    def get_public_config(self) -> PublicAuthConfig:
+        """Expose auth feature flags the frontend needs before the user logs in."""
+        return PublicAuthConfig(
+            allow_self_registration=self.settings.allow_self_registration
+        )
 
     def get_captcha_challenge(self) -> dict:
         """Generate a new Altcha proof-of-work challenge."""

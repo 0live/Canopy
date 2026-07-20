@@ -6,6 +6,7 @@ import { LoginForm } from "./LoginForm";
 import { RegisterForm } from "./RegisterForm";
 import { ForgotPasswordForm } from "./ForgotPasswordForm";
 import { useState } from "react";
+import { useAuthConfig } from "../hooks/useAuth";
 
 type DialogView = "auth" | "forgot-password";
 
@@ -13,6 +14,8 @@ export function AuthDialog({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<DialogView>("auth");
+  const { data: authConfig } = useAuthConfig();
+  const canSelfRegister = authConfig?.allow_self_registration ?? false;
 
   const handleOpenChange = (isOpen: boolean) => {
     setOpen(isOpen);
@@ -30,7 +33,7 @@ export function AuthDialog({ children }: { children: React.ReactNode }) {
           <DialogDescription className="sr-only">Login or create an account</DialogDescription>
         </DialogHeader>
 
-        {view === "auth" && (
+        {view === "auth" && canSelfRegister && (
           <Tabs defaultValue="login" className="w-full mt-4">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">{t("auth.login")}</TabsTrigger>
@@ -46,6 +49,15 @@ export function AuthDialog({ children }: { children: React.ReactNode }) {
               <RegisterForm onSuccess={() => setOpen(false)} />
             </TabsContent>
           </Tabs>
+        )}
+
+        {view === "auth" && !canSelfRegister && (
+          <div className="mt-4">
+            <LoginForm
+              onSuccess={() => setOpen(false)}
+              onForgotPassword={() => setView("forgot-password")}
+            />
+          </div>
         )}
 
         {view === "forgot-password" && (

@@ -22,6 +22,14 @@ export const useCanWithDbAccess = (): boolean => {
   return canWithDbAccess(user);
 };
 
+export const useAuthConfig = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.AUTH.CONFIG(),
+    queryFn: () => authApi.fetchConfig(),
+    staleTime: Infinity,
+  });
+};
+
 export const useCurrentUser = () => {
   const accessToken = useAppStore((s) => s.accessToken);
 
