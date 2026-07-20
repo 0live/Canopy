@@ -24,8 +24,8 @@ stop:
 	$(DOCKER_COMPOSE) down
 
 stop-and-delete-data:
-	$(DOCKER_COMPOSE) down -v
-	sudo rm -rf docker/postgis/data/*
+	$(DOCKER_COMPOSE) $(PROFILES) down -v
+	sudo sh -c 'rm -rf docker/postgis/data/*'
 
 genpkey:
 	@[ -s .env ] && [ -n "$$(tail -c1 .env)" ] && echo "" >> .env; \
@@ -43,7 +43,7 @@ launch-all-tests:
 	$(MAKE) launch-api-tests
 	$(MAKE) launch-frontend-tests
 
-create-app: genpkey genaltchakey build start setup-db
+create-app: genpkey genaltchakey guard-existing-db build start setup-db
 
 rebuild-restart: stop build start
 

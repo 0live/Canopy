@@ -27,7 +27,7 @@ Operating system:
   **WSL 2** shell, not PowerShell.
 
 > `make reset-db` and `make stop-and-delete-data` use `sudo rm -rf
-> docker/postgis/data/*`. On Linux the PostGIS data directory is owned by the
+docker/postgis/data/*`. On Linux the PostGIS data directory is owned by the
 > container's postgres user, so destructive DB resets need `sudo`.
 
 ## 2. Configuration (`.env`)
@@ -42,13 +42,13 @@ Configuration reference (defaults from `api/app/core/config.py`):
 
 ### Required
 
-| Variable            | Purpose                                                             |
-| ------------------- | ------------------------------------------------------------------ |
-| `ENV`               | `dev` or `prod`. Drives the Makefile and security posture.         |
-| `SITE_ADDRESS`      | Public host for Caddy. In dev use `localhost`; in prod your domain (no scheme). Also derives `allowed_hosts` and CORS `allowed_origins` (see `config.py`). |
+| Variable            | Purpose                                                                                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ENV`               | `dev` or `prod`. Drives the Makefile and security posture.                                                                                                  |
+| `SITE_ADDRESS`      | Public host for Caddy. In dev use `localhost`; in prod your domain (no scheme). Also derives `allowed_hosts` and CORS `allowed_origins` (see `config.py`).  |
 | `POSTGRES_USER`     | Database superuser/owner login. In production, the app **refuses to boot** if this is left at the placeholder value `"To set"` (see `config.py` validator). |
-| `POSTGRES_PASSWORD` | Database password. Same fail-closed check in production as `POSTGRES_USER`. |
-| `POSTGRES_DB`       | Database name.                                                     |
+| `POSTGRES_PASSWORD` | Database password. Same fail-closed check in production as `POSTGRES_USER`.                                                                                 |
+| `POSTGRES_DB`       | Database name.                                                                                                                                              |
 
 > `POSTGRES_HOST` and `DATABASE_URL` are **not** user-facing settings: in
 > `docker-compose.yml` the API's and Martin's `DATABASE_URL` are always
@@ -58,11 +58,11 @@ Configuration reference (defaults from `api/app/core/config.py`):
 
 ### Registration & tokens
 
-| Variable                      | Default | Purpose                                        |
-| ----------------------------- | ------- | ---------------------------------------------- |
+| Variable                      | Default                                                               | Purpose                                                              |
+| ----------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | `ALLOW_SELF_REGISTRATION`     | `False` in prod, `True` in dev (set by `docker-compose.override.yml`) | Allow public sign-up (else admin-only, accounts created via the UI). |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | `15`    | Access-token lifetime.                         |
-| `REFRESH_TOKEN_EXPIRE_DAYS`   | `30`    | Refresh-token lifetime.                        |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `15`                                                                  | Access-token lifetime.                                               |
+| `REFRESH_TOKEN_EXPIRE_DAYS`   | `30`                                                                  | Refresh-token lifetime.                                              |
 
 > If `ALLOW_SELF_REGISTRATION=True` in production, `SMTP_HOST` must also be a
 > real server: the app refuses to boot if self-registration is on and
@@ -77,23 +77,23 @@ Email verification and password reset require SMTP. In **dev**, the compose
 override ships **Mailpit** (`SMTP_HOST=mailpit`, `SMTP_PORT=1025`, web UI on
 `:8025`) so no real provider is needed.
 
-| Variable          | Dev default        | Purpose                              |
-| ----------------- | ------------------ | ------------------------------------ |
-| `SMTP_HOST`       | `mailpit`          | SMTP server host.                    |
-| `SMTP_PORT`       | `1025`             | SMTP port.                           |
-| `SMTP_FROM_EMAIL` | `noreply@canopy.dev` | From address.                      |
-| `SMTP_USER` / `SMTP_PASSWORD` | *(empty)* | Auth (needed for real providers).    |
-| `SMTP_STARTTLS` / `SMTP_USE_TLS` | `False` | TLS mode for real providers.        |
+| Variable                         | Dev default          | Purpose                           |
+| -------------------------------- | -------------------- | --------------------------------- |
+| `SMTP_HOST`                      | `mailpit`            | SMTP server host.                 |
+| `SMTP_PORT`                      | `1025`               | SMTP port.                        |
+| `SMTP_FROM_EMAIL`                | `noreply@canopy.dev` | From address.                     |
+| `SMTP_USER` / `SMTP_PASSWORD`    | _(empty)_            | Auth (needed for real providers). |
+| `SMTP_STARTTLS` / `SMTP_USE_TLS` | `False`              | TLS mode for real providers.      |
 
 ### Optional
 
-| Variable                                    | Default | Purpose                                       |
-| ------------------------------------------- | ------- | --------------------------------------------- |
-| `LOCALE`                                    | `en`    | Default language (`en` / `fr`) for docs/UI.   |
-| `COMPOSE_PROFILES`                          | `none`  | Set to `expose-db` to publish PostGIS.        |
-| `POSTGRES_EXTERNAL_PORT`                    | `5432`  | Host port when `expose-db` is on.             |
-| `DB_ROLE_PREFIX`                            | `canopy_user_` | Prefix for per-user PostgreSQL roles.  |
-| `ACTIVATE_GOOGLE_AUTH` + `GOOGLE_CLIENT_*`  | off     | Google OAuth (requires self-registration on). |
+| Variable                                   | Default        | Purpose                                       |
+| ------------------------------------------ | -------------- | --------------------------------------------- |
+| `LOCALE`                                   | `en`           | Default language (`en` / `fr`) for docs/UI.   |
+| `COMPOSE_PROFILES`                         | `none`         | Set to `expose-db` to publish PostGIS.        |
+| `POSTGRES_EXTERNAL_PORT`                   | `5432`         | Host port when `expose-db` is on.             |
+| `DB_ROLE_PREFIX`                           | `canopy_user_` | Prefix for per-user PostgreSQL roles.         |
+| `ACTIVATE_GOOGLE_AUTH` + `GOOGLE_CLIENT_*` | off            | Google OAuth (requires self-registration on). |
 
 ### Auto-generated secrets — do not set by hand
 
@@ -116,16 +116,29 @@ Under the hood (`Makefile`), this runs:
 
 1. `genpkey` — append a random `PRIVATE_KEY` to `.env`.
 2. `genaltchakey` — append a random `ALTCHA_HMAC_KEY` to `.env`.
-3. `build` — build all images.
-4. `start` — `docker compose up -d` (compose files chosen by `ENV`).
-5. `setup-db` — `apply-init-db` (schemas + REVOKE) → `apply-migration`
+3. `guard-existing-db` — **`ENV=prod` only**: `create-app` is meant to be a
+   one-shot, first-time setup, so it refuses to continue if
+   `docker/postgis/data` already has an initialized PostGIS cluster — even
+   one created by an earlier `create-app`/`reset-db` run on this same
+   environment. There is no "safe to re-run" exception: any pre-existing data
+   must be explicitly acknowledged. It runs _before_ `build`/`start`, via a
+   throwaway `docker compose run` (entrypoint overridden to a plain shell)
+   that inspects the bind-mounted data directory directly — checking after
+   `start` would be too late, since Postgres's own first-boot `initdb`
+   creates its version marker file itself, making a brand-new volume look
+   identical to a pre-existing one by the time `start` returns. If it fires,
+   either run `ENV=prod make reset-db` for a genuinely clean start, or
+   re-run with `REMOVE_EXISTING_DB=yes` if you want to keep and build on
+   that existing data. No-op in `ENV=dev`.
+4. `build` — build all images.
+5. `start` — `docker compose up -d` (compose files chosen by `ENV`).
+6. `setup-db` — `apply-init-db` (schemas + REVOKE) → `apply-migration`
    (Alembic `upgrade head`) → then, depending on `ENV`:
    - `ENV=dev`: `seed` (dev mock data, see below).
    - `ENV=prod`: `bootstrap-admin` — if no administrator exists yet, prints a
      one-time `/setup?token=...` URL to the terminal so the operator can create
      the first admin account through the UI (see the
-     [deployment guide](../user/deployment)). Safe to re-run: it regenerates
-     the link as long as no admin has been created yet, and is a no-op once one
+     [deployment guide](../user/deployment)). No-op if an admin already
      exists. `app/core/seeds.py` refuses to run at all when `ENV=prod`.
 
 ### Development vs production
@@ -156,6 +169,8 @@ make create-migration m="add something"   # autogenerate an Alembic revision
 make apply-migration                       # upgrade head
 make seed                                   # re-seed dev data (dev/test only)
 make bootstrap-admin                        # print a first-admin setup link (prod)
+make guard-existing-db                      # prod only: refuse to run against any existing PostGIS data
+make guard-existing-db REMOVE_EXISTING_DB=yes  # prod only: acknowledge and proceed anyway
 make backup-db                              # pg_dump the app database to backups/
 make restore-db file=backups/canopy_<ts>.dump  # restore a backup (pg_restore --clean)
 make stop-and-delete-data                   # DESTRUCTIVE: down -v + wipe docker/postgis/data
@@ -173,25 +188,25 @@ make reset-db                               # DESTRUCTIVE: stop-and-delete-data,
 
 With `SITE_ADDRESS=localhost` and `ENV=dev`:
 
-| Check              | URL / command                                    | Expected                         |
-| ------------------ | ------------------------------------------------ | -------------------------------- |
-| API health         | `curl -k https://localhost/api/health`           | `{"status":"healthy"}`           |
-| API health (direct)| `curl http://localhost:8000/health`              | `{"status":"healthy"}` (dev port)|
-| OpenAPI / Swagger  | `https://localhost/api/docs`                     | Interactive API docs             |
-| Frontend           | `https://localhost/`                             | Canopy SPA                       |
-| Docs               | `https://localhost/docs/`                         | This site                        |
-| Style editor       | `https://localhost/editor/`                       | Maputnik                         |
-| Martin catalog     | `http://localhost:3002/catalog`                   | JSON tile catalog (dev port)     |
-| Dev mailbox        | `http://localhost:8025`                           | Mailpit UI                       |
+| Check               | URL / command                          | Expected                          |
+| ------------------- | -------------------------------------- | --------------------------------- |
+| API health          | `curl -k https://localhost/api/health` | `{"status":"healthy"}`            |
+| API health (direct) | `curl http://localhost:8000/health`    | `{"status":"healthy"}` (dev port) |
+| OpenAPI / Swagger   | `https://localhost/api/docs`           | Interactive API docs              |
+| Frontend            | `https://localhost/`                   | Canopy SPA                        |
+| Docs                | `https://localhost/docs/`              | This site                         |
+| Style editor        | `https://localhost/editor/`            | Maputnik                          |
+| Martin catalog      | `http://localhost:3002/catalog`        | JSON tile catalog (dev port)      |
+| Dev mailbox         | `http://localhost:8025`                | Mailpit UI                        |
 
 Seeded dev logins (from `api/app/core/seeds.py`, `ENV=dev`/`test` only — this
 script refuses to run when `ENV=prod`):
 
-| Username   | Password   | Roles                          |
-| ---------- | ---------- | ------------------------------ |
-| `admin`    | `admin`    | USER, ADMIN                    |
-| `editor`   | `editor`   | USER, MANAGE_ATLASES_AND_MAPS  |
-| `baseUser` | `baseUser` | USER                           |
+| Username   | Password   | Roles                         |
+| ---------- | ---------- | ----------------------------- |
+| `admin`    | `admin`    | USER, ADMIN                   |
+| `editor`   | `editor`   | USER, MANAGE_ATLASES_AND_MAPS |
+| `baseUser` | `baseUser` | USER                          |
 
 ## 6. Troubleshooting
 
@@ -206,8 +221,15 @@ script refuses to run when `ENV=prod`):
 - **API exits at boot in prod mentioning `SMTP_HOST`** — `SMTP_HOST` is still
   `mailpit`; set a real SMTP server (required for password-reset emails,
   regardless of `ALLOW_SELF_REGISTRATION`).
+- **`make create-app` fails with "An existing PostGIS database was
+  found..."** — `ENV=prod` and `docker/postgis/data` already contains a
+  database. `create-app` is one-shot and always requires an explicit
+  decision here, even if that data comes from an earlier `create-app` run on
+  this same server. Run `ENV=prod make reset-db` for a clean start, or
+  re-run with `REMOVE_EXISTING_DB=yes` if you want to keep and build on
+  that existing data.
 - **API can't reach the database** — the API depends on `postgis`, `pgbouncer`
-  and `redis` being *healthy*. On first boot PostGIS initialises before
+  and `redis` being _healthy_. On first boot PostGIS initialises before
   accepting connections; compose `depends_on: condition: service_healthy`
   handles ordering, but a cold start can take a minute.
 - **`prepared statement already exists` / psycopg errors** — PgBouncer is in

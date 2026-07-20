@@ -10,10 +10,10 @@ right compose files and env for you.
 
 ## Compose files
 
-| File                          | Role                                                        |
-| ----------------------------- | ---------------------------------------------------------- |
-| `docker-compose.yml`          | Base topology (production shape): all services + networks. |
-| `docker-compose.override.yml` | Dev-only: publishes ports, hot-reload volumes, adds Mailpit.|
+| File                          | Role                                                         |
+| ----------------------------- | ------------------------------------------------------------ |
+| `docker-compose.yml`          | Base topology (production shape): all services + networks.   |
+| `docker-compose.override.yml` | Dev-only: publishes ports, hot-reload volumes, adds Mailpit. |
 
 The Makefile selects them from `ENV`:
 
@@ -38,11 +38,26 @@ Database helpers (run against the `api` container):
 make apply-init-db      # apply docker/postgis/init_db.sql (schemas + REVOKE)
 make apply-migration    # alembic upgrade head
 make seed               # dev seed data
+make guard-existing-db  # prod only: refuse to run against any existing PostGIS data (see below)
 make setup-db           # init-db + migrate + seed
 make backup-db          # pg_dump the app database to backups/
 make restore-db file=backups/canopy_<ts>.dump  # pg_restore --clean a backup
 make reset-db           # ⚠ destructive: stop-and-delete-data, restart, migrate, seed
 ```
+
+`create-app` inserts `guard-existing-db` right after `genaltchakey` and
+**before `build`/`start`**. `create-app` is meant to be a one-shot, first-time
+setup in production, so in `ENV=prod` it aborts if `docker/postgis/data`
+already has an initialized PostGIS cluster — even one created by an earlier
+`create-app`/`reset-db` run on this same environment; there is no "safe to
+re-run" exception. `guard-existing-db` checks the bind-mounted data directory
+via a throwaway `docker compose run` (entrypoint overridden to plain `sh`)
+instead of the real Postgres container — running the check after `start`
+would be too late, since Postgres's own first-boot `initdb` creates
+`PG_VERSION` itself, making a fresh volume indistinguishable from a
+pre-existing one at that point. Re-run with `REMOVE_EXISTING_DB=yes` to keep
+and build on the existing data anyway, or `make reset-db` for a clean slate.
+No-op in `ENV=dev`.
 
 ## Environment
 

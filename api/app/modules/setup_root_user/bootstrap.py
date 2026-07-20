@@ -41,7 +41,7 @@ async def bootstrap_root_user_setup(session) -> None:
     )
     await session.commit()
 
-    setup_url = f"{settings.site_address}/setup?token={token}"
+    setup_url = f"https://{settings.site_address}/setup?token={token}"
     print(
         "✅ No administrator account found. Visit this URL to create one "
         f"(valid {AppParameter.ADMIN_SETUP_TOKEN_EXPIRE_MINUTES} minutes):\n"

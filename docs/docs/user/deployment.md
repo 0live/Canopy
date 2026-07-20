@@ -127,11 +127,27 @@ logged in as an administrator — there is nothing to change afterwards, since n
 default credentials ever existed.
 
 :::tip Missed the link, or it expired?
-Just run `make create-app` again (or `ENV=prod make bootstrap-admin` directly).
-It's safe to re-run: as long as no administrator account exists yet, it prints
-a fresh link. Once an administrator has been created, running it again does
-nothing.
+Run `ENV=prod make bootstrap-admin` directly (not `create-app` — see below).
+As long as no administrator account exists yet, it prints a fresh link. Once
+an administrator has been created, running it again does nothing.
 :::
+
+:::caution `make create-app` is one-shot — it always refuses to run against existing data
+`create-app` is meant for the very first install. In production, it refuses
+to run at all if `docker/postgis/data` already contains a database — even
+one it created itself on a previous run. This is intentional: re-running the
+full first-time-setup command against a server that already has a real,
+running Canopy instance (or half-finished data from an interrupted install)
+should never happen silently. You'll always see an explicit error instead.
+
+- To pick up where an interrupted install left off, or to knowingly build on
+  existing data: re-run with `REMOVE_EXISTING_DB=yes`.
+- To start completely over: wipe it first with `ENV=prod make reset-db`, then
+  run `create-app` again.
+- To just resend the admin setup link on an already-working instance: use
+  `ENV=prod make bootstrap-admin` directly (see above) — it doesn't go
+  through this check.
+  :::
 
 ## 8. Check everything is healthy
 
