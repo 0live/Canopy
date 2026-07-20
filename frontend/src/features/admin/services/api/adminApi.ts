@@ -3,6 +3,7 @@ import type { PaginatedResponse } from "@/shared/types/Pagination";
 import type {
   AdminUserSummary,
   AtlasSummary,
+  CreateUserPayload,
   TeamSummary,
 } from "../../types";
 
@@ -14,6 +15,16 @@ export const adminApi = {
     const { data } = await apiClient.get<PaginatedResponse<AdminUserSummary>>(
       "/users",
       { params: { skip, limit } }
+    );
+    return data;
+  },
+
+  createUser: async (
+    payload: CreateUserPayload
+  ): Promise<AdminUserSummary> => {
+    const { data } = await apiClient.post<AdminUserSummary>(
+      "/users",
+      payload
     );
     return data;
   },

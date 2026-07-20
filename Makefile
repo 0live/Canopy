@@ -18,7 +18,16 @@ build:
 	$(DOCKER_COMPOSE) build
 
 start:
-	$(DOCKER_COMPOSE) $(PROFILES) up -d
+	@$(DOCKER_COMPOSE) $(PROFILES) up -d || { \
+		echo ""; \
+		echo "=== Startup failed. Logs from failing containers: ==="; \
+		for svc in $$($(DOCKER_COMPOSE) ps -a --format json | jq -r 'select(.Health == "unhealthy" or (.State != "running")) | .Service' | sort -u); do \
+			echo ""; \
+			echo "--- $$svc ---"; \
+			$(DOCKER_COMPOSE) logs --tail=50 $$svc; \
+		done; \
+		exit 1; \
+	}
 
 stop:
 	$(DOCKER_COMPOSE) down

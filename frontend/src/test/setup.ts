@@ -12,6 +12,15 @@ vi.mock("sonner", () => ({
   },
 }));
 
+// jsdom doesn't implement ResizeObserver, which Radix UI primitives
+// (e.g. Checkbox, Slider, Switch) rely on internally.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+vi.stubGlobal("ResizeObserver", ResizeObserverStub);
+
 beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
 afterEach(() => {
   server.resetHandlers();

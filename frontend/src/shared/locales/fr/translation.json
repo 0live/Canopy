@@ -37,6 +37,10 @@
       "rolesUpdateSuccess": "Rôles mis à jour avec succès.",
       "cannotEditOwnAdminRole": "Vous ne pouvez pas retirer votre propre rôle administrateur.",
       "noUsers": "Aucun utilisateur trouvé.",
+      "addUser": "Ajouter un utilisateur",
+      "createUserTitle": "Créer un utilisateur",
+      "createUser": "Créer",
+      "createSuccess": "Utilisateur créé avec succès.",
       "roleLabels": {
         "ADMIN": "Administrateur",
         "USER": "Utilisateur",

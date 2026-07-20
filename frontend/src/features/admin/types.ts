@@ -6,6 +6,13 @@ export interface AdminUserSummary {
   is_verified: boolean;
 }
 
+export interface CreateUserPayload {
+  email: string;
+  username: string;
+  password: string;
+  roles: string[];
+}
+
 export interface TeamSummary {
   id: number;
   name: string;

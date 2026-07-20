@@ -14,14 +14,14 @@ class TestExceptionsI18n:
         exc = EntityNotFoundException(entity="User")
         assert exc.key == "entity.not_found"
         assert exc.params == {"entity": "User"}
-        assert str(exc) == "entity.not_found - {'entity': 'User'}"
+        assert str(exc) == "User not found."
 
     def test_entity_not_found_exception_custom_key(self):
         """Test EntityNotFoundException with custom key."""
         exc = EntityNotFoundException(entity="User", key="user.not_found")
         assert exc.key == "user.not_found"
         assert exc.params == {"entity": "User"}
-        assert str(exc) == "user.not_found - {'entity': 'User'}"
+        assert str(exc) == "User not found."
 
     def test_entity_not_found_exception_custom_params(self):
         """Test EntityNotFoundException with custom params."""

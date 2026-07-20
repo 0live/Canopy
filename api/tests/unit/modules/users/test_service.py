@@ -251,6 +251,67 @@ class TestUserService:
 
         assert exc.value.key == "user.email_exists"
 
+    @pytest.mark.asyncio
+    async def test_create_user_by_admin_permission_denied(self, service, mock_repo):
+        """Test that a non-admin cannot create a user."""
+        from app.modules.users.schemas import UserCreate
+
+        non_admin_user = UserDetail(
+            id=1,
+            username="regular",
+            email="regular@test.com",
+            roles=[UserRole.USER],
+            teams=[],
+        )
+        user_create = UserCreate(
+            username="newuser", email="new@test.com", password="password12345"
+        )
+
+        with pytest.raises(PermissionDeniedException) as exc:
+            await service.create_user_by_admin(user_create, non_admin_user)
+
+        assert exc.value.params["detail"] == "user.create_permission_denied"
+        mock_repo.create.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_create_user_by_admin_success_with_roles(self, service, mock_repo):
+        """Test that an admin can create a user, auto-verified with the given roles."""
+        from app.modules.users.schemas import UserCreate
+
+        admin_user = UserDetail(
+            id=99,
+            username="admin",
+            email="admin@test.com",
+            roles=[UserRole.ADMIN],
+            teams=[],
+        )
+        user_create = UserCreate(
+            username="newuser",
+            email="new@test.com",
+            password="password12345",
+            roles=[UserRole.USER, UserRole.MANAGE_TEAMS],
+        )
+        created_user = Mock(
+            id=1,
+            username="newuser",
+            email="new@test.com",
+            roles=[UserRole.USER, UserRole.MANAGE_TEAMS],
+            teams=[],
+            is_verified=True,
+        )
+        mock_repo.validate_unique_credentials = AsyncMock(return_value=None)
+        mock_repo.create = AsyncMock(return_value=created_user)
+        mock_repo.get = AsyncMock(return_value=created_user)
+
+        result = await service.create_user_by_admin(user_create, admin_user)
+
+        assert result.is_verified is True
+        assert result.roles == [UserRole.USER, UserRole.MANAGE_TEAMS]
+        args, kwargs = mock_repo.create.call_args
+        created_data = args[0]
+        assert created_data["roles"] == [UserRole.USER, UserRole.MANAGE_TEAMS]
+        assert created_data["is_verified"] is True
+
     # =========================================================================
     # Get User Internal Tests
     # =========================================================================

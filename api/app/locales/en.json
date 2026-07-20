@@ -54,6 +54,7 @@
     "not_found": "User not found.",
     "email_exists": "User with email '{email}' already exists.",
     "username_exists": "User with username '{username}' already exists.",
+    "create_permission_denied": "You don't have permission to create users.",
     "list_permission_denied": "You don't have permission to list users.",
     "read_permission_denied": "You don't have permission to read this user profile.",
     "update_permission_denied": "You don't have permission to update this user.",

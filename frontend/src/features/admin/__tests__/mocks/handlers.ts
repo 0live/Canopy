@@ -25,9 +25,21 @@ export const mockPaginatedUsers = {
   limit: 25,
 };
 
+export const mockCreatedUser: AdminUserSummary = {
+  id: 3,
+  username: "newuser",
+  email: "newuser@example.com",
+  roles: [UserRole.USER],
+  is_verified: true,
+};
+
 export const adminHandlers = [
   http.get("/api/users", () =>
     HttpResponse.json(mockPaginatedUsers, { status: 200 })
+  ),
+
+  http.post("/api/users", () =>
+    HttpResponse.json(mockCreatedUser, { status: 200 })
   ),
 
   http.delete("/api/users/:userId", () =>

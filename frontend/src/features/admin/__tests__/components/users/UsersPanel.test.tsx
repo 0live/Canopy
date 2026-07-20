@@ -52,6 +52,20 @@ describe("UsersPanel", () => {
     expect(screen.getByRole("alertdialog")).toBeInTheDocument();
   });
 
+  it("opens CreateUserDialog when 'Add user' is clicked", async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<UsersPanel />);
+
+    await waitFor(() =>
+      expect(screen.getByText(mockRegularUser.username)).toBeInTheDocument()
+    );
+
+    await user.click(screen.getByRole("button", { name: "admin.users.addUser" }));
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("admin.users.createUserTitle")).toBeInTheDocument();
+  });
+
   it("renders nothing when users API returns an error", async () => {
     server.use(
       http.get("/api/users", () => new HttpResponse(null, { status: 500 }))

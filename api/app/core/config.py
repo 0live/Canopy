@@ -115,8 +115,6 @@ class Settings(BaseSettings):
     uploads_dir: str = "/tmp/canopy_uploads"
 
     # Application Features
-    # Secure by default: prod stays closed to public sign-up unless explicitly
-    # opted into. The dev compose override flips this to True.
     allow_self_registration: bool = False
 
     # Email / SMTP settings

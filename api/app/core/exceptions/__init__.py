@@ -7,9 +7,20 @@ class APIException(Exception):
     def __init__(self, key: str, params: Optional[Dict[str, Any]] = None):
         self.key = key
         self.params = params or {}
-        # We don't call super().__init__(message) here because the message is resolved later
-        # But for debugging purposes, we can stringify the key and params
         super().__init__(f"{key} - {self.params}")
+
+    def __str__(self) -> str:
+        from app.core.messages import MessageService
+
+        try:
+            resolved = MessageService.get_message(self.key, **self.params)
+        except Exception:
+            return super().__str__()
+
+        if resolved.startswith("Message not found for key:"):
+            return super().__str__()
+
+        return resolved
 
 
 class DomainException(APIException):

@@ -29,6 +29,14 @@ class MessageService:
         cls._loaded = True
 
     @classmethod
+    def _resolve_default_locale(cls) -> str:
+        """Falls back to 'en' if settings can't be built (e.g. invalid config at boot)."""
+        try:
+            return get_settings().locale
+        except Exception:
+            return "en"
+
+    @classmethod
     def get_message(cls, key: str, locale: str = None, **kwargs) -> str:
         """
         Retrieves a message by key and locale, formatting it with kwargs.
@@ -37,8 +45,7 @@ class MessageService:
         if not cls._loaded:
             cls.load_messages()
 
-        settings = get_settings()
-        target_locale = locale or settings.locale
+        target_locale = locale or cls._resolve_default_locale()
 
         if target_locale not in cls._messages:
             target_locale = "en"

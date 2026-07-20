@@ -37,6 +37,10 @@
       "rolesUpdateSuccess": "Roles updated successfully.",
       "cannotEditOwnAdminRole": "You cannot remove your own admin role.",
       "noUsers": "No users found.",
+      "addUser": "Add user",
+      "createUserTitle": "Create user",
+      "createUser": "Create",
+      "createSuccess": "User created successfully.",
       "roleLabels": {
         "ADMIN": "Administrator",
         "USER": "User",

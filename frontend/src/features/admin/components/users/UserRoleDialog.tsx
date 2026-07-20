@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -7,12 +6,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { UserRole } from "@/shared/types/UserRole";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUpdateUserRoles } from "../../hooks/users/useUpdateUserRoles";
 import { type AdminUserSummary } from "../../types";
+import { RoleCheckboxList } from "./RoleCheckboxList";
 
 interface UserRoleDialogProps {
   user: AdminUserSummary;
@@ -43,29 +42,16 @@ export function UserRoleDialog({ user, currentUserId, open, onClose }: UserRoleD
             {t("admin.users.editRolesTitle", { username: user.username })}
           </DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col gap-3 py-2">
-          {Object.values(UserRole).map((role) => {
-            const isDisabledAdminSelf = role === UserRole.ADMIN && isSelf;
-            return (
-              <div key={role} className="flex items-center gap-3">
-                <Checkbox
-                  id={role}
-                  checked={selectedRoles.includes(role)}
-                  onCheckedChange={() => toggle(role)}
-                  disabled={isDisabledAdminSelf}
-                />
-                <Label htmlFor={role} className="font-normal cursor-pointer">
-                  {t(`admin.users.roleLabels.${role}`)}
-                </Label>
-              </div>
-            );
-          })}
-          {isSelf && (
-            <p className="text-sm text-muted-foreground">
-              {t("admin.users.cannotEditOwnAdminRole")}
-            </p>
-          )}
-        </div>
+        <RoleCheckboxList
+          selectedRoles={selectedRoles}
+          onToggle={toggle}
+          disabledRoles={isSelf ? [UserRole.ADMIN] : []}
+        />
+        {isSelf && (
+          <p className="text-sm text-muted-foreground">
+            {t("admin.users.cannotEditOwnAdminRole")}
+          </p>
+        )}
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isPending}>
             {t("admin.users.cancel")}

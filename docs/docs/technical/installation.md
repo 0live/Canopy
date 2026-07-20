@@ -60,7 +60,7 @@ Configuration reference (defaults from `api/app/core/config.py`):
 
 | Variable                      | Default                                                               | Purpose                                                              |
 | ----------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `ALLOW_SELF_REGISTRATION`     | `False` in prod, `True` in dev (set by `docker-compose.override.yml`) | Allow public sign-up (else admin-only, accounts created via the UI). |
+| `ALLOW_SELF_REGISTRATION`     | `False`                                                               | Allow public sign-up (else admin-only, accounts created via the UI). |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | `15`                                                                  | Access-token lifetime.                                               |
 | `REFRESH_TOKEN_EXPIRE_DAYS`   | `30`                                                                  | Refresh-token lifetime.                                              |
 

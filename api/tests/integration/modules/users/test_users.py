@@ -30,6 +30,43 @@ async def test_get_all_users_permissions(
 
 
 @pytest.mark.asyncio
+async def test_create_user_permissions(
+    client: AsyncClient, auth_token_factory, existing_users
+):
+    """Tests access control and defaults for admin user creation."""
+    payload = {
+        "email": "created_by_admin@example.com",
+        "username": "created_by_admin",
+        "password": "password12345",
+    }
+
+    # 1. Unauthenticated
+    response = await client.post("/users", json=payload)
+    assert response.status_code == 401
+
+    # 2. Authenticated as regular user (Should be Forbidden)
+    token = await auth_token_factory(
+        username=existing_users[0]["username"], password=existing_users[0]["password"]
+    )
+    response = await client.post(
+        "/users", json=payload, headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 403
+
+    # 3. Authenticated as admin (Should be OK, auto-verified, default USER role)
+    admin_token = await auth_token_factory(
+        username=existing_users[2]["username"], password=existing_users[2]["password"]
+    )
+    response = await client.post(
+        "/users", json=payload, headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["roles"] == ["USER"]
+    assert body["is_verified"] is True
+
+
+@pytest.mark.asyncio
 async def test_get_user_dynamic_id(
     client: AsyncClient, auth_token_factory, existing_users
 ):
