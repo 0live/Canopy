@@ -18,7 +18,7 @@ dependencies = [
     "slowapi>=0.1.9",
     "redis>=7.1.1",
     "orjson",
-    "altcha>=1.0.0",
+    "altcha>=2.1.0",
     "python-json-logger>=4.0.0",
     "pyproj>=3.7.2",
     "gunicorn>=26.0.0",
