@@ -23,7 +23,7 @@
     "@loaders.gl/shapefile": "^4.4.1",
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-query": "^5.95.2",
-    "altcha": "^2.3.0",
+    "altcha": "^3.2.1",
     "axios": "^1.13.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
