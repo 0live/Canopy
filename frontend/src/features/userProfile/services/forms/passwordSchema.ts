@@ -3,6 +3,7 @@ import type { TFunction } from "i18next";
 
 export const getPasswordSchema = (t: TFunction) =>
   yup.object({
+    currentPassword: yup.string().required(t("auth.requiredPassword")),
     password: yup
       .string()
       .required(t("auth.requiredPassword"))

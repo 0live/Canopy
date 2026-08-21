@@ -108,6 +108,19 @@ function PasswordSection({ form, isPending, t }: PasswordSectionProps) {
       </div>
       <FormField
         control={form.control}
+        name="currentPassword"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>{t("profile.currentPassword")}</FormLabel>
+            <FormControl>
+              <Input type="password" disabled={isPending} {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
         name="password"
         render={({ field }) => (
           <FormItem>

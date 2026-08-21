@@ -63,6 +63,7 @@ class UserUpdate(BaseModel):
         default=None, min_length=5, pattern=r"^[a-zA-Z0-9_-]+$"
     )
     password: Optional[str] = Field(default=None)
+    current_password: Optional[str] = Field(default=None)
 
     @field_validator("password")
     @classmethod

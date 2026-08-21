@@ -216,6 +216,11 @@ class AuthService:
 
         response.delete_cookie(AppParameter.REFRESH_TOKEN_COOKIE_NAME)
 
+    async def revoke_user_sessions(self, user_id: int) -> None:
+        """Revoke all active refresh tokens for a user (e.g. after a password change)."""
+        await self.repository.delete_all_user_tokens(user_id)
+        _logger.info("User sessions revoked", extra={"user_id": user_id})
+
     async def verify_email(self, token: str, response: Response) -> Token:
         """Verify user email and issue auth tokens."""
         user = await self.user_service.verify_user(token)

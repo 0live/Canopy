@@ -5,6 +5,7 @@ const t = ((key: string) => key) as TFunction;
 const schema = getPasswordSchema(t);
 
 const valid = {
+  currentPassword: "oldpassword123",
   password: "validpassword123",
   confirmPassword: "validpassword123",
 };
@@ -15,16 +16,36 @@ describe("passwordSchema", () => {
     expect(err.message).toBe("auth.requiredPassword");
   });
 
+  it("rejects when currentPassword is missing", async () => {
+    const err = await schema
+      .validate(
+        { password: "validpassword123", confirmPassword: "validpassword123" },
+        { abortEarly: true }
+      )
+      .catch((e) => e);
+    expect(err.message).toBe("auth.requiredPassword");
+  });
+
   it("rejects password shorter than 12 characters", async () => {
     const err = await schema
-      .validate({ password: "short", confirmPassword: "short" }, { abortEarly: true })
+      .validate(
+        { currentPassword: "oldpassword123", password: "short", confirmPassword: "short" },
+        { abortEarly: true }
+      )
       .catch((e) => e);
     expect(err.message).toBe("auth.passwordMinLength");
   });
 
   it("rejects when confirmPassword is missing", async () => {
     const err = await schema
-      .validate({ password: "validpassword123", confirmPassword: "" }, { abortEarly: true })
+      .validate(
+        {
+          currentPassword: "oldpassword123",
+          password: "validpassword123",
+          confirmPassword: "",
+        },
+        { abortEarly: true }
+      )
       .catch((e) => e);
     expect(err.message).toBe("auth.passwordMismatch");
   });

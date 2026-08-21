@@ -6,6 +6,7 @@ import { http, HttpResponse } from "msw";
 import { mockUser, userProfileHandlers } from "../../mocks/handlers";
 
 function fillValidPassword(form: ReturnType<typeof usePasswordForm>["form"]) {
+  form.setValue("currentPassword", "oldpassword123");
   form.setValue("password", "validpassword123");
   form.setValue("confirmPassword", "validpassword123");
 }
@@ -32,7 +33,45 @@ describe("usePasswordForm", () => {
     act(() => { fillValidPassword(result.current.form); });
     await act(async () => { await result.current.onSubmit(); });
 
-    await waitFor(() => expect(capturedBody).toEqual({ password: "validpassword123" }));
+    await waitFor(() =>
+      expect(capturedBody).toEqual({
+        password: "validpassword123",
+        current_password: "oldpassword123",
+      })
+    );
+  });
+
+  it("shows a validation error when currentPassword is missing", async () => {
+    const { result } = renderHookWithProviders(() => usePasswordFormWithErrors());
+
+    act(() => {
+      result.current.form.setValue("password", "validpassword123");
+      result.current.form.setValue("confirmPassword", "validpassword123");
+    });
+    await act(async () => { await result.current.onSubmit(); });
+
+    await waitFor(() =>
+      expect(result.current.form.formState.errors.currentPassword).toBeDefined()
+    );
+  });
+
+  it("sets a currentPassword error on API 401", async () => {
+    server.use(
+      http.patch("/api/users/:userId", () => new HttpResponse(null, { status: 401 })),
+      // The apiClient interceptor tries a silent refresh on any 401; make it fail
+      // fast so the original wrong-current-password error surfaces to the form.
+      http.post("/api/auth/refresh", () => new HttpResponse(null, { status: 401 }))
+    );
+
+    const { result } = renderHookWithProviders(() => usePasswordFormWithErrors());
+    act(() => { fillValidPassword(result.current.form); });
+    await act(async () => { await result.current.onSubmit(); });
+
+    await waitFor(() =>
+      expect(result.current.form.formState.errors.currentPassword?.message).toBe(
+        "profile.currentPasswordInvalid"
+      )
+    );
   });
 
   it("resets the fields after a successful submit", async () => {
@@ -42,6 +81,7 @@ describe("usePasswordForm", () => {
 
     await waitFor(() => expect(result.current.form.getValues("password")).toBe(""));
     expect(result.current.form.getValues("confirmPassword")).toBe("");
+    expect(result.current.form.getValues("currentPassword")).toBe("");
   });
 
   it("shows a validation error when the password is too short", async () => {

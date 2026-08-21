@@ -117,6 +117,8 @@
     "identitySection": "Identité",
     "passwordSection": "Changer le mot de passe",
     "passwordOptionalHint": "Laissez vide pour conserver votre mot de passe actuel",
+    "currentPassword": "Mot de passe actuel",
+    "currentPasswordInvalid": "Le mot de passe actuel est incorrect.",
     "saveChanges": "Enregistrer les modifications",
     "updateSuccess": "Profil mis à jour avec succès.",
     "confirmPassword": "Confirmer le nouveau mot de passe",

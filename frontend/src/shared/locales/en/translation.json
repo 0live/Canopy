@@ -117,6 +117,8 @@
     "identitySection": "Identity",
     "passwordSection": "Change password",
     "passwordOptionalHint": "Leave blank to keep your current password",
+    "currentPassword": "Current password",
+    "currentPasswordInvalid": "Current password is incorrect.",
     "saveChanges": "Save changes",
     "updateSuccess": "Profile updated successfully.",
     "confirmPassword": "Confirm new password",

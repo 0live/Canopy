@@ -144,6 +144,90 @@ class TestUserService:
         assert exc.value.params["detail"] == "user.update_permission_denied"
 
     @pytest.mark.asyncio
+    async def test_update_user_password_requires_current_password(
+        self, service, mock_repo
+    ):
+        """Self password change without current_password raises."""
+        from app.core.exceptions import AuthenticationException
+
+        user = UserDetail(
+            id=1, username="myuser", email="me@test.com", roles=[UserRole.USER], teams=[]
+        )
+        update_data = UserUpdate(password="newpassword123")
+
+        with pytest.raises(AuthenticationException) as exc:
+            await service.update_user(1, update_data, user)
+
+        assert exc.value.key == "user.current_password_required"
+        mock_repo.update.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_update_user_password_invalid_current_password(
+        self, service, mock_repo
+    ):
+        """Self password change with a wrong current_password raises."""
+        from app.core.exceptions import AuthenticationException
+        from app.core.hashing import hash_password
+
+        user = UserDetail(
+            id=1, username="myuser", email="me@test.com", roles=[UserRole.USER], teams=[]
+        )
+        mock_repo.get = AsyncMock(
+            return_value=Mock(hashed_password=hash_password("correctpassword"))
+        )
+        update_data = UserUpdate(
+            password="newpassword123", current_password="wrongpassword"
+        )
+
+        with pytest.raises(AuthenticationException) as exc:
+            await service.update_user(1, update_data, user)
+
+        assert exc.value.key == "user.current_password_invalid"
+        mock_repo.update.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_update_user_password_success_self(self, service, mock_repo):
+        """Self password change with correct current_password succeeds."""
+        from app.core.hashing import hash_password
+
+        user = UserDetail(
+            id=1, username="myuser", email="me@test.com", roles=[UserRole.USER], teams=[]
+        )
+        mock_repo.get = AsyncMock(
+            return_value=Mock(hashed_password=hash_password("correctpassword"))
+        )
+        mock_repo.update = AsyncMock()
+        update_data = UserUpdate(
+            password="newpassword123", current_password="correctpassword"
+        )
+
+        await service.update_user(1, update_data, user)
+
+        called_data = mock_repo.update.call_args.args[1]
+        assert "hashed_password" in called_data
+        assert "current_password" not in called_data
+        assert "password" not in called_data
+
+    @pytest.mark.asyncio
+    async def test_update_user_password_admin_no_current_password_required(
+        self, service, mock_repo
+    ):
+        """Admin changing another user's password doesn't need their current_password."""
+        admin_user = UserDetail(
+            id=99,
+            username="admin",
+            email="admin@test.com",
+            roles=[UserRole.ADMIN],
+            teams=[],
+        )
+        mock_repo.update = AsyncMock()
+        update_data = UserUpdate(password="newpassword123")
+
+        await service.update_user(1, update_data, admin_user)
+
+        mock_repo.update.assert_called_once()
+
+    @pytest.mark.asyncio
     async def test_delete_user_success(self, service, mock_repo):
         """Test successful user deletion by admin."""
         admin_user = UserDetail(

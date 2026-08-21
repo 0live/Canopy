@@ -63,7 +63,9 @@
     "role_permission_denied": "You don't have permission to change roles.",
     "cannot_remove_own_admin_role": "You cannot remove your own admin role.",
     "team_permission_denied": "You don't have permission to change teams.",
-    "deleted_success": "User deleted successfully."
+    "deleted_success": "User deleted successfully.",
+    "current_password_required": "Current password is required to change your password.",
+    "current_password_invalid": "Current password is incorrect."
   },
   "config": {
     "site_address_missing": "SITE_ADDRESS must be set in production mode or when not in 'dev' environment.",

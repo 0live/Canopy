@@ -207,6 +207,64 @@ async def test_update_user_self(
 
 
 @pytest.mark.asyncio
+async def test_update_own_password_requires_current_password(
+    client: AsyncClient, auth_token_factory, user_data, register_and_verify_user
+):
+    """Verifies that changing your own password requires the current password
+    and revokes existing refresh sessions once changed."""
+    await register_and_verify_user(user_data)
+    token = await auth_token_factory(
+        username=user_data["username"], password=user_data["password"]
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+
+    me_res = await client.get("/users/me", headers=headers)
+    user_id = me_res.json()["id"]
+
+    # 1. Missing current_password -> 401
+    resp_missing = await client.patch(
+        f"/users/{user_id}", json={"password": "newpassword123"}, headers=headers
+    )
+    assert resp_missing.status_code == 401
+
+    # 2. Wrong current_password -> 401
+    resp_wrong = await client.patch(
+        f"/users/{user_id}",
+        json={"password": "newpassword123", "current_password": "wrongpassword"},
+        headers=headers,
+    )
+    assert resp_wrong.status_code == 401
+
+    # 3. Correct current_password -> 200
+    resp_ok = await client.patch(
+        f"/users/{user_id}",
+        json={
+            "password": "newpassword123",
+            "current_password": user_data["password"],
+        },
+        headers=headers,
+    )
+    assert resp_ok.status_code == 200
+
+    # Old refresh session (from the login above) must now be revoked
+    resp_refresh = await client.post("/auth/refresh")
+    assert resp_refresh.status_code == 401
+
+    # Old password no longer works, new one does
+    login_old = await client.post(
+        "/auth/login",
+        data={"username": user_data["username"], "password": user_data["password"]},
+    )
+    assert login_old.status_code == 401
+
+    login_new = await client.post(
+        "/auth/login",
+        data={"username": user_data["username"], "password": "newpassword123"},
+    )
+    assert login_new.status_code == 200
+
+
+@pytest.mark.asyncio
 async def test_update_user_duplicate_username(
     client: AsyncClient, auth_token_factory, user_data, register_and_verify_user
 ):

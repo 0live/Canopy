@@ -30,6 +30,12 @@ describe("ProfilePanel", () => {
     expect(screen.getByDisplayValue(mockUser.email)).toBeInTheDocument();
   });
 
+  it("renders a current password field in the password section", async () => {
+    renderWithProviders(<ProfilePanel />);
+
+    expect(await screen.findByLabelText("profile.currentPassword")).toBeInTheDocument();
+  });
+
   it("shows a validation error when the username is cleared", async () => {
     const user = userEvent.setup();
     renderWithProviders(<ProfilePanel />);

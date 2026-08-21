@@ -247,6 +247,10 @@ class UserService:
         self, user_id: int, user_update: UserUpdate, current_user: UserDetail
     ) -> UserDetail:
         self._ensure_update_permissions(user_id, current_user)
+
+        if user_update.password is not None and user_id == current_user.id:
+            await self._verify_current_password(user_id, user_update.current_password)
+
         update_data = self._prepare_update_data(user_update, current_user)
 
         try:
@@ -368,10 +372,23 @@ class UserService:
                 params={"detail": "user.update_permission_denied"}
             )
 
+    async def _verify_current_password(
+        self, user_id: int, current_password: Optional[str]
+    ) -> None:
+        """Require proof of the existing password before a user changes their own."""
+        if not current_password:
+            raise AuthenticationException(key="user.current_password_required")
+
+        user = await self.repository.get(user_id)
+        if not user or not verify_password(current_password, user.hashed_password):
+            raise AuthenticationException(key="user.current_password_invalid")
+
     def _prepare_update_data(
         self, user_update: UserUpdate, current_user: UserDetail
     ) -> dict[str, Any]:
-        update_data = user_update.model_dump(exclude_unset=True, exclude={"password"})
+        update_data = user_update.model_dump(
+            exclude_unset=True, exclude={"password", "current_password"}
+        )
 
         if user_update.password is not None:
             update_data["hashed_password"] = hash_password(user_update.password)

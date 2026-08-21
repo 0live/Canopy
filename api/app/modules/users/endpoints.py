@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
 from app.core.enums.app_parameter import AppParameter
+from app.core.rate_limit import limiter
 from app.core.schemas.paginated_response import PaginatedResponse
 from app.core.security import get_current_user
+from app.modules.auth.services.auth_service import AuthServiceDep
 from app.modules.users.schemas import (
     AdminUserSummary,
     UserCreate,
@@ -55,13 +57,21 @@ async def get_user(
 
 
 @userRouter.patch("/{user_id}", response_model=UserDetail)
+@limiter.limit("5/minute")
 async def patch_user(
+    request: Request,
     user_id: int,
     user: UserUpdate,
     service: UserServiceDep,
+    auth_service: AuthServiceDep,
     current_user: UserDetail = Depends(get_current_user),
 ):
-    return await service.update_user(user_id, user, current_user)
+    updated_user = await service.update_user(user_id, user, current_user)
+    if user.password is not None:
+        # Done here rather than in UserService to avoid a circular import
+        # (AuthService already depends on UserService).
+        await auth_service.revoke_user_sessions(user_id)
+    return updated_user
 
 
 @userRouter.delete("/{user_id}")

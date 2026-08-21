@@ -34,6 +34,7 @@ export interface UserUpdatePayload {
   email?: string;
   username?: string;
   password?: string;
+  current_password?: string;
 }
 
 export interface NotificationsTableProps {
