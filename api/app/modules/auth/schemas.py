@@ -10,10 +10,6 @@ class Token(BaseModel):
     token_type: str
 
 
-class AuthResponse(Token):
-    refresh_token: str
-
-
 class RegisterPayload(UserCreate):
     """Extends UserCreate with captcha for public self-registration."""
 

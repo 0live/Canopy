@@ -133,7 +133,7 @@ class TestAuthService:
 
         assert result.access_token is not None
         assert result.token_type == AppParameter.TOKEN_TYPE
-        assert result.refresh_token is not None
+        assert not hasattr(result, "refresh_token")
         mock_response.set_cookie.assert_called_once()
 
     @pytest.mark.asyncio

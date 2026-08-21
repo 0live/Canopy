@@ -23,11 +23,11 @@ from app.core.security import get_token
 from app.modules.auth.models import PasswordResetToken, RefreshToken
 from app.modules.auth.repository import AuthRepository
 from app.modules.auth.schemas import (
-    AuthResponse,
     ForgotPasswordRequest,
     PublicAuthConfig,
     RegisterPayload,
     ResetPasswordRequest,
+    Token,
 )
 from app.modules.auth.services.email_service import EmailService
 from app.modules.auth.services.google_auth import GoogleAuthService
@@ -86,17 +86,16 @@ class AuthService:
         """Hash the refresh token for storage."""
         return hashlib.sha256(token.encode()).hexdigest()
 
-    async def _issue_tokens(self, user: UserDetail, response: Response) -> AuthResponse:
+    async def _issue_tokens(self, user: UserDetail, response: Response) -> Token:
         """Helper to issue access/refresh tokens and set cookie."""
         access_token_obj = get_token(user, settings=self.settings)
         refresh_token_str = await self.create_refresh_token(user.id)
 
         self.set_refresh_cookie(response, refresh_token_str)
 
-        return AuthResponse(
+        return Token(
             access_token=access_token_obj.access_token,
             token_type=access_token_obj.token_type,
-            refresh_token=refresh_token_str,
         )
 
     async def register(self, payload: RegisterPayload) -> UserDetail:
@@ -159,7 +158,7 @@ class AuthService:
 
     async def login(
         self, username: str, password: str, response: Response
-    ) -> AuthResponse:
+    ) -> Token:
         """Authenticate user and return access + refresh tokens."""
         user = await self.user_service.authenticate_user(username, password)
 
@@ -170,7 +169,7 @@ class AuthService:
 
     async def refresh_access_token(
         self, refresh_token: Optional[str], response: Response
-    ) -> AuthResponse:
+    ) -> Token:
         """Validate refresh token and rotate it."""
         if not refresh_token:
             response.delete_cookie(AppParameter.REFRESH_TOKEN_COOKIE_NAME)
@@ -217,7 +216,7 @@ class AuthService:
 
         response.delete_cookie(AppParameter.REFRESH_TOKEN_COOKIE_NAME)
 
-    async def verify_email(self, token: str, response: Response) -> AuthResponse:
+    async def verify_email(self, token: str, response: Response) -> Token:
         """Verify user email and issue auth tokens."""
         user = await self.user_service.verify_user(token)
         if not user:
@@ -294,7 +293,7 @@ class AuthService:
 
     async def google_callback(
         self, request: Request, response: Response
-    ) -> AuthResponse:
+    ) -> Token:
         """Handle Google OAuth callback."""
         user_info = await self.google_auth_service.callback(request)
 
