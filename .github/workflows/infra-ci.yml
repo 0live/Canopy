@@ -19,7 +19,7 @@ jobs:
   validate-compose:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # env_file: .env is referenced by docker-compose.yml; config resolution
       # fails if the file is missing, so provide the placeholder values.
@@ -35,7 +35,7 @@ jobs:
   validate-caddy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # SITE_ADDRESS must resolve to a non-empty value: an empty {$SITE_ADDRESS}
       # site header makes Caddy parse the block as global options instead of a
