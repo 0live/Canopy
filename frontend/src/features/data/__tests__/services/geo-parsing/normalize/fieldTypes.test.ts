@@ -1,6 +1,7 @@
 import type { DataType } from "@loaders.gl/schema";
 import { GeoFieldType } from "@/features/data/services/geo-parsing/core/enums";
 import {
+  fromDbfFieldType,
   fromJsonValue,
   fromSchemaDataType,
   fromSchemaField,
@@ -40,6 +41,24 @@ describe("fromSchemaField", () => {
 
   it("defaults the native type to null", () => {
     expect(fromSchemaField({ name: "id", type: "float64" }).nativeType).toBeNull();
+  });
+});
+
+describe("fromDbfFieldType", () => {
+  it.each([
+    ["C", STRING],
+    ["M", STRING],
+    ["N", NUMBER],
+    ["F", NUMBER],
+    ["I", NUMBER],
+    ["D", DATE],
+    ["T", DATE],
+    ["L", BOOLEAN],
+    ["G", BINARY],
+    ["X", UNKNOWN],
+    ["", UNKNOWN],
+  ])("%s → %s", (code, expected) => {
+    expect(fromDbfFieldType(code)).toBe(expected);
   });
 });
 

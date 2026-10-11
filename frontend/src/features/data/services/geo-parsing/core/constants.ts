@@ -11,8 +11,18 @@ export const ZIP_IGNORED_PATH_PATTERNS: readonly RegExp[] = [/^__MACOSX\//, /(^|
 /** Fixed size of the main file header of .shp and .shx files */
 export const SHP_HEADER_SIZE = 100;
 
-/** DBF prefix parsed to get the typed field schema (header + first records) */
-export const DBF_PREFIX_BYTES = 64 * KIB;
+/** Each .shx record is an offset + a length, 4 bytes each */
+export const SHX_RECORD_SIZE = 8;
+
+/** DBF main header, followed by one descriptor per field */
+export const DBF_HEADER_SIZE = 32;
+export const DBF_FIELD_DESCRIPTOR_SIZE = 32;
+
+/** Encoding assumed when neither .cpg nor DBF language driver declares one (GDAL default) */
+export const SHAPEFILE_DEFAULT_ENCODING = "ISO-8859-1";
+
+/** Upper bound for small text sidecars (.prj, .cpg): real ones are a few KiB at most */
+export const SIDECAR_MAX_BYTES = 64 * KIB;
 
 /** Features per batch when streaming a GeoJSON file */
 export const GEOJSON_BATCH_SIZE = 1000;

@@ -75,3 +75,13 @@ export const ExtraDimension = {
 
 export type ExtraDimension = (typeof ExtraDimension)[keyof typeof ExtraDimension];
 
+/** Files of a Shapefile dataset, by extension (param of MISSING_COMPONENT and CORRUPTED) */
+export const ShapefileComponent = {
+  SHP: "shp",
+  SHX: "shx",
+  DBF: "dbf",
+  PRJ: "prj",
+  CPG: "cpg",
+} as const;
+
+export type ShapefileComponent = (typeof ShapefileComponent)[keyof typeof ShapefileComponent];

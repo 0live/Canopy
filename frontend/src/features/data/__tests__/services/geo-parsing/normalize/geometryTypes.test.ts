@@ -3,25 +3,16 @@ import {
   GeometryType,
   GeoWarningCode,
 } from "@/features/data/services/geo-parsing/core/enums";
-import { GeoParseError, GeoParseErrorCode } from "@/features/data/services/geo-parsing/core/errors";
+import { GeoParseErrorCode } from "@/features/data/services/geo-parsing/core/errors";
 import {
   fromGeoJsonType,
   fromShpShapeType,
   mergeGeometryTypes,
   ShpShapeType,
 } from "@/features/data/services/geo-parsing/normalize/geometryTypes";
+import { thrownBy } from "@/features/data/__tests__/services/geo-parsing/helpers/errors";
 
 const PROMOTED = [{ code: GeoWarningCode.GEOMETRY_PROMOTED_TO_MULTI }];
-
-function thrownBy(fn: () => unknown): GeoParseError {
-  try {
-    fn();
-  } catch (error) {
-    expect(error).toBeInstanceOf(GeoParseError);
-    return error as GeoParseError;
-  }
-  throw new Error("expected a GeoParseError");
-}
 
 describe("fromShpShapeType", () => {
   it.each([

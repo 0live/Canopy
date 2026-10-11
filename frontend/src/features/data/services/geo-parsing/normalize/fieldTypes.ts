@@ -20,6 +20,25 @@ const SIMPLE_DATA_TYPES: Readonly<Record<string, GeoFieldType>> = {
   binary: GeoFieldType.BINARY,
 };
 
+/** dBase / FoxPro type letters; memo (M) is text stored in a .dbt sidecar */
+const DBF_FIELD_TYPES: Readonly<Record<string, GeoFieldType>> = {
+  C: GeoFieldType.STRING,
+  M: GeoFieldType.STRING,
+  N: GeoFieldType.NUMBER,
+  F: GeoFieldType.NUMBER,
+  I: GeoFieldType.NUMBER,
+  B: GeoFieldType.NUMBER,
+  O: GeoFieldType.NUMBER,
+  Y: GeoFieldType.NUMBER,
+  "+": GeoFieldType.NUMBER,
+  D: GeoFieldType.DATE,
+  T: GeoFieldType.DATE,
+  "@": GeoFieldType.DATE,
+  L: GeoFieldType.BOOLEAN,
+  G: GeoFieldType.BINARY,
+  P: GeoFieldType.BINARY,
+};
+
 const DATE_DATA_TYPE_PREFIXES = ["date-", "timestamp-"];
 
 /** ISO 8601 date or date-time only: Date.parse alone accepts free text like "May 3" */
@@ -38,6 +57,10 @@ export function fromSchemaDataType(dataType: DataType): GeoFieldType {
 
 export function fromSchemaField(field: Field, nativeType: string | null = null): GeoField {
   return { name: field.name, type: fromSchemaDataType(field.type), nativeType };
+}
+
+export function fromDbfFieldType(typeCode: string): GeoFieldType {
+  return Object.hasOwn(DBF_FIELD_TYPES, typeCode) ? DBF_FIELD_TYPES[typeCode] : GeoFieldType.UNKNOWN;
 }
 
 /** Infers a field type from one JSON property value; empty values carry no type */
