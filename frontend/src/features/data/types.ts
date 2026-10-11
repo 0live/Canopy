@@ -1,3 +1,12 @@
+import {
+  GeoFieldType,
+  GeoFormat,
+  GeometryType,
+} from "@/features/data/services/geo-parsing/core/enums";
+
+// Parsing enums live in the geo-parsing core; re-exported for existing consumers
+export { GeoFieldType, GeoFormat, GeometryType };
+
 export const DataLoadTab = {
   GEO_FILES: "geoFiles",
   TABULAR_FILES: "tabularFiles",
@@ -8,25 +17,8 @@ export const DATA_LOAD_TABS = Object.values(DataLoadTab) as DataLoadTab[];
 
 export type DataLoadTab = (typeof DataLoadTab)[keyof typeof DataLoadTab];
 
-export const GeoFormat = {
-  GEOJSON: "geojson",
-  SHAPEFILE: "shapefile",
-  UNKNOWN: "unknown",
-} as const;
-
-export type GeoFormat = (typeof GeoFormat)[keyof typeof GeoFormat];
-
-export const GeoFieldType = {
-  STRING: "string",
-  NUMBER: "number",
-  BOOLEAN: "boolean",
-  DATE: "date",
-  BINARY: "binary",
-  UNKNOWN: "unknown",
-} as const;
-
-export type GeoFieldType = (typeof GeoFieldType)[keyof typeof GeoFieldType];
-
+// Legacy metadata shapes used by the current UI; replaced by geo-parsing/core/types
+// when the UI is switched to the new parser (phase 8)
 export interface GeoField {
   name: string;
   type: GeoFieldType;
@@ -55,18 +47,6 @@ export const MetadataParseStatus = {
 } as const;
 
 export type MetadataParseStatus = (typeof MetadataParseStatus)[keyof typeof MetadataParseStatus];
-
-export const GeometryType = {
-  POINT: "Point",
-  LINESTRING: "LineString",
-  POLYGON: "Polygon",
-  MULTIPOINT: "MultiPoint",
-  MULTILINESTRING: "MultiLineString",
-  MULTIPOLYGON: "MultiPolygon",
-  UNKNOWN: "Unknown",
-} as const;
-
-export type GeometryType = (typeof GeometryType)[keyof typeof GeometryType];
 
 // SHP geometry type codes (ESRI spec)
 export const SHP_GEOMETRY_TYPES: Record<number, GeometryType> = {
