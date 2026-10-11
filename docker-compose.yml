@@ -28,6 +28,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.prod
+      args:
+        - VITE_GEO_IMPORT_MAX_FILE_SIZE_MB=${VITE_GEO_IMPORT_MAX_FILE_SIZE_MB:-}
+        - VITE_GEO_IMPORT_ZIP_MAX_ENTRIES=${VITE_GEO_IMPORT_ZIP_MAX_ENTRIES:-}
+        - VITE_GEO_IMPORT_ZIP_MAX_COMPRESSION_RATIO=${VITE_GEO_IMPORT_ZIP_MAX_COMPRESSION_RATIO:-}
+        - VITE_GEO_IMPORT_ZIP_MAX_UNCOMPRESSED_MB=${VITE_GEO_IMPORT_ZIP_MAX_UNCOMPRESSED_MB:-}
     expose:
       - "3000"
     networks:

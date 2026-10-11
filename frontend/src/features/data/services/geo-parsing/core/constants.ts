@@ -1,18 +1,10 @@
-const KIB = 1024;
-const MIB = 1024 * KIB;
-const GIB = 1024 * MIB;
+// Configurable limits (file size, zip bomb guards) live in core/config.ts
 
-/** Largest file accepted for inspection (only headers are read, not the whole file) */
-export const MAX_FILE_SIZE_BYTES = 2 * GIB;
+const KIB = 1024;
 
 /** Size of each ranged read when streaming a file */
 export const READ_CHUNK_BYTES = 64 * KIB;
 
-// Zip bomb guards, checked on the central directory before any entry is read
-export const ZIP_MAX_ENTRIES = 1000;
-/** Archive-wide ratio: padded DBF text fields alone legitimately compress ~100x */
-export const ZIP_MAX_COMPRESSION_RATIO = 200;
-export const ZIP_MAX_UNCOMPRESSED_BYTES = 8 * GIB;
 /** OS metadata entries skipped when listing an archive */
 export const ZIP_IGNORED_PATH_PATTERNS: readonly RegExp[] = [/^__MACOSX\//, /(^|\/)\._/, /(^|\/)\.DS_Store$/];
 

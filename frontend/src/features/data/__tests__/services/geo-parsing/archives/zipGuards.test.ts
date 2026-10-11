@@ -3,11 +3,7 @@ import {
   isIgnoredEntryPath,
   type GuardedEntry,
 } from "@/features/data/services/geo-parsing/archives/zipGuards";
-import {
-  ZIP_MAX_COMPRESSION_RATIO,
-  ZIP_MAX_ENTRIES,
-  ZIP_MAX_UNCOMPRESSED_BYTES,
-} from "@/features/data/services/geo-parsing/core/constants";
+import type { GeoImportLimits } from "@/features/data/services/geo-parsing/core/config";
 import { ArchiveRejectReason } from "@/features/data/services/geo-parsing/core/enums";
 import { GeoParseError, GeoParseErrorCode } from "@/features/data/services/geo-parsing/core/errors";
 
@@ -16,9 +12,16 @@ const entry = (uncompressedSize: number, encrypted = false): GuardedEntry => ({
   encrypted,
 });
 
+const LIMITS: GeoImportLimits = {
+  maxFileSizeBytes: 1_000_000,
+  zipMaxEntries: 5,
+  zipMaxCompressionRatio: 10,
+  zipMaxUncompressedBytes: 50_000,
+};
+
 function rejectReason(entries: GuardedEntry[], archiveBytes: number) {
   try {
-    assertSafeArchive(entries, archiveBytes);
+    assertSafeArchive(entries, archiveBytes, LIMITS);
     return null;
   } catch (error) {
     expect(error).toBeInstanceOf(GeoParseError);
@@ -33,16 +36,16 @@ describe("assertSafeArchive", () => {
   });
 
   it.each([
-    ["too many entries", Array.from({ length: ZIP_MAX_ENTRIES + 1 }, () => entry(1)), 1e6, ArchiveRejectReason.TOO_MANY_ENTRIES],
+    ["too many entries", Array.from({ length: 6 }, () => entry(1)), 1000, ArchiveRejectReason.TOO_MANY_ENTRIES],
     ["an encrypted entry", [entry(10), entry(10, true)], 100, ArchiveRejectReason.ENCRYPTED],
-    ["too large once uncompressed", [entry(ZIP_MAX_UNCOMPRESSED_BYTES + 1)], ZIP_MAX_UNCOMPRESSED_BYTES, ArchiveRejectReason.TOO_LARGE_UNCOMPRESSED],
-    ["a compression ratio above the limit", [entry(ZIP_MAX_COMPRESSION_RATIO * 1000 + 1)], 1000, ArchiveRejectReason.COMPRESSION_RATIO],
+    ["too large once uncompressed", [entry(50_001)], 50_000, ArchiveRejectReason.TOO_LARGE_UNCOMPRESSED],
+    ["a compression ratio above the limit", [entry(10_001)], 1000, ArchiveRejectReason.COMPRESSION_RATIO],
   ])("rejects %s", (_label, entries, archiveBytes, expected) => {
     expect(rejectReason(entries, archiveBytes)).toBe(expected);
   });
 
   it("accepts a ratio exactly at the limit", () => {
-    expect(rejectReason([entry(ZIP_MAX_COMPRESSION_RATIO * 1000)], 1000)).toBeNull();
+    expect(rejectReason([entry(10_000)], 1000)).toBeNull();
   });
 });
 

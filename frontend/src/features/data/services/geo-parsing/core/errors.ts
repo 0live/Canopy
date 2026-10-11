@@ -9,7 +9,10 @@ export const GeoParseErrorCode = {
   ARCHIVE_UNSAFE: "archiveUnsafe",
   MULTIPLE_LAYERS: "multipleLayers",
   MIXED_GEOMETRY_TYPES: "mixedGeometryTypes",
-  MULTIPATCH_UNSUPPORTED: "multipatchUnsupported",
+  /** Z and/or M coordinates: only 2D data is accepted */
+  UNSUPPORTED_DIMENSIONS: "unsupportedDimensions",
+  /** The EPSG API could not be reached, distinct from an unknown CRS */
+  EPSG_SERVICE_UNAVAILABLE: "epsgServiceUnavailable",
   EMPTY: "empty",
   ABORTED: "aborted",
 } as const;

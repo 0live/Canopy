@@ -6,7 +6,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# Build the application
+# Build the application (VITE_* values are inlined into the bundle at build time)
+ARG VITE_GEO_IMPORT_MAX_FILE_SIZE_MB
+ARG VITE_GEO_IMPORT_ZIP_MAX_ENTRIES
+ARG VITE_GEO_IMPORT_ZIP_MAX_COMPRESSION_RATIO
+ARG VITE_GEO_IMPORT_ZIP_MAX_UNCOMPRESSED_MB
 COPY . .
 RUN npm run build
 

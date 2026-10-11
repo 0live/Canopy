@@ -53,5 +53,9 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - VITE_GEO_IMPORT_MAX_FILE_SIZE_MB=${VITE_GEO_IMPORT_MAX_FILE_SIZE_MB:-}
+      - VITE_GEO_IMPORT_ZIP_MAX_ENTRIES=${VITE_GEO_IMPORT_ZIP_MAX_ENTRIES:-}
+      - VITE_GEO_IMPORT_ZIP_MAX_COMPRESSION_RATIO=${VITE_GEO_IMPORT_ZIP_MAX_COMPRESSION_RATIO:-}
+      - VITE_GEO_IMPORT_ZIP_MAX_UNCOMPRESSED_MB=${VITE_GEO_IMPORT_ZIP_MAX_UNCOMPRESSED_MB:-}
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]

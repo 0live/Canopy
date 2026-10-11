@@ -47,11 +47,11 @@ export type EpsgSource = (typeof EpsgSource)[keyof typeof EpsgSource];
 /** Non-blocking findings shown to the user before import */
 export const GeoWarningCode = {
   GEOMETRY_PROMOTED_TO_MULTI: "geometryPromotedToMulti",
-  Z_M_DROPPED: "zmDropped",
   MIXED_FIELD_TYPES: "mixedFieldTypes",
   NULL_GEOMETRIES: "nullGeometries",
-  MISSING_SHX: "missingShx",
+  NO_FIELDS: "noFields",
   EPSG_ASSUMED: "epsgAssumed",
+  ENCODING_ASSUMED: "encodingAssumed",
 } as const;
 
 export type GeoWarningCode = (typeof GeoWarningCode)[keyof typeof GeoWarningCode];
@@ -65,3 +65,13 @@ export const ArchiveRejectReason = {
 } as const;
 
 export type ArchiveRejectReason = (typeof ArchiveRejectReason)[keyof typeof ArchiveRejectReason];
+
+/** Coordinate dimensions beyond XY, all refused for now (param of UNSUPPORTED_DIMENSIONS) */
+export const ExtraDimension = {
+  Z: "z",
+  M: "m",
+  ZM: "zm",
+} as const;
+
+export type ExtraDimension = (typeof ExtraDimension)[keyof typeof ExtraDimension];
+

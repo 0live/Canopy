@@ -52,7 +52,10 @@ export type VirtualFileSet = ReadonlyMap<string, ReadableFile>;
 export interface ParseContext {
   signal: AbortSignal;
   onProgress: (bytesRead: number, totalBytes: number) => void;
-  /** Resolves a WKT without authority code to an EPSG code (API fallback) */
+  /**
+   * Resolves a WKT without authority code to an EPSG code (API fallback).
+   * Returns null for an unknown CRS; rejects only when the API is unreachable.
+   */
   resolveEpsg: (wkt: string) => Promise<string | null>;
 }
 
