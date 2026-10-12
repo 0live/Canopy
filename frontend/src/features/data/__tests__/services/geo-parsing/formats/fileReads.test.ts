@@ -19,7 +19,7 @@ describe("readExact", () => {
 
 describe("readSidecarText", () => {
   it("decodes UTF-8 and strips the BOM", async () => {
-    expect(await readSidecarText(memoryFile("﻿UTF-8"), "cpg")).toBe("UTF-8");
+    expect(await readSidecarText(memoryFile("\uFEFFUTF-8"), "cpg")).toBe("UTF-8");
   });
 
   it("returns an empty string for an empty file", async () => {

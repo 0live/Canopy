@@ -1,12 +1,12 @@
 import { WKTCRSLoader } from "@loaders.gl/wkt";
 import { GEOJSON_DEFAULT_EPSG } from "@/features/data/services/geo-parsing/core/constants";
-import { EpsgSource } from "@/features/data/services/geo-parsing/core/enums";
+import { EpsgSource, GeoWarningCode } from "@/features/data/services/geo-parsing/core/enums";
 import {
   GeoParseError,
   GeoParseErrorCode,
   isAbortError,
 } from "@/features/data/services/geo-parsing/core/errors";
-import type { ParseContext } from "@/features/data/services/geo-parsing/core/types";
+import type { GeoLayerWarning, ParseContext } from "@/features/data/services/geo-parsing/core/types";
 
 export interface EpsgResolution {
   epsg: string | null;
@@ -100,4 +100,24 @@ export function fromGeoJsonCrsMember(crs: unknown): string | null {
   if (type === "name") return epsgFromCrsName(properties?.name);
   if (type === EPSG_AUTHORITY) return epsgFromCrsName(`${EPSG_AUTHORITY}:${properties?.code}`);
   return null;
+}
+
+export interface GeoJsonCrsResolution extends EpsgResolution {
+  warnings: GeoLayerWarning[];
+}
+
+/**
+ * No crs member (or null): RFC 7946 WGS84, flagged as assumed.
+ * A crs member we cannot read gives no EPSG, since the file states it is not WGS84.
+ */
+export function resolveGeoJsonCrs(crs: unknown): GeoJsonCrsResolution {
+  if (crs === undefined || crs === null) {
+    return {
+      epsg: GEOJSON_DEFAULT_EPSG,
+      source: EpsgSource.DEFAULT,
+      warnings: [{ code: GeoWarningCode.EPSG_ASSUMED, params: { epsg: GEOJSON_DEFAULT_EPSG } }],
+    };
+  }
+  const epsg = fromGeoJsonCrsMember(crs);
+  return epsg ? { epsg, source: EpsgSource.DECLARED, warnings: [] } : { ...NO_EPSG, warnings: [] };
 }

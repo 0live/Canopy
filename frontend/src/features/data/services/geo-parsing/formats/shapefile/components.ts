@@ -1,4 +1,5 @@
 import type { ReadableFile } from "@loaders.gl/loader-utils";
+import { MESSAGE_LIST_SEPARATOR } from "@/features/data/services/geo-parsing/core/constants";
 import { ShapefileComponent } from "@/features/data/services/geo-parsing/core/enums";
 import { GeoParseError, GeoParseErrorCode } from "@/features/data/services/geo-parsing/core/errors";
 import type { VirtualFileSet } from "@/features/data/services/geo-parsing/core/types";
@@ -15,7 +16,6 @@ export interface ShapefileComponents {
 
 const REQUIRED_SIDECARS = [ShapefileComponent.SHX, ShapefileComponent.DBF, ShapefileComponent.PRJ] as const;
 const SHP_SUFFIX = `.${ShapefileComponent.SHP}`;
-const COMPONENT_LIST_SEPARATOR = ", ";
 
 type RequiredSidecar = (typeof REQUIRED_SIDECARS)[number];
 type SidecarLookup = (component: ShapefileComponent) => ReadableFile | null;
@@ -50,7 +50,7 @@ function requireSidecars(sidecar: SidecarLookup): Record<RequiredSidecar, Readab
   }
   if (missing.length > 0) {
     throw new GeoParseError(GeoParseErrorCode.MISSING_COMPONENT, {
-      components: missing.join(COMPONENT_LIST_SEPARATOR),
+      components: missing.join(MESSAGE_LIST_SEPARATOR),
     });
   }
   return found as Record<RequiredSidecar, ReadableFile>;

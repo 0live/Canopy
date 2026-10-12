@@ -13,6 +13,10 @@ export const GeoParseErrorCode = {
   UNSUPPORTED_DIMENSIONS: "unsupportedDimensions",
   /** The EPSG API could not be reached, distinct from an unknown CRS */
   EPSG_SERVICE_UNAVAILABLE: "epsgServiceUnavailable",
+  /** Coordinates impossible in the layer CRS (e.g. projected metres read as WGS84 degrees) */
+  COORDINATES_OUT_OF_RANGE: "coordinatesOutOfRange",
+  /** Text that is not valid in its mandatory encoding (GeoJSON must be UTF-8) */
+  INVALID_ENCODING: "invalidEncoding",
   EMPTY: "empty",
   ABORTED: "aborted",
 } as const;

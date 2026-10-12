@@ -24,11 +24,14 @@ export const SHAPEFILE_DEFAULT_ENCODING = "ISO-8859-1";
 /** Upper bound for small text sidecars (.prj, .cpg): real ones are a few KiB at most */
 export const SIDECAR_MAX_BYTES = 64 * KIB;
 
-/** Features per batch when streaming a GeoJSON file */
-export const GEOJSON_BATCH_SIZE = 1000;
-
-/** GeoJSON prefix scanned for a "crs" member declared before "features" */
-export const CRS_SCAN_PREFIX_BYTES = 4 * KIB;
-
 /** RFC 7946: GeoJSON coordinates are WGS84 when no crs member is given */
 export const GEOJSON_DEFAULT_EPSG = "4326";
+
+/** RFC 7946: GeoJSON text is always UTF-8 */
+export const GEOJSON_ENCODING = "UTF-8";
+
+/** Valid WGS84 longitude / latitude extent, in degrees */
+export const WGS84_BOUNDS = { minX: -180, maxX: 180, minY: -90, maxY: 90 } as const;
+
+/** Joins list values (missing components, field names) inside i18n message params */
+export const MESSAGE_LIST_SEPARATOR = ", ";
