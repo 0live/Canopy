@@ -22,6 +22,10 @@ export default defineConfig({
     port: 3000,
     host: true
   },
+  // The parse worker imports ES modules (zip.js): keep it an ES module worker
+  worker: {
+    format: "es",
+  },
   build: {
     outDir: "build",
   },

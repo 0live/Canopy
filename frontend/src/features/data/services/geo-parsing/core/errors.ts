@@ -17,6 +17,8 @@ export const GeoParseErrorCode = {
   /** Text that is not valid in its mandatory encoding (GeoJSON must be UTF-8) */
   INVALID_ENCODING: "invalidEncoding",
   EMPTY: "empty",
+  /** Internal failure unrelated to the file (worker crashed or could not start) */
+  UNEXPECTED: "unexpected",
   ABORTED: "aborted",
 } as const;
 

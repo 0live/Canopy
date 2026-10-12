@@ -6,6 +6,9 @@ export const MIB = 1024 * KIB;
 /** Size of each ranged read when streaming a file */
 export const READ_CHUNK_BYTES = 64 * KIB;
 
+/** Minimum delay between two progress reports sent by the parse worker */
+export const PROGRESS_THROTTLE_MS = 100;
+
 /** OS metadata entries skipped when listing an archive */
 export const ZIP_IGNORED_PATH_PATTERNS: readonly RegExp[] = [/^__MACOSX\//, /(^|\/)\._/, /(^|\/)\.DS_Store$/];
 
