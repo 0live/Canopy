@@ -3,6 +3,8 @@ import type {
   EpsgSource,
   GeoFieldType,
   GeoFormat,
+  GeoLayerIssueCode,
+  GeoLayerProperty,
   GeometryType,
   GeoWarningCode,
 } from "@/features/data/services/geo-parsing/core/enums";
@@ -33,6 +35,11 @@ export interface GeoLayerMetadata {
   /** Attribute encoding (.cpg / DBF language driver), null when unknown */
   encoding: string | null;
   warnings: GeoLayerWarning[];
+}
+
+export interface GeoLayerIssue {
+  code: GeoLayerIssueCode;
+  property: GeoLayerProperty;
 }
 
 export interface GeoFileMetadata {

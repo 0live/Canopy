@@ -8,7 +8,6 @@ export const GeoParseErrorCode = {
   TOO_LARGE: "tooLarge",
   ARCHIVE_UNSAFE: "archiveUnsafe",
   MULTIPLE_LAYERS: "multipleLayers",
-  MIXED_GEOMETRY_TYPES: "mixedGeometryTypes",
   /** Z and/or M coordinates: only 2D data is accepted */
   UNSUPPORTED_DIMENSIONS: "unsupportedDimensions",
   /** The EPSG API could not be reached, distinct from an unknown CRS */

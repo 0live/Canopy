@@ -1,6 +1,8 @@
+import { MIB } from "@/features/data/services/geo-parsing/core/constants";
+
 /**
  * Import limits, configurable at build time through VITE_* variables (see .env.example).
- * Unset or invalid values fall back to the defaults below.
+ * Unset or invalid values fall back to the defaults below; sizes are in MiB.
  */
 export interface GeoImportLimits {
   maxFileSizeBytes: number;
@@ -20,8 +22,6 @@ export const GeoImportEnvVar = {
 type GeoImportEnvVar = (typeof GeoImportEnvVar)[keyof typeof GeoImportEnvVar];
 type EnvSource = Partial<Record<string, string | boolean | undefined>>;
 
-/** Sizes are expressed in MiB in the environment */
-const MIB = 1024 * 1024;
 
 const DEFAULTS: Record<GeoImportEnvVar, number> = {
   [GeoImportEnvVar.MAX_FILE_SIZE_MB]: 2048,

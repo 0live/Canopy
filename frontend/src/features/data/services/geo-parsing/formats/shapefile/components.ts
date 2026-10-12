@@ -2,6 +2,7 @@ import type { ReadableFile } from "@loaders.gl/loader-utils";
 import { MESSAGE_LIST_SEPARATOR } from "@/features/data/services/geo-parsing/core/constants";
 import { ShapefileComponent } from "@/features/data/services/geo-parsing/core/enums";
 import { GeoParseError, GeoParseErrorCode } from "@/features/data/services/geo-parsing/core/errors";
+import { fileStemOf } from "@/features/data/services/geo-parsing/core/paths";
 import type { VirtualFileSet } from "@/features/data/services/geo-parsing/core/types";
 
 export interface ShapefileComponents {
@@ -62,7 +63,7 @@ export function findShapefileComponents(files: VirtualFileSet): ShapefileCompone
   const stem = shpPath.slice(0, -SHP_SUFFIX.length);
   const sidecar = sidecarLookup(files, stem);
   return {
-    name: stem.slice(stem.lastIndexOf("/") + 1),
+    name: fileStemOf(shpPath),
     shp,
     ...requireSidecars(sidecar),
     cpg: sidecar(ShapefileComponent.CPG),

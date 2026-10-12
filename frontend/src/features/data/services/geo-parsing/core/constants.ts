@@ -1,6 +1,7 @@
 // Configurable limits (file size, zip bomb guards) live in core/config.ts
 
 const KIB = 1024;
+export const MIB = 1024 * KIB;
 
 /** Size of each ranged read when streaming a file */
 export const READ_CHUNK_BYTES = 64 * KIB;

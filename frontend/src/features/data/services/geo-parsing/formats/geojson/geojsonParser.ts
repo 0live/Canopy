@@ -6,6 +6,7 @@ import {
 } from "@/features/data/services/geo-parsing/core/constants";
 import { GeoFormat, GeometryType } from "@/features/data/services/geo-parsing/core/enums";
 import { GeoParseError, GeoParseErrorCode } from "@/features/data/services/geo-parsing/core/errors";
+import { extensionOf, fileStemOf } from "@/features/data/services/geo-parsing/core/paths";
 import type {
   GeoFormatParser,
   GeoLayerMetadata,
@@ -26,12 +27,6 @@ const FEATURE_TYPE = "Feature";
 
 type JsonObject = Record<string, unknown>;
 
-function extensionOf(path: string): string {
-  const fileName = path.slice(path.lastIndexOf("/") + 1);
-  const dot = fileName.lastIndexOf(".");
-  return dot === -1 ? "" : fileName.slice(dot + 1).toLowerCase();
-}
-
 function isGeoJsonPath(path: string): boolean {
   return (GEOJSON_EXTENSIONS as readonly string[]).includes(extensionOf(path));
 }
@@ -41,11 +36,6 @@ function findSingleGeoJson(files: VirtualFileSet): [string, ReadableFile] {
   if (entries.length === 0) throw new GeoParseError(GeoParseErrorCode.UNSUPPORTED_FORMAT);
   if (entries.length > 1) throw new GeoParseError(GeoParseErrorCode.MULTIPLE_LAYERS, { count: entries.length });
   return entries[0];
-}
-
-function layerName(path: string): string {
-  const fileName = path.slice(path.lastIndexOf("/") + 1);
-  return fileName.slice(0, fileName.lastIndexOf("."));
 }
 
 /** RFC 7946 also allows a single Feature or a bare geometry as root: both make a one-feature layer */
@@ -91,7 +81,7 @@ async function parseGeoJson(files: VirtualFileSet, ctx: ParseContext): Promise<G
   const layer = new GeoJsonLayerAccumulator();
   const root = await streamGeoJson(file, { ...ctx, onFeature: (feature) => layer.add(feature) });
   const rootObject = completeRoot(root, layer);
-  return [toMetadata(layerName(path), rootObject, layer.summarize())];
+  return [toMetadata(fileStemOf(path), rootObject, layer.summarize())];
 }
 
 /** Streams the whole file once: GeoJSON has no header, every feature must be read */

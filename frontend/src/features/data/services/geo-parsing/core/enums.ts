@@ -85,3 +85,23 @@ export const ShapefileComponent = {
 } as const;
 
 export type ShapefileComponent = (typeof ShapefileComponent)[keyof typeof ShapefileComponent];
+
+/** Blocking problems of a parsed layer, shown next to the metadata they concern */
+export const GeoLayerIssueCode = {
+  /** No .prj authority, CRS unknown to the API, or unreadable GeoJSON crs member */
+  EPSG_NOT_FOUND: "epsgNotFound",
+  /** Null shape type, or only null geometries */
+  GEOMETRY_UNKNOWN: "geometryUnknown",
+  /** Several incompatible geometry types, or a GeometryCollection */
+  GEOMETRY_MIXED: "geometryMixed",
+} as const;
+
+export type GeoLayerIssueCode = (typeof GeoLayerIssueCode)[keyof typeof GeoLayerIssueCode];
+
+/** Layer metadata property an issue is attached to */
+export const GeoLayerProperty = {
+  GEOMETRY_TYPE: "geometryType",
+  EPSG: "epsg",
+} as const;
+
+export type GeoLayerProperty = (typeof GeoLayerProperty)[keyof typeof GeoLayerProperty];
