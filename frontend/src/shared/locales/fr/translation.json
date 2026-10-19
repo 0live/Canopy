@@ -175,7 +175,7 @@
         "errors": {
           "epsgMissing": "Projection non détectée",
           "geometryUnknown": "Type de géométrie inconnu",
-          "noFields": "Aucun champ détecté"
+          "geometryMixed": "Types de géométrie incompatibles"
         },
         "close": "Fermer",
         "cancel": "Annuler",
@@ -206,7 +206,54 @@
           "fieldName": "Nom",
           "fieldType": "Type",
           "importField": "Importer",
-          "indexField": "Index"
+          "indexField": "Index",
+          "epsgDetected": "{{epsg}} (déduit)",
+          "featureCount": "Entités",
+          "encoding": "Encodage"
+        },
+        "parsingProgress": "Analyse du fichier en cours… {{percent}} %",
+        "cancelParsing": "Annuler l'analyse",
+        "parseErrors": {
+          "unsupportedFormat": "Format non supporté. Formats acceptés : GeoJSON (.geojson, .json) et Shapefile (.zip)",
+          "missingComponent": "Fichiers manquants dans l'archive : {{components}}",
+          "corrupted": {
+            "generic": "Fichier corrompu ou illisible",
+            "feature": "Fichier corrompu : l'entité n° {{feature}} est invalide",
+            "component": "Le fichier .{{component}} est corrompu ou illisible",
+            "shapeType": "Type de géométrie Shapefile inconnu (code {{shapeType}})"
+          },
+          "tooLarge": "Fichier trop volumineux (maximum {{maxSizeMb}} Mio)",
+          "archiveUnsafe": {
+            "tooManyEntries": "Archive refusée : elle contient trop de fichiers",
+            "tooLargeUncompressed": "Archive refusée : elle est trop volumineuse une fois décompressée",
+            "compressionRatio": "Archive refusée : taux de compression anormal",
+            "encrypted": "Archive refusée : les archives chiffrées ne sont pas supportées"
+          },
+          "multipleLayers": "Le fichier contient {{count}} couches : une seule est acceptée par import",
+          "unsupportedDimensions": {
+            "generic": "Coordonnées {{dimension}} non supportées : seules les données 2D sont acceptées",
+            "feature": "Coordonnées {{dimension}} non supportées (entité n° {{feature}}) : seules les données 2D sont acceptées"
+          },
+          "epsgServiceUnavailable": "Le service de détection de la projection est injoignable. Réessayez plus tard.",
+          "coordinatesOutOfRange": "Coordonnées hors des limites de l'EPSG:{{epsg}} : la projection du fichier est probablement absente ou fausse",
+          "invalidEncoding": "Le fichier GeoJSON doit être encodé en UTF-8",
+          "empty": "Le fichier ne contient aucune entité",
+          "aborted": "Analyse annulée",
+          "unexpected": "Erreur interne pendant l'analyse. Réessayez."
+        },
+        "dimensions": {
+          "z": "Z (altitude)",
+          "m": "M (mesure)",
+          "zm": "Z et M"
+        },
+        "warnings": {
+          "geometryPromotedToMulti": "Géométries simples et multiples mélangées : toutes seront importées en géométries multiples",
+          "mixedFieldTypes": "Types de valeurs mélangés, importés en texte : {{fields}}",
+          "nullGeometries_one": "{{count}} entité sans géométrie sera importée",
+          "nullGeometries_other": "{{count}} entités sans géométrie seront importées",
+          "noFields": "Aucun champ attributaire : seules les géométries seront importées",
+          "epsgAssumed": "Aucune projection déclarée : EPSG:{{epsg}} (WGS 84) supposé",
+          "encodingAssumed": "Encodage des attributs non déclaré : {{encoding}} supposé"
         }
       }
     }

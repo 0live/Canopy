@@ -4,8 +4,14 @@ import {
   GeometryType,
 } from "@/features/data/services/geo-parsing/core/enums";
 
-// Parsing enums live in the geo-parsing core; re-exported for existing consumers
+// Parsing enums and metadata shapes live in the geo-parsing core; re-exported for UI consumers
 export { GeoFieldType, GeoFormat, GeometryType };
+export type {
+  GeoField,
+  GeoFileMetadata,
+  GeoLayerMetadata,
+  GeoLayerWarning,
+} from "@/features/data/services/geo-parsing/core/types";
 
 export const DataLoadTab = {
   GEO_FILES: "geoFiles",
@@ -17,28 +23,6 @@ export const DATA_LOAD_TABS = Object.values(DataLoadTab) as DataLoadTab[];
 
 export type DataLoadTab = (typeof DataLoadTab)[keyof typeof DataLoadTab];
 
-// Legacy metadata shapes used by the current UI; replaced by geo-parsing/core/types
-// when the UI is switched to the new parser (phase 8)
-export interface GeoField {
-  name: string;
-  type: GeoFieldType;
-}
-
-export interface GeoLayerMetadata {
-  name: string;
-  geometryType: GeometryType;
-  epsg: string | null;
-  fields: GeoField[];
-}
-
-export interface GeoFileMetadata {
-  fileName: string;
-  fileSize: number;
-  format: GeoFormat;
-  layers: GeoLayerMetadata[];
-  parseTimeMs: number;
-}
-
 export const MetadataParseStatus = {
   IDLE: "idle",
   PARSING: "parsing",
@@ -47,16 +31,6 @@ export const MetadataParseStatus = {
 } as const;
 
 export type MetadataParseStatus = (typeof MetadataParseStatus)[keyof typeof MetadataParseStatus];
-
-// SHP geometry type codes (ESRI spec)
-export const SHP_GEOMETRY_TYPES: Record<number, GeometryType> = {
-  0: "Unknown", 1: "Point", 3: "LineString", 5: "Polygon", 8: "MultiPoint"
-};
-
-export const EXTENSION_TO_FORMAT: Record<string, GeoFormat> = {
-  geojson: GeoFormat.GEOJSON, json: GeoFormat.GEOJSON,
-  zip: GeoFormat.SHAPEFILE,
-};
 
 export interface GeoFieldImportSettings {
   include: boolean;
@@ -81,7 +55,8 @@ export const GeoMetadataField = {
   FILE_SIZE: "fileSize",
   GEOMETRY_TYPE: "geometryType",
   EPSG: "epsg",
-  FIELDS: "fields",
+  FEATURE_COUNT: "featureCount",
+  ENCODING: "encoding",
 } as const;
 
 export type GeoMetadataField = (typeof GeoMetadataField)[keyof typeof GeoMetadataField];

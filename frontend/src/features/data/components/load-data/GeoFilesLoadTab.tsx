@@ -1,32 +1,29 @@
-import { useGeoFileMetadata } from "@/features/data/hooks/useGeoFileMetadata";
-import { Spinner } from "@/shared/components/ui/spinner";
 import { useTranslation } from "react-i18next";
-import { GeoFileInput } from "./GeoFileInput";
-import { GeoImportPanel } from "./GeoImportPanel";
+import { GeoFileInput } from "@/features/data/components/load-data/GeoFileInput";
+import { GeoImportPanel } from "@/features/data/components/load-data/GeoImportPanel";
+import { GeoParseProgress } from "@/features/data/components/load-data/GeoParseProgress";
+import { useGeoFileMetadata } from "@/features/data/hooks/useGeoFileMetadata";
+import { parseErrorMessage } from "@/features/data/services/load-data/geoMessages";
+import { MetadataParseStatus } from "@/features/data/types";
 
 export function GeoFilesLoadTab() {
   const { t } = useTranslation();
-  const { status, metadata, file, error, parse, reset } = useGeoFileMetadata();
+  const { status, metadata, file, error, progress, parse, reset } = useGeoFileMetadata();
 
-  if (status === "parsing") {
-    return (
-      <div className="flex items-center gap-3 py-8 text-muted-foreground">
-        <Spinner />
-        <span>{t("data.load.postgis.parsing")}</span>
-      </div>
-    );
-  }
+  if (status === MetadataParseStatus.PARSING) return <GeoParseProgress percent={progress} onCancel={reset} />;
 
-  if (status === "error") {
+  if (status === MetadataParseStatus.ERROR && error) {
     return (
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-destructive">{t("data.load.postgis.parseError", { error })}</p>
+        <p role="alert" className="text-sm text-destructive">
+          {t("data.load.postgis.parseError", { error: parseErrorMessage(error, t) })}
+        </p>
         <GeoFileInput onChange={parse} />
       </div>
     );
   }
 
-  if (status === "success" && metadata && file) {
+  if (status === MetadataParseStatus.SUCCESS && metadata && file) {
     return <GeoImportPanel metadata={metadata} file={file} onClose={reset} />;
   }
 

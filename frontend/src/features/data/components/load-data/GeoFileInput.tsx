@@ -1,22 +1,15 @@
+import { UPLOAD_EXTENSIONS } from "@/features/data/services/geo-parsing/extract/registry";
 import { cn } from "@/shared/lib/utils";
 import { UploadCloud } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const ACCEPTED_EXTENSIONS = ".geojson,.json,.zip";
-const ACCEPTED_MIME_TYPES = ["application/geo+json", "application/json", "application/zip"];
+// Only filters the file picker: dropped files of any type go to the parser, which explains a refusal
+const ACCEPTED_EXTENSIONS = UPLOAD_EXTENSIONS.map((extension) => `.${extension}`).join(",");
 
 interface GeoFileInputProps {
   disabled?: boolean;
   onChange: (file: File) => void;
-}
-
-function isAcceptedFile(file: File): boolean {
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
-  return (
-    ACCEPTED_MIME_TYPES.includes(file.type) ||
-    ["geojson", "json", "zip"].includes(ext)
-  );
 }
 
 export function GeoFileInput({ disabled, onChange }: GeoFileInputProps) {
@@ -25,7 +18,6 @@ export function GeoFileInput({ disabled, onChange }: GeoFileInputProps) {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileSelected = (file: File) => {
-    if (!isAcceptedFile(file)) return;
     onChange(file);
     if (inputRef.current) inputRef.current.value = "";
   };

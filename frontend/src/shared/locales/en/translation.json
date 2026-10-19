@@ -175,7 +175,7 @@
         "errors": {
           "epsgMissing": "EPSG not detected",
           "geometryUnknown": "Unknown geometry type",
-          "noFields": "No fields detected"
+          "geometryMixed": "Incompatible geometry types"
         },
         "close": "Close",
         "cancel": "Cancel",
@@ -206,7 +206,54 @@
           "fieldName": "Name",
           "fieldType": "Type",
           "importField": "Import",
-          "indexField": "Index"
+          "indexField": "Index",
+          "epsgDetected": "{{epsg}} (deduced)",
+          "featureCount": "Features",
+          "encoding": "Encoding"
+        },
+        "parsingProgress": "Analysing file… {{percent}}%",
+        "cancelParsing": "Cancel analysis",
+        "parseErrors": {
+          "unsupportedFormat": "Unsupported format. Accepted formats: GeoJSON (.geojson, .json) and Shapefile (.zip)",
+          "missingComponent": "Files missing from the archive: {{components}}",
+          "corrupted": {
+            "generic": "Corrupted or unreadable file",
+            "feature": "Corrupted file: feature #{{feature}} is invalid",
+            "component": "The .{{component}} file is corrupted or unreadable",
+            "shapeType": "Unknown Shapefile geometry type (code {{shapeType}})"
+          },
+          "tooLarge": "File too large (maximum {{maxSizeMb}} MiB)",
+          "archiveUnsafe": {
+            "tooManyEntries": "Archive refused: it contains too many files",
+            "tooLargeUncompressed": "Archive refused: it is too large once uncompressed",
+            "compressionRatio": "Archive refused: abnormal compression ratio",
+            "encrypted": "Archive refused: encrypted archives are not supported"
+          },
+          "multipleLayers": "The file contains {{count}} layers: only one is accepted per import",
+          "unsupportedDimensions": {
+            "generic": "{{dimension}} coordinates are not supported: only 2D data is accepted",
+            "feature": "{{dimension}} coordinates are not supported (feature #{{feature}}): only 2D data is accepted"
+          },
+          "epsgServiceUnavailable": "The projection detection service is unreachable. Please try again later.",
+          "coordinatesOutOfRange": "Coordinates outside the EPSG:{{epsg}} bounds: the file projection is probably missing or wrong",
+          "invalidEncoding": "GeoJSON files must be UTF-8 encoded",
+          "empty": "The file contains no features",
+          "aborted": "Analysis cancelled",
+          "unexpected": "Internal error during analysis. Please try again."
+        },
+        "dimensions": {
+          "z": "Z (elevation)",
+          "m": "M (measure)",
+          "zm": "Z and M"
+        },
+        "warnings": {
+          "geometryPromotedToMulti": "Single and multi geometries mixed: all will be imported as multi geometries",
+          "mixedFieldTypes": "Mixed value types, imported as text: {{fields}}",
+          "nullGeometries_one": "{{count}} feature without geometry will be imported",
+          "nullGeometries_other": "{{count}} features without geometry will be imported",
+          "noFields": "No attribute fields: only geometries will be imported",
+          "epsgAssumed": "No projection declared: EPSG:{{epsg}} (WGS 84) assumed",
+          "encodingAssumed": "Attribute encoding not declared: {{encoding}} assumed"
         }
       }
     }

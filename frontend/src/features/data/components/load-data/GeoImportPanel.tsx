@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, CheckCircle2, X } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
 import type { GeoFileMetadata, GeoFieldImportSettings, GeoMetadataErrors } from "@/features/data/types";
-import { validateLayerMetadata } from "@/features/data/services/load-data/medataUtils";
+import { layerErrors } from "@/features/data/services/load-data/geoMessages";
+import {
+  UploadErrorSection,
+  UploadProgressSection,
+  UploadSuccessSection,
+} from "@/features/data/components/load-data/GeoUploadSections";
 import { useGeoImportForm } from "@/features/data/hooks/useGeoImportForm";
 import type { GeoFileUploadState } from "@/features/data/hooks/useGeoFileUpload";
 import { Button } from "@/shared/components/ui/button";
@@ -22,7 +27,7 @@ import {
   FormMessage,
 } from "@/shared/components/ui/form";
 import { Input } from "@/shared/components/ui/input";
-import { GeoMetadataTable } from "./GeoMetadataTable";
+import { GeoMetadataTable } from "@/features/data/components/load-data/GeoMetadataTable";
 import type { UseFormReturn } from "react-hook-form";
 import type { ImportFormData } from "@/features/data/services/forms/importSchema";
 import type { TFunction } from "i18next";
@@ -132,74 +137,6 @@ function ImportActions({ onCancel, onSubmitPostgis, onSubmitPmtiles, disabled, t
   );
 }
 
-interface UploadProgressSectionProps {
-  progress: number;
-  t: TFunction;
-}
-
-function UploadProgressSection({ progress, t }: UploadProgressSectionProps) {
-  return (
-    <div className="flex flex-col gap-2">
-      <span className="text-sm text-muted-foreground">
-        {t("data.load.postgis.upload.uploading", { percent: progress })}
-      </span>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-        <div
-          className="h-full bg-primary transition-all duration-200"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-interface UploadSuccessSectionProps {
-  filename: string;
-  onClose: () => void;
-  t: TFunction;
-}
-
-function UploadSuccessSection({ filename, onClose, t }: UploadSuccessSectionProps) {
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2 text-sm text-green-600">
-        <CheckCircle2 className="h-4 w-4 shrink-0" />
-        <span>{t("data.load.postgis.upload.success", { filename })}</span>
-      </div>
-      <div className="flex justify-end">
-        <Button type="button" onClick={onClose}>
-          {t("data.load.postgis.upload.done")}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-interface UploadErrorSectionProps {
-  onRetry: () => void;
-  onCancel: () => void;
-  t: TFunction;
-}
-
-function UploadErrorSection({ onRetry, onCancel, t }: UploadErrorSectionProps) {
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2 text-sm text-destructive">
-        <AlertCircle className="h-4 w-4 shrink-0" />
-        <span>{t("data.load.postgis.upload.error")}</span>
-      </div>
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" type="button" onClick={onCancel}>
-          {t("data.load.postgis.cancel")}
-        </Button>
-        <Button type="button" onClick={onRetry}>
-          {t("data.load.postgis.upload.retry")}
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 interface FormFooterProps {
   uploadState: GeoFileUploadState;
   metadataErrors: GeoMetadataErrors;
@@ -257,8 +194,10 @@ export function GeoImportPanel({ metadata, file, onClose }: GeoImportPanelProps)
     () => initFieldSettings(metadata)
   );
 
-  const errors = validateLayerMetadata(metadata);
-  const hasNoFieldSelected = Object.values(fieldSettings).every((s) => !s.include);
+  const errors = layerErrors(metadata.layers[0]);
+  // A layer without fields is importable (geometries only): nothing to select then
+  const settings = Object.values(fieldSettings);
+  const hasNoFieldSelected = settings.length > 0 && settings.every((s) => !s.include);
 
   const { form, onSubmitPostgis, onSubmitPmtiles, uploadState, resetUpload } =
     useGeoImportForm({ metadata, file, fieldSettings });
