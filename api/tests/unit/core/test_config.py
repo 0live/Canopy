@@ -1,4 +1,5 @@
 import pytest
+from pydantic import ValidationError
 from app.core.config import Settings
 from app.core.enums.environment import Environment
 from app.core.exceptions import SecurityException
@@ -82,3 +83,35 @@ class TestAllowedOrigins:
         with pytest.raises(SecurityException) as exc:
             settings.allowed_origins
         assert exc.value.key == "config.site_address_missing"
+
+
+class TestGeoImportLimits:
+    def test_reads_the_frontend_build_variables(self, monkeypatch):
+        monkeypatch.setenv("VITE_GEO_IMPORT_MAX_FILE_SIZE_MB", "100")
+        monkeypatch.setenv("VITE_GEO_IMPORT_ZIP_MAX_UNCOMPRESSED_MB", "300")
+        settings = Settings(_env_file=None)
+        assert settings.geo_import_max_file_size_bytes == 100 * 1024 * 1024
+        assert settings.geo_import_zip_max_uncompressed_bytes == 300 * 1024 * 1024
+
+    def test_defaults_match_the_frontend_defaults(self):
+        settings = Settings(_env_file=None)
+        assert settings.geo_import_max_file_size_mb == 2048
+        assert settings.geo_import_zip_max_entries == 1000
+        assert settings.geo_import_zip_max_compression_ratio == 200
+        assert settings.geo_import_zip_max_uncompressed_mb == 8192
+
+    def test_accepts_the_field_name(self):
+        settings = Settings(_env_file=None, geo_import_zip_max_entries=10)
+        assert settings.geo_import_zip_max_entries == 10
+
+    @pytest.mark.parametrize(
+        "field",
+        [
+            "geo_import_max_file_size_mb",
+            "geo_import_max_concurrent",
+            "geo_import_timeout_s",
+        ],
+    )
+    def test_rejects_non_positive_values(self, field):
+        with pytest.raises(ValidationError):
+            Settings(_env_file=None, **{field: 0})

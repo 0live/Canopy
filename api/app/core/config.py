@@ -1,9 +1,17 @@
 from functools import lru_cache
 from typing import List
 
-from pydantic import RedisDsn, ValidationInfo, field_validator
+from pydantic import (
+    AliasChoices,
+    Field,
+    PositiveInt,
+    RedisDsn,
+    ValidationInfo,
+    field_validator,
+)
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.core.enums.app_parameter import AppParameter
 from app.core.enums.environment import Environment
 from app.core.enums.insecure_default import InsecureDefault
 from app.core.exceptions import SecurityException
@@ -87,6 +95,10 @@ class Settings(BaseSettings):
             "config.insecure_postgres_password",
         )
 
+    # Direct PostGIS connection bypassing PgBouncer, whose transaction pooling GDAL does not support
+    postgres_direct_host: str = "postgis"
+    postgres_direct_port: PositiveInt = 5432
+
     # Martin tile server (internal network)
     martin_internal_url: str = "http://martin:3000"
 
@@ -113,6 +125,44 @@ class Settings(BaseSettings):
 
     # File uploads
     uploads_dir: str = "/tmp/canopy_uploads"
+
+    # Geo file import: size and ZIP limits share the frontend build variables
+    geo_import_max_file_size_mb: PositiveInt = Field(
+        default=2048,
+        validation_alias=AliasChoices(
+            "vite_geo_import_max_file_size_mb", "geo_import_max_file_size_mb"
+        ),
+    )
+    geo_import_zip_max_entries: PositiveInt = Field(
+        default=1000,
+        validation_alias=AliasChoices(
+            "vite_geo_import_zip_max_entries", "geo_import_zip_max_entries"
+        ),
+    )
+    geo_import_zip_max_compression_ratio: PositiveInt = Field(
+        default=200,
+        validation_alias=AliasChoices(
+            "vite_geo_import_zip_max_compression_ratio",
+            "geo_import_zip_max_compression_ratio",
+        ),
+    )
+    geo_import_zip_max_uncompressed_mb: PositiveInt = Field(
+        default=8192,
+        validation_alias=AliasChoices(
+            "vite_geo_import_zip_max_uncompressed_mb",
+            "geo_import_zip_max_uncompressed_mb",
+        ),
+    )
+    geo_import_max_concurrent: PositiveInt = 2
+    geo_import_timeout_s: PositiveInt = 3600
+
+    @property
+    def geo_import_max_file_size_bytes(self) -> int:
+        return self.geo_import_max_file_size_mb * AppParameter.BYTES_PER_MIB
+
+    @property
+    def geo_import_zip_max_uncompressed_bytes(self) -> int:
+        return self.geo_import_zip_max_uncompressed_mb * AppParameter.BYTES_PER_MIB
 
     # Application Features
     allow_self_registration: bool = False

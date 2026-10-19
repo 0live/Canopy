@@ -11,6 +11,10 @@ ENV UV_PROJECT_ENVIRONMENT="/usr/local"
 
 WORKDIR /code
 
+# GDAL command-line tools (ogr2ogr, ogrinfo) used by the geo file import
+RUN apt-get update && apt-get install -y --no-install-recommends gdal-bin \
+    && rm -rf /var/lib/apt/lists/*
+
 # 3. Dependency Installation
 COPY pyproject.toml uv.lock ./
 
