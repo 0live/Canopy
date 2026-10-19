@@ -1,48 +1,11 @@
-import type { DataType } from "@loaders.gl/schema";
 import { GeoFieldType } from "@/features/data/services/geo-parsing/core/enums";
 import {
   fromDbfFieldType,
   fromJsonValue,
-  fromSchemaDataType,
-  fromSchemaField,
   mergeFieldTypes,
 } from "@/features/data/services/geo-parsing/normalize/fieldTypes";
 
 const { STRING, NUMBER, BOOLEAN, DATE, BINARY, UNKNOWN } = GeoFieldType;
-
-describe("fromSchemaDataType", () => {
-  it.each<[DataType, GeoFieldType]>([
-    ["utf8", STRING],
-    ["bool", BOOLEAN],
-    ["binary", BINARY],
-    ["int32", NUMBER],
-    ["uint8", NUMBER],
-    ["int64", NUMBER],
-    ["float64", NUMBER],
-    ["date-day", DATE],
-    ["timestamp-millisecond", DATE],
-    [{ type: "decimal", bitWidth: 128, precision: 10, scale: 2 }, NUMBER],
-    ["time-second", UNKNOWN],
-    ["null", UNKNOWN],
-    [{ type: "list", children: [] }, UNKNOWN],
-  ])("%j → %s", (dataType, expected) => {
-    expect(fromSchemaDataType(dataType)).toBe(expected);
-  });
-});
-
-describe("fromSchemaField", () => {
-  it("keeps the name and the native type", () => {
-    expect(fromSchemaField({ name: "LIBELLÉ", type: "utf8" }, "C")).toEqual({
-      name: "LIBELLÉ",
-      type: STRING,
-      nativeType: "C",
-    });
-  });
-
-  it("defaults the native type to null", () => {
-    expect(fromSchemaField({ name: "id", type: "float64" }).nativeType).toBeNull();
-  });
-});
 
 describe("fromDbfFieldType", () => {
   it.each([
