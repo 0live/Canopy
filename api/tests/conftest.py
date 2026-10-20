@@ -14,7 +14,8 @@ from testcontainers.core.waiting_utils import wait_for_logs
 from testcontainers.postgres import PostgresContainer
 from testcontainers.redis import RedisContainer
 
-POSTGRES_IMAGE = "postgres:16-alpine"
+# Same image as production: layer imports need PostGIS
+POSTGRES_IMAGE = "postgis/postgis:16-3.4"
 POSTGRES_USER = "tester"
 POSTGRES_PASSWORD = "tester"
 POSTGRES_DATABASE = "test_database"
